@@ -1,0 +1,13 @@
+# Ignore everything
+*
+
+# Allow folders
+!public/
+!src/
+
+# Allow files inside folders
+!public/**
+!src/**
+
+# (bắt buộc) cho phép file gitignore hoạt động
+!.gitignore
