@@ -1,8 +1,10 @@
 // src/App.jsx
 import React from "react";
+import { Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import HomePage from "./components/HomePage";
+import NewsDetailPage from "./components/NewsDetailPage";
 
 export default function App() {
   return (
@@ -10,7 +12,11 @@ export default function App() {
       <Header />
 
       <main style={{ flex: 1 }}>
-        <HomePage />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/tin-tuc/:slug" element={<NewsDetailPage />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
       </main>
 
       <Footer />

@@ -9,7 +9,7 @@ export const newsItems = [
     category: "Xu hướng làm đẹp",
     author: "PinkyCloud Editorial",
     readTime: "6 phút đọc",
-    image: "/IMG/news01.jpg",
+    image: "/IMG/news01.png",
     content: `
 Năm 2026 đánh dấu sự lên ngôi mạnh mẽ của xu hướng làm đẹp bền vững, trong đó các sản phẩm có nguồn gốc thiên nhiên và quy trình chăm sóc da tối giản đang trở thành lựa chọn ưu tiên của nhiều người tiêu dùng. Không chỉ dừng lại ở yếu tố hiệu quả, người dùng hiện nay còn quan tâm đến độ an toàn, độ lành tính và sự thân thiện với môi trường trong từng sản phẩm.
 
@@ -32,7 +32,7 @@ Trong thời gian tới, xu hướng làm đẹp thiên nhiên được dự đo
     category: "Chăm sóc da",
     author: "PinkyCloud Editorial",
     readTime: "5 phút đọc",
-    image: "/IMG/news02.jpg",
+    image: "/IMG/news02.png",
     content: `
 Da nhạy cảm là một trong những loại da cần được chăm sóc cẩn thận nhất vì rất dễ phản ứng với mỹ phẩm, thời tiết hoặc môi trường xung quanh. Việc lựa chọn mỹ phẩm phù hợp không chỉ giúp bảo vệ da mà còn hạn chế tình trạng kích ứng, mẩn đỏ và khô rát kéo dài.
 
@@ -55,7 +55,7 @@ Bên cạnh việc chọn sản phẩm, người có làn da nhạy cảm cũng 
     category: "Hướng dẫn sử dụng",
     author: "PinkyCloud Editorial",
     readTime: "4 phút đọc",
-    image: "/IMG/news03.jpg",
+    image: "/IMG/news03.png",
     content: `
 Serum là một trong những sản phẩm chăm sóc da được nhiều người yêu thích nhờ khả năng chứa nồng độ hoạt chất cao, thẩm thấu nhanh và tập trung giải quyết từng vấn đề cụ thể của làn da. Tuy nhiên, để serum phát huy hiệu quả tối đa, cách sử dụng đúng là điều rất quan trọng.
 

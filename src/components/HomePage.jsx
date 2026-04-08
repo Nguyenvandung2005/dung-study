@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../css/HomePage.css";
 import products from "../data/products";
 import brandUrls from "../data/brandUrls";
@@ -191,6 +192,8 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fontId = "playfair-display-font";
 
@@ -304,9 +307,13 @@ export default function HomePage() {
                   <div className="news-date">{news.date}</div>
                   <h3 className="news-title">{news.title}</h3>
                   <p className="news-excerpt">{news.excerpt}</p>
-                  <a href="#" className="btn news-btn btn-pink">
+                  <button
+                    type="button"
+                    className="btn news-btn btn-pink"
+                    onClick={() => navigate(`/tin-tuc/${news.slug}`)}
+                  >
                     Xem chi tiết
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
