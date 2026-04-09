@@ -9,6 +9,7 @@ import ProductListPage from "./pages/ProductListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import AccountPage from "./pages/AccountPage";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -21,12 +22,18 @@ export default function App() {
 
           <main style={{ flex: 1 }}>
             <Routes>
-              {/* 1. Trang chủ bây giờ sẽ gọi HomePage */}
-              {/* <Route path="/" element={<HomePage />} /> */}
+              {/* Trang chủ — dùng ProductListPage tạm, sau thay bằng HomePage */}
+              <Route path="/" element={<ProductListPage query={query} />} />
               <Route path="/bo-suu-tap" element={<ProductListPage query={query} />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+
+              {/* Tài khoản */}
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/account/orders" element={<AccountPage />} />
+              <Route path="/account/wishlist" element={<AccountPage />} />
+              <Route path="/account/address" element={<AccountPage />} />
             </Routes>
           </main>
 

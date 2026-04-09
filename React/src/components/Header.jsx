@@ -151,11 +151,11 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
 
                                                 {/* Các mục dropdown */}
                                                 {[
-                                                    { icon: "👤", label: "Tài khoản của tôi", to: "#" },
-                                                    { icon: "📦", label: "Đơn hàng của tôi", to: "#" },
-                                                    { icon: "❤️", label: "Sản phẩm yêu thích", to: "#" },
+                                                    { icon: "👤", label: "Tài khoản của tôi", to: "/account" },
+                                                    { icon: "📦", label: "Đơn hàng của tôi", to: "/account/orders" },
+                                                    { icon: "❤️", label: "Sản phẩm yêu thích", to: "/account/wishlist" },
                                                 ].map((item, i) => (
-                                                    <a key={i} href={item.to} style={{
+                                                    <Link key={i} to={item.to} style={{
                                                         display: "flex", alignItems: "center", gap: 10,
                                                         padding: "10px 16px", textDecoration: "none",
                                                         color: "#333", fontSize: 14,
@@ -166,7 +166,7 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                                                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                                                     >
                                                         <span>{item.icon}</span> {item.label}
-                                                    </a>
+                                                    </Link>
                                                 ))}
 
                                                 {/* Nút đăng xuất */}
