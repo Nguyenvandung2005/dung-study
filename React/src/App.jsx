@@ -10,6 +10,7 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import AccountPage from "./pages/AccountPage";
+import ContactPage from "./pages/ContactPage";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/account/orders" element={<AccountPage />} />
               <Route path="/account/wishlist" element={<AccountPage />} />
               <Route path="/account/address" element={<AccountPage />} />
+              <Route path="/lien-he" element={<ContactPage />} />
             </Routes>
           </main>
 

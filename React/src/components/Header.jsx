@@ -208,7 +208,7 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                                 )}
                             </li>
 
-                            <li><a href="#" className="menu-link">LIÊN HỆ</a></li>
+                            <NavLink to="/lien-he" className="menu-link">LIÊN HỆ</NavLink>
                         </ul>
 
                         {/* --- SEARCH & CART --- */}
