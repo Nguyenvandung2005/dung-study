@@ -28,7 +28,7 @@ export default function Footer() {
             </h5>
 
             <p className="mb-3" style={{ lineHeight: 1.8 }}>
-              Dia chi: So 57, duong Quang Trung, quan Go Vap, TP. HCM
+              Địa chỉ: Số 57, đường Quang Trung, quận Gò Vấp, TP. HCM
             </p>
 
             <p className="mb-3" style={{ lineHeight: 1.8 }}>
@@ -59,16 +59,16 @@ export default function Footer() {
               className="fw-bold text-uppercase mb-4"
               style={{ fontSize: 20, letterSpacing: 0.4 }}
             >
-              Danh muc
+              Danh mục
             </h5>
 
             <ul className="list-unstyled mb-0" style={{ lineHeight: 2 }}>
-              <li><a href="#" className="text-white text-decoration-none">Suc khoe va lam dep</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Cham soc co the</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Cham soc da mat</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Cham soc toc</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Sức khỏe và làm đẹp</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chăm sóc cơ thể</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chăm sóc da mặt</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chăm sóc tóc</a></li>
               <li><a href="#" className="text-white text-decoration-none">Clinic & Spa</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Trang diem</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Trang điểm</a></li>
             </ul>
           </div>
 
@@ -77,15 +77,15 @@ export default function Footer() {
               className="fw-bold text-uppercase mb-4"
               style={{ fontSize: 20, letterSpacing: 0.4 }}
             >
-              Chinh sach ho tro
+              Chính sách hỗ trợ
             </h5>
 
             <ul className="list-unstyled mb-0" style={{ lineHeight: 2 }}>
-              <li><a href="#" className="text-white text-decoration-none">Ho tro dat hang</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Chinh sach tra hang</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Chinh sach bao hanh</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Chinh sach nguoi dung</a></li>
-              <li><a href="#" className="text-white text-decoration-none">Chinh sach mua hang</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Hỗ trợ đặt hàng</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chính sách trả hàng</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chính sách bảo hành</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chính sách người dùng</a></li>
+              <li><a href="#" className="text-white text-decoration-none">Chính sách mua hàng</a></li>
             </ul>
           </div>
 
@@ -94,7 +94,7 @@ export default function Footer() {
               className="fw-bold text-uppercase mb-4"
               style={{ fontSize: 20, letterSpacing: 0.4 }}
             >
-              Theo doi chung toi
+              Theo dõi chúng tôi
             </h5>
 
             <div
@@ -111,7 +111,7 @@ export default function Footer() {
             <div>
               <img
                 src="/IMG/bocongthuong.png"
-                alt="Bo Cong Thuong"
+                alt="Bộ Công Thương"
                 style={{ width: 140, maxWidth: "100%" }}
               />
             </div>
@@ -125,7 +125,7 @@ export default function Footer() {
 
         <div className="text-center">
           <p className="mb-0" style={{ fontSize: 14, lineHeight: 1.7 }}>
-            2023 Copyright PinkyCloud.vn - San pham cham soc da, My pham trang diem, My pham chinh hang
+            2023 Copyright PinkyCloud.vn - Sản phẩm chăm sóc da, Mỹ phẩm trang điểm, Mỹ phẩm chính hãng
           </p>
         </div>
       </div>

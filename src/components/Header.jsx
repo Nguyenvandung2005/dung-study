@@ -14,15 +14,15 @@ export default function Header({ searchValue = "", onSearchChange = () => {} }) 
 
         <div className="header-center-brand">
           <div className="header-brand-tag">
-            MY PHAM CHINH HANG • CHAM SOC DA CAO CAP
+            MỸ PHẨM CHÍNH HÃNG • CHĂM SÓC DA CAO CẤP
           </div>
           <div className="header-brand-subtitle">
-            Nang tam trai nghiem lam dep moi ngay
+            Nâng tầm trải nghiệm làm đẹp mỗi ngày
           </div>
         </div>
 
         <div className="d-flex align-items-center gap-3 header-social-wrap">
-          <span className="social-text">Theo doi chung toi</span>
+          <span className="social-text">Theo dõi chúng tôi</span>
 
           <div className="d-flex gap-2 social-list">
             <a href="#" className="social-link">
@@ -46,27 +46,27 @@ export default function Header({ searchValue = "", onSearchChange = () => {} }) 
           <ul className="nav d-none d-lg-flex gap-4 m-0 header-menu-list">
             <li>
               <NavLink to="/" end className="menu-link">
-                TRANG CHU
+                TRANG CHỦ
               </NavLink>
             </li>
             <li>
               <NavLink to="/about" className="menu-link">
-                VE CHUNG TOI
+                VỀ CHÚNG TÔI
               </NavLink>
             </li>
             <li>
               <NavLink to="/san-pham" className="menu-link">
-                BO SUU TAP
+                BỘ SƯU TẬP
               </NavLink>
             </li>
             <li>
               <NavLink to="/login" className="menu-link">
-                DANG NHAP & DANG KY
+                ĐĂNG NHẬP & ĐĂNG KÝ
               </NavLink>
             </li>
             <li>
               <a href="/#office" className="menu-link">
-                LIEN HE
+                LIÊN HỆ
               </a>
             </li>
           </ul>
@@ -76,7 +76,7 @@ export default function Header({ searchValue = "", onSearchChange = () => {} }) 
               <input
                 type="text"
                 className="search-input"
-                placeholder="Nhap tu khoa ban can tim kiem..."
+                placeholder="Nhập từ khóa bạn cần tìm kiếm..."
                 value={searchValue}
                 onChange={(e) => onSearchChange(e.target.value)}
               />

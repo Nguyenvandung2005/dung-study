@@ -44,9 +44,9 @@ function ProductCard({ product }) {
           type="button"
           className="btn mt-auto"
           style={{ background: "#f76c85", color: "white", marginTop: 12 }}
-          onClick={() => alert(`(Tam) Them vao gio: ${product.name}`)}
+          onClick={() => alert(`(Tạm) Thêm vào giỏ: ${product.name}`)}
         >
-          Them vao gio
+          Thêm vào giỏ
         </button>
       </div>
     </div>
@@ -94,15 +94,15 @@ export default function ProductListPage({ query = "" }) {
     <div className="container-fluid" style={{ marginTop: 24, padding: "0 50px" }}>
       <div className="d-flex align-items-end justify-content-between flex-wrap gap-3">
         <div>
-          <h2 style={{ margin: 0 }}>Danh sach san pham</h2>
+          <h2 style={{ margin: 0 }}>Danh sách sản phẩm</h2>
           <div style={{ opacity: 0.8 }}>
-            Tong: <b>{filtered.length}</b> san pham • Trang <b>{safePage}</b> / <b>{totalPages}</b>
+            Tổng: <b>{filtered.length}</b> sản phẩm • Trang <b>{safePage}</b> / <b>{totalPages}</b>
           </div>
         </div>
 
         <div style={{ minWidth: 220 }}>
           <label style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>
-            Danh muc
+            Danh mục
           </label>
           <select
             className="form-select"
@@ -111,7 +111,7 @@ export default function ProductListPage({ query = "" }) {
           >
             {categories.map((c) => (
               <option key={c} value={c}>
-                {c === "all" ? "Tat ca" : c}
+                {c === "all" ? "Tất cả" : c}
               </option>
             ))}
           </select>
