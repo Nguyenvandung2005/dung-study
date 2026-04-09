@@ -68,4 +68,51 @@ Thời điểm sử dụng serum cũng ảnh hưởng đến hiệu quả. Một
 Việc sử dụng serum đúng cách không chỉ giúp da hấp thụ dưỡng chất tốt hơn mà còn tối ưu hiệu quả chăm sóc da, giúp làn da sáng khỏe và đều màu hơn theo thời gian.
     `,
   },
+  {
+  id: 4,
+  slug: "cach-duong-da-ban-dem-de-phuc-hoi-lan-da",
+  title: "Cách dưỡng da ban đêm để phục hồi làn da hiệu quả",
+  excerpt:
+    "Ban đêm là thời điểm vàng để tái tạo da, hãy tận dụng skincare routine đúng cách.",
+  date: "20/03/2026",
+  category: "Chăm sóc da",
+  author: "PinkyCloud Editorial",
+  readTime: "5 phút đọc",
+  image: "/IMG/news04.png",
+  content: `
+Ban đêm là khoảng thời gian làn da bước vào quá trình phục hồi và tái tạo mạnh mẽ nhất. Vì vậy, việc xây dựng một chu trình dưỡng da ban đêm hợp lý sẽ giúp tối ưu hiệu quả chăm sóc da.
+
+Bước đầu tiên luôn là làm sạch da kỹ lưỡng bằng tẩy trang và sữa rửa mặt. Điều này giúp loại bỏ bụi bẩn, dầu thừa và lớp trang điểm sau một ngày dài. Sau đó, toner sẽ giúp cân bằng lại độ pH và chuẩn bị da cho các bước tiếp theo.
+
+Serum và kem dưỡng là hai bước quan trọng giúp cung cấp dưỡng chất và khóa ẩm cho da. Vào ban đêm, bạn có thể sử dụng các hoạt chất mạnh hơn như retinol hoặc AHA/BHA để cải thiện kết cấu da.
+
+Ngoài ra, ngủ đủ giấc và giữ tinh thần thoải mái cũng góp phần rất lớn trong việc giúp làn da khỏe mạnh và tươi sáng hơn.
+
+Một chu trình chăm sóc da ban đêm đúng cách sẽ giúp bạn thức dậy với làn da mềm mại, căng mịn và đầy sức sống.
+  `,
+},
+
+{
+  id: 5,
+  slug: "top-thanh-phan-duong-da-nen-co-trong-my-pham",
+  title: "Top những thành phần dưỡng da nên có trong mỹ phẩm",
+  excerpt:
+    "Những hoạt chất phổ biến giúp cải thiện làn da mà bạn nên biết khi chọn mỹ phẩm.",
+  date: "15/03/2026",
+  category: "Kiến thức làm đẹp",
+  author: "PinkyCloud Editorial",
+  readTime: "6 phút đọc",
+  image: "/IMG/news05.png",
+  content: `
+Khi lựa chọn mỹ phẩm, việc hiểu rõ các thành phần có trong sản phẩm sẽ giúp bạn đưa ra quyết định đúng đắn và phù hợp với làn da của mình.
+
+Một trong những thành phần phổ biến nhất là Hyaluronic Acid, giúp cấp ẩm sâu và giữ nước cho da. Niacinamide cũng là hoạt chất được ưa chuộng nhờ khả năng làm sáng da, giảm thâm và cải thiện kết cấu da.
+
+Vitamin C là thành phần chống oxy hóa mạnh, giúp da đều màu và tăng độ rạng rỡ. Trong khi đó, Retinol là lựa chọn hàng đầu cho việc chống lão hóa, giảm nếp nhăn và cải thiện độ đàn hồi.
+
+Ceramide đóng vai trò quan trọng trong việc phục hồi hàng rào bảo vệ da, đặc biệt phù hợp với da khô và nhạy cảm.
+
+Hiểu rõ các thành phần này sẽ giúp bạn xây dựng được routine chăm sóc da hiệu quả, an toàn và phù hợp với nhu cầu cá nhân.
+  `,
+}
 ];

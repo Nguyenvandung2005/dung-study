@@ -1,62 +1,18 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import productsData from "../data/products";
-
-function formatVnd(value) {
-  return `${value.toLocaleString("vi-VN")}₫`;
-}
-
-function ProductCard({ product }) {
-  return (
-    <div
-      className="card h-100"
-      style={{ borderRadius: 12, overflow: "hidden" }}
-      title={product.name}
-    >
-      <div
-        style={{
-          background: "#fff",
-          padding: 12,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <img
-          src={product.image}
-          alt={product.name}
-          style={{ width: 160, height: 160, objectFit: "contain" }}
-        />
-      </div>
-
-      <div className="card-body d-flex flex-column">
-        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
-          {product.brand} • {product.category}
-        </div>
-
-        <div className="card-title" style={{ fontWeight: 600, lineHeight: 1.25 }}>
-          {product.name}
-        </div>
-
-        <div style={{ marginTop: 10, fontWeight: 800, color: "#f76c85" }}>
-          {formatVnd(product.price)}
-        </div>
-
-        <button
-          type="button"
-          className="btn mt-auto"
-          style={{ background: "#f76c85", color: "white", marginTop: 12 }}
-          onClick={() => alert(`(Tạm) Thêm vào giỏ: ${product.name}`)}
-        >
-          Thêm vào giỏ
-        </button>
-      </div>
-    </div>
-  );
-}
+import ProductCard from "./ProductCard";
 
 export default function ProductListPage({ query = "" }) {
-  const [category, setCategory] = useState("all");
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+  const [category, setCategory] = useState(categoryFromUrl || "all");
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
+
+  useEffect(() => {
+    setCategory(categoryFromUrl || "all");
+  }, [categoryFromUrl]);
 
   const categories = useMemo(() => {
     const set = new Set(productsData.map((p) => p.category));
@@ -72,7 +28,9 @@ export default function ProductListPage({ query = "" }) {
         p.name.toLowerCase().includes(normalizedQuery) ||
         p.brand.toLowerCase().includes(normalizedQuery);
 
-      const matchCategory = category === "all" || p.category === category;
+      const matchCategory =
+        category === "all" ||
+        p.category.toLowerCase() === category.toLowerCase();
 
       return matchQuery && matchCategory;
     });
@@ -94,6 +52,13 @@ export default function ProductListPage({ query = "" }) {
     <div className="container-fluid" style={{ marginTop: 24, padding: "0 50px" }}>
       <div className="d-flex align-items-end justify-content-between flex-wrap gap-3">
         <div>
+          <nav style={{ marginBottom: 10, fontSize: 14 }}>
+            <Link to="/" style={{ textDecoration: "none", color: "#8b8b8b" }}>
+              Trang chủ
+            </Link>
+            <span style={{ margin: "0 8px", color: "#8b8b8b" }}>/</span>
+            <span style={{ fontWeight: 600 }}>Bộ sưu tập</span>
+          </nav>
           <h2 style={{ margin: 0 }}>Danh sách sản phẩm</h2>
           <div style={{ opacity: 0.8 }}>
             Tổng: <b>{filtered.length}</b> sản phẩm • Trang <b>{safePage}</b> / <b>{totalPages}</b>

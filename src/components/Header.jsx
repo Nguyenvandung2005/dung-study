@@ -1,8 +1,11 @@
 ﻿import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import "../css/Header.css";
+import { useCart } from "./CartContext";
 
 export default function Header({ searchValue = "", onSearchChange = () => {} }) {
+  const { cartCount } = useCart();
+
   return (
     <header className="site-header">
       <div className="container d-flex justify-content-between align-items-center py-3 header-top">
@@ -85,7 +88,17 @@ export default function Header({ searchValue = "", onSearchChange = () => {} }) 
               </button>
             </div>
 
-            <a href="#" className="cart-icon">🛒</a>
+            <Link to="/gio-hang" className="cart-icon position-relative" aria-label="Giỏ hàng">
+              🛒
+              {cartCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                  style={{ background: "#fff", color: "#f76c85", fontSize: 11 }}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       </div>

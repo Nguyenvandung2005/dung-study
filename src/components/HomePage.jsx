@@ -22,12 +22,18 @@ function shuffleArray(array) {
   return newArray;
 }
 
+function parseVietnameseDate(dateString) {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day).getTime();
+}
+
 const bannerImages = [
   "/IMG/banner01.png",
   "/IMG/banner02.png",
   "/IMG/banner03.png",
   "/IMG/banner04.png",
   "/IMG/banner05.png",
+  "/IMG/banner06.png"
 ];
 
 const loopImages = [...bannerImages, bannerImages[0]];
@@ -210,6 +216,12 @@ export default function HomePage() {
     return shuffleArray(products).slice(0, 8);
   }, []);
 
+  const latestNewsItems = useMemo(() => {
+    return [...newsItems]
+      .sort((a, b) => parseVietnameseDate(b.date) - parseVietnameseDate(a.date))
+      .slice(0, 3);
+  }, []);
+
   return (
     <div className="container-fluid homepage-container">
       <HeroBanner
@@ -300,7 +312,7 @@ export default function HomePage() {
         </div>
 
         <div className="row g-4 mt-3">
-          {newsItems.map((news) => (
+          {latestNewsItems.map((news) => (
             <div key={news.id} className="col-12 col-md-6 col-xl-4">
               <div className="card h-100 news-card">
                 <div className="news-card-body">
