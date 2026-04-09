@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import ProductListPage from "./pages/ProductListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -23,7 +24,7 @@ export default function App() {
               {/* 1. Trang chủ bây giờ sẽ gọi HomePage */}
               {/* <Route path="/" element={<HomePage />} /> */}
               <Route path="/bo-suu-tap" element={<ProductListPage query={query} />} />
-
+              <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
             </Routes>
