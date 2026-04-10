@@ -1,11 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/HomePage.css";
-import products from "../data/products";
-import brandUrls from "../data/brandUrls";
-import officeLocations from "../data/officeLocations";
-import { hotVouchers } from "../data/hotVouchers";
-import { newsItems } from "../data/newsItems";
+import productsSource from "../data/products.json";
+import brandUrls from "../data/brandUrls.json";
+import officeLocations from "../data/officeLocations.json";
+import hotVouchers from "../data/hotVouchers.json";
+import newsItems from "../data/newsItems.json";
+
+const products = Array.isArray(productsSource)
+  ? productsSource
+  : productsSource.products ?? [];
 
 function getBrandUrl(brand) {
   return brandUrls[brand] || `https://www.google.com/search?q=${encodeURIComponent(brand)}`;
@@ -335,3 +339,6 @@ export default function HomePage() {
     </div>
   );
 }
+
+
+

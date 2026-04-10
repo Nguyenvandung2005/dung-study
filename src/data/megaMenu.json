@@ -1,0 +1,40 @@
+[
+  {
+    "title": "Chăm Sóc Da Mặt",
+    "image": "/IMG/skin-care.png",
+    "items": [
+      { "name": "Sữa Rửa Mặt", "link": "/san-pham?category=R%E1%BB%ADa%20m%E1%BA%B7t" },
+      { "name": "Nước Tẩy Trang", "link": "/san-pham?category=T%E1%BA%A9y%20trang" },
+      { "name": "Serum / Tinh Chất", "link": "/san-pham?category=Serum" },
+      { "name": "Mặt Nạ Dưỡng Da", "link": "/san-pham?category=M%E1%BA%B7t%20n%E1%BA%A1" },
+      { "name": "Xịt Khoáng", "link": "/san-pham?category=X%E1%BB%8Bt%20kho%C3%A1ng" }
+    ]
+  },
+  {
+    "title": "Bảo Vệ Da",
+    "image": "/IMG/personal-care.png",
+    "items": [
+      { "name": "Kem Chống Nắng", "link": "/san-pham?category=Ch%E1%BB%91ng%20n%E1%BA%AFng", "isSale": true },
+      { "name": "Sữa Chống Nắng", "link": "/san-pham?category=Ch%E1%BB%91ng%20n%E1%BA%AFng" },
+      { "name": "Phục Hồi Sau Đi Nắng", "link": "/san-pham?category=D%C6%B0%E1%BB%A1ng%20%E1%BA%A9m" }
+    ]
+  },
+  {
+    "title": "Trang Điểm",
+    "image": "/IMG/makeup.png",
+    "items": [
+      { "name": "Son Môi", "link": "/san-pham?category=D%C6%B0%E1%BB%A1ng%20m%C3%B4i" },
+      { "name": "Kẻ Mắt", "link": "/san-pham?category=Trang%20%C4%91i%E1%BB%83m" },
+      { "name": "Phấn Phủ & Highlight", "link": "/san-pham?category=Trang%20%C4%91i%E1%BB%83m" }
+    ]
+  },
+  {
+    "title": "Chăm Sóc Tóc & Khác",
+    "image": "/IMG/hair-care.png",
+    "items": [
+      { "name": "Dầu Gội & Dầu Xả", "link": "/san-pham?category=Ch%C4%83m%20s%C3%B3c%20t%C3%B3c" },
+      { "name": "Sữa / Gel Tắm", "link": "/san-pham?category=Ch%C4%83m%20s%C3%B3c%20c%C6%A1%20th%E1%BB%83" },
+      { "name": "Chăm Sóc Răng Miệng", "link": "/san-pham?category=all" }
+    ]
+  }
+]

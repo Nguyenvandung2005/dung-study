@@ -1,6 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { newsItems } from "../data/newsItems";
+import newsItems from "../data/newsItems.json";
 import "../css/NewsDetailPage.css";
 
 const fallbackImages = [
@@ -133,3 +133,4 @@ export default function NewsDetailPage() {
     </section>
   );
 }
+
