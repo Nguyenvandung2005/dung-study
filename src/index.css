@@ -163,3 +163,95 @@ button:not(.btn) {
     height: 60px;
   }
 }
+
+/* Hiệu ứng nổi lên cho thẻ sản phẩm */
+.product-card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #eaeaea;
+}
+
+.product-card-hover:hover {
+  transform: translateY(-8px);
+  /* Trượt lên trên 8px */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12) !important;
+  /* Đổ bóng to hơn */
+  border-color: #f76c85;
+  /* Tuỳ chọn: đổi màu viền sang hồng khi di chuột */
+}
+
+/* Rút gọn tên sản phẩm nếu quá dài thành dấu ... */
+.product-name-clamp {
+  display: -webkit-box;
+  /* -webkit-line-clamp: 2; */
+  /* Chỉ hiển thị tối đa 2 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Container bar màu hồng */
+.main-menu-bar {
+  position: relative;
+  /* Cực kỳ quan trọng để Menu con căn theo thanh này */
+  background: #ff6b81;
+  border-radius: 30px;
+}
+
+/* Thẻ li chứa Bộ sưu tập */
+.nav-item-has-mega {
+  position: static;
+  /* Để mega menu bung full chiều ngang của .main-menu-bar */
+}
+
+/* Khung Mega Menu */
+.mega-menu-container {
+  position: absolute;
+  top: 100%;
+  /* Hiện ngay dưới thanh bar */
+  left: 0;
+  width: 100%;
+  background: white;
+  z-index: 9999;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 20px 20px;
+  border: 1px solid #f0f0f0;
+  animation: slideIn 0.2s ease-out;
+}
+
+/* Link nhỏ trong Mega Menu */
+.mega-item-link {
+  text-decoration: none;
+  color: #555;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.mega-item-link:hover {
+  color: #ff6b81 !important;
+  transform: translateX(5px);
+}
+
+/* Nhãn SALE */
+.badge-sale {
+  background: #fff0f3;
+  color: #ff6b81;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+/* Badge giỏ hàng */
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -12px;
+  background: white;
+  color: #ff6b81;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
