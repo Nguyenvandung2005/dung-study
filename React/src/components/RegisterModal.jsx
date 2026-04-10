@@ -1,365 +1,326 @@
 import React, { useState } from "react";
+import { registerUser, isContactTaken } from "../utils/userStorage";
+
+function generateCaptcha() {
+  const chars = "abcdefghjkmnpqrstuvwxyz23456789";
+  return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
 
 export default function RegisterModal({ show, onClose, onSwitchToLogin }) {
   const [gender, setGender] = useState("nu");
-  const [agreed, setAgreed] = useState(true);
-  const [newsletter, setNewsletter] = useState(true);
-  const [privacy, setPrivacy] = useState(true);
+  const [agreed, setAgreed] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
   const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaCode, setCaptchaCode] = useState(generateCaptcha);
   const [otp, setOtp] = useState("");
-  const [phone, setPhone] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [day, setDay] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
+  const [errors, setErrors] = useState({});
+  const [simulatedOtp, setSimulatedOtp] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   if (!show) return null;
 
-  const captchaCode = "k1kb";
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 80 }, (_, i) => currentYear - i);
 
-  const inputStyle = {
-    width: "100%",
-    padding: "10px 14px",
-    border: "1px solid #e0e0e0",
-    borderRadius: "4px",
-    fontSize: "14px",
-    outline: "none",
-    backgroundColor: "#fff",
-    color: "#333",
-    boxSizing: "border-box",
+  function validate() {
+    const errs = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+
+    if (!contact.trim()) {
+      errs.contact = "Vui lòng nhập email hoặc số điện thoại.";
+    } else if (!emailRegex.test(contact) && !phoneRegex.test(contact)) {
+      errs.contact = "Email hoặc số điện thoại không hợp lệ.";
+    } else if (isContactTaken(contact)) {
+      errs.contact = "Email hoặc số điện thoại này đã được đăng ký.";
+    }
+
+    if (!captchaInput.trim()) {
+      errs.captcha = "Vui lòng nhập mã captcha.";
+    } else if (captchaInput.toLowerCase() !== captchaCode.toLowerCase()) {
+      errs.captcha = "Mã captcha không đúng.";
+    }
+
+    if (!otp.trim()) {
+      errs.otp = "Vui lòng nhập mã OTP.";
+    } else if (!/^\d{6}$/.test(otp)) {
+      errs.otp = "Mã OTP phải gồm đúng 6 chữ số.";
+    } else if (otp !== simulatedOtp) {
+      errs.otp = "Mã OTP không đúng. Vui lòng kiểm tra lại.";
+    }
+
+    if (!password) {
+      errs.password = "Vui lòng nhập mật khẩu.";
+    } else if (password.length < 6 || password.length > 32) {
+      errs.password = "Mật khẩu phải từ 6 đến 32 ký tự.";
+    }
+
+    if (!confirmPassword) {
+      errs.confirmPassword = "Vui lòng xác nhận mật khẩu.";
+    } else if (confirmPassword !== password) {
+      errs.confirmPassword = "Mật khẩu xác nhận không khớp.";
+    }
+
+    if (!name.trim()) {
+      errs.name = "Vui lòng nhập họ tên.";
+    } else if (name.trim().length < 2) {
+      errs.name = "Họ tên phải có ít nhất 2 ký tự.";
+    }
+
+    if (!day || !month || !year) {
+      errs.dob = "Vui lòng chọn đầy đủ ngày sinh.";
+    } else if (currentYear - parseInt(year) < 13) {
+      errs.dob = "Bạn phải từ 13 tuổi trở lên để đăng ký.";
+    }
+
+    if (!agreed) errs.agreed = "Bạn cần đồng ý với điều khoản để tiếp tục.";
+    if (!privacy) errs.privacy = "Bạn cần đồng ý với chính sách xử lý dữ liệu.";
+
+    return errs;
+  }
+
+  function handleSendOtp() {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+    if (!contact.trim() || (!emailRegex.test(contact) && !phoneRegex.test(contact))) {
+      setErrors(e => ({ ...e, contact: "Vui lòng nhập email hoặc SĐT hợp lệ trước khi lấy mã." }));
+      return;
+    }
+    if (!captchaInput || captchaInput.toLowerCase() !== captchaCode.toLowerCase()) {
+      setErrors(e => ({ ...e, captcha: "Vui lòng nhập đúng captcha trước khi lấy mã OTP." }));
+      return;
+    }
+    if (isContactTaken(contact)) {
+      setErrors(e => ({ ...e, contact: "Email hoặc SĐT này đã được đăng ký. Vui lòng đăng nhập." }));
+      return;
+    }
+    setErrors(e => ({ ...e, contact: undefined, captcha: undefined, otp: undefined }));
+    const fakeOtp = String(Math.floor(100000 + Math.random() * 900000));
+    setSimulatedOtp(fakeOtp);
+    setOtpSent(true);
+    setOtpCountdown(60);
+    const timer = setInterval(() => {
+      setOtpCountdown(c => { if (c <= 1) { clearInterval(timer); return 0; } return c - 1; });
+    }, 1000);
+  }
+
+  function handleSubmit() {
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    // ✅ Lưu vào localStorage
+    const result = registerUser({
+      contact, password, name, gender,
+      dob: `${day}/${month}/${year}`,
+    });
+    if (!result.success) {
+      setErrors(e => ({ ...e, contact: result.error }));
+      return;
+    }
+    setRegisterSuccess(true);
+  }
+
+  function refreshCaptcha() {
+    setCaptchaCode(generateCaptcha());
+    setCaptchaInput("");
+    setErrors(e => ({ ...e, captcha: undefined }));
+  }
+
+  const inputBase = {
+    width: "100%", padding: "10px 14px",
+    border: "1px solid #e0e0e0", borderRadius: "6px",
+    fontSize: "14px", outline: "none",
+    backgroundColor: "#fff", color: "#333",
+    boxSizing: "border-box", transition: "border-color 0.2s",
   };
+  const inputErr = { ...inputBase, border: "1px solid #e53935", background: "#fff5f5" };
+  const errText = { fontSize: "12px", color: "#e53935", marginTop: "3px" };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.55)",
-        zIndex: 1050,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: "10px",
-          width: "100%",
-          maxWidth: "440px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          padding: "28px 32px 24px",
-          position: "relative",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-        }}
-      >
-        {/* Nút đóng */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "14px",
-            right: "16px",
-            background: "none",
-            border: "none",
-            fontSize: "22px",
-            cursor: "pointer",
-            color: "#888",
-            lineHeight: 1,
-          }}
-        >
-          ×
-        </button>
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.55)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#fff", borderRadius: "12px", width: "100%", maxWidth: "460px", maxHeight: "92vh", overflowY: "auto", padding: "28px 32px 24px", position: "relative", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: "14px", right: "16px", background: "none", border: "none", fontSize: "22px", cursor: "pointer", color: "#888" }}>×</button>
 
-        <h5
-          style={{
-            textAlign: "center",
-            fontWeight: 700,
-            fontSize: "18px",
-            marginBottom: "20px",
-            color: "#222",
-          }}
-        >
-          Đăng ký tài khoản
-        </h5>
-
-        {/* Email / SĐT */}
-        <div style={{ marginBottom: "12px", position: "relative" }}>
-          <input
-            type="text"
-            placeholder="Nhập email hoặc số điện thoại"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            style={{ ...inputStyle, paddingRight: "36px" }}
-          />
-          <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: "16px" }}>✉</span>
-        </div>
-
-        {/* Captcha */}
-        <div style={{ marginBottom: "12px", display: "flex", gap: "8px", alignItems: "stretch" }}>
-          <input
-            type="text"
-            placeholder="Nhập captcha"
-            value={captchaInput}
-            onChange={(e) => setCaptchaInput(e.target.value)}
-            style={{ ...inputStyle, flex: 1, width: "auto" }}
-          />
-          <div
-            style={{
-              background: "#2d6a4f",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "17px",
-              padding: "10px 16px",
-              borderRadius: "4px",
-              letterSpacing: "4px",
-              fontFamily: "monospace",
-              userSelect: "none",
-              whiteSpace: "nowrap",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {captchaCode}
+        {/* ══ THÀNH CÔNG ══ */}
+        {registerSuccess ? (
+          <div style={{ textAlign: "center", padding: "32px 16px" }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#fff0f3", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 36 }}>🎉</div>
+            <h5 style={{ fontWeight: 800, color: "#ff6b81", marginBottom: 8 }}>Đăng ký thành công!</h5>
+            <p style={{ fontSize: 14, color: "#555", lineHeight: 1.7, marginBottom: 8 }}>
+              Xin chào <b>{name}</b>! Tài khoản của bạn đã được tạo.
+            </p>
+            <div style={{ background: "#fff8e1", border: "1px dashed #ffc107", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#795548", marginBottom: 20, textAlign: "left" }}>
+              📧 Tài khoản: <b>{contact}</b>
+            </div>
+            <button onClick={() => { setRegisterSuccess(false); onSwitchToLogin(); }}
+              style={{ width: "100%", padding: "13px", background: "#ff6b81", color: "#fff", border: "none", borderRadius: "25px", fontSize: "15px", fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
+              Đăng nhập ngay →
+            </button>
+            <button onClick={onClose}
+              style={{ width: "100%", padding: "11px", background: "#f5f5f5", color: "#555", border: "none", borderRadius: "25px", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
+              Về trang chủ
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <h5 style={{ fontWeight: 700, fontSize: "17px", color: "#222" }}>Đăng ký tài khoản</h5>
+            </div>
 
-        {/* OTP */}
-        <div style={{ marginBottom: "4px", display: "flex", gap: "8px", alignItems: "stretch" }}>
-          <input
-            type="text"
-            placeholder="Nhập mã xác thực 6 số"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            style={{ ...inputStyle, flex: 1, width: "auto" }}
-          />
-          <button
-            style={{
-              background: "#326e51",
-              color: "#fff",
-              border: "none",
-              borderRadius: "4px",
-              padding: "10px 14px",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            lấy mã
-          </button>
-        </div>
-        <div style={{ marginBottom: "12px" }}>
-          <a href="#" style={{ fontSize: "13px", color: "#1a73e8", textDecoration: "none" }}>
-            Xem hướng dẫn nhận OTP
-          </a>
-        </div>
+            {/* Email / SĐT */}
+            <div style={{ marginBottom: "12px" }}>
+              <input type="text" placeholder="Nhập email hoặc số điện thoại *" value={contact}
+                onChange={e => { setContact(e.target.value); setErrors(er => ({ ...er, contact: undefined })); }}
+                style={errors.contact ? inputErr : inputBase} />
+              {errors.contact && <div style={errText}>⚠ {errors.contact}</div>}
+            </div>
 
-        {/* Mật khẩu */}
-        <div style={{ marginBottom: "12px", position: "relative" }}>
-          <input
-            type="password"
-            placeholder="Nhập mật khẩu từ 6 - 32 ký tự"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ ...inputStyle, paddingRight: "36px" }}
-          />
-          <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: "15px" }}>🔒</span>
-        </div>
+            {/* Captcha */}
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
+                <input type="text" placeholder="Nhập mã captcha *" value={captchaInput}
+                  onChange={e => { setCaptchaInput(e.target.value); setErrors(er => ({ ...er, captcha: undefined })); }}
+                  style={{ ...(errors.captcha ? inputErr : inputBase), flex: 1, width: "auto" }} />
+                <div style={{ background: "#1b4332", color: "#fff", fontWeight: 700, fontSize: "17px", padding: "10px 14px", borderRadius: "6px", letterSpacing: "5px", fontFamily: "monospace", userSelect: "none", display: "flex", alignItems: "center" }}>
+                  {captchaCode}
+                </div>
+                <button onClick={refreshCaptcha} title="Làm mới" style={{ background: "#f5f5f5", border: "1px solid #ddd", borderRadius: "6px", padding: "0 12px", cursor: "pointer", fontSize: "18px" }}>↻</button>
+              </div>
+              {errors.captcha && <div style={errText}>⚠ {errors.captcha}</div>}
+            </div>
 
-        {/* Họ tên */}
-        <div style={{ marginBottom: "12px", position: "relative" }}>
-          <input
-            type="text"
-            placeholder="Họ tên"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{ ...inputStyle, paddingRight: "36px" }}
-          />
-          <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: "15px" }}>👤</span>
-        </div>
+            {/* OTP */}
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input type="text" placeholder="Nhập mã OTP 6 số *" value={otp}
+                  onChange={e => { setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setErrors(er => ({ ...er, otp: undefined })); }}
+                  maxLength={6} style={{ ...(errors.otp ? inputErr : inputBase), flex: 1, width: "auto" }} />
+                <button onClick={handleSendOtp} disabled={otpCountdown > 0}
+                  style={{ background: otpCountdown > 0 ? "#ccc" : "#ff6b81", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 12px", fontSize: "13px", fontWeight: 600, cursor: otpCountdown > 0 ? "not-allowed" : "pointer", whiteSpace: "nowrap", minWidth: "90px" }}>
+                  {otpCountdown > 0 ? `Gửi lại (${otpCountdown}s)` : "Lấy mã OTP"}
+                </button>
+              </div>
+              {errors.otp && <div style={errText}>⚠ {errors.otp}</div>}
+              {otpSent && simulatedOtp && (
+                <div style={{ marginTop: "6px", padding: "10px 14px", background: "#fff0f3", border: "1px dashed #ff6b81", borderRadius: "6px", fontSize: "13px", color: "#c2185b" }}>
+                  ✓ Mã OTP gửi đến <b>{contact}</b>:
+                  <div style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "8px", marginTop: "4px", fontFamily: "monospace" }}>{simulatedOtp}</div>
+                  <div style={{ fontSize: "11px", color: "#888" }}>(Demo — thực tế gửi qua email/SMS)</div>
+                </div>
+              )}
+            </div>
 
-        {/* Giới tính */}
-        <div style={{ marginBottom: "12px", display: "flex", gap: "20px", alignItems: "center" }}>
-          {[
-            { value: "khong_xac_dinh", label: "Không xác định" },
-            { value: "nam", label: "Nam" },
-            { value: "nu", label: "Nữ" },
-          ].map((g) => (
-            <label key={g.value} style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontSize: "14px", color: "#333" }}>
-              <input
-                type="radio"
-                name="gender"
-                value={g.value}
-                checked={gender === g.value}
-                onChange={() => setGender(g.value)}
-                style={{ accentColor: "#326e51" }}
-              />
-              {g.label}
-            </label>
-          ))}
-        </div>
+            {/* Mật khẩu */}
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{ position: "relative" }}>
+                <input type={showPassword ? "text" : "password"} placeholder="Nhập mật khẩu từ 6 - 32 ký tự *"
+                  value={password} onChange={e => { setPassword(e.target.value); setErrors(er => ({ ...er, password: undefined })); }}
+                  style={{ ...(errors.password ? inputErr : inputBase), paddingRight: "40px" }} />
+                <button onClick={() => setShowPassword(s => !s)}
+                  style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px" }}>
+                  {showPassword ? "🙈" : "👁"}
+                </button>
+              </div>
+              {errors.password && <div style={errText}>⚠ {errors.password}</div>}
+            </div>
 
-        {/* Ngày sinh */}
-        <div style={{ marginBottom: "16px", display: "flex", gap: "8px" }}>
-          {[
-            { label: "Ngày", value: day, setter: setDay, options: days },
-            { label: "Tháng", value: month, setter: setMonth, options: months },
-            { label: "Năm", value: year, setter: setYear, options: years },
-          ].map((item) => (
-            <select
-              key={item.label}
-              value={item.value}
-              onChange={(e) => item.setter(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "10px 8px",
-                border: "1px solid #e0e0e0",
-                borderRadius: "4px",
-                fontSize: "14px",
-                color: item.value ? "#333" : "#999",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              <option value="">{item.label}</option>
-              {item.options.map((o) => (
-                <option key={o} value={o}>{o}</option>
+            {/* Xác nhận mật khẩu */}
+            <div style={{ marginBottom: "12px" }}>
+              <input type="password" placeholder="Xác nhận mật khẩu *" value={confirmPassword}
+                onChange={e => { setConfirmPassword(e.target.value); setErrors(er => ({ ...er, confirmPassword: undefined })); }}
+                style={errors.confirmPassword ? inputErr : inputBase} />
+              {errors.confirmPassword && <div style={errText}>⚠ {errors.confirmPassword}</div>}
+            </div>
+
+            {/* Họ tên */}
+            <div style={{ marginBottom: "12px" }}>
+              <input type="text" placeholder="Họ và tên *" value={name}
+                onChange={e => { setName(e.target.value); setErrors(er => ({ ...er, name: undefined })); }}
+                style={errors.name ? inputErr : inputBase} />
+              {errors.name && <div style={errText}>⚠ {errors.name}</div>}
+            </div>
+
+            {/* Giới tính */}
+            <div style={{ marginBottom: "12px", display: "flex", gap: "20px" }}>
+              {[{ value: "khong_xac_dinh", label: "Không xác định" }, { value: "nam", label: "Nam" }, { value: "nu", label: "Nữ" }].map(g => (
+                <label key={g.value} style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontSize: "14px" }}>
+                  <input type="radio" name="gender" value={g.value} checked={gender === g.value} onChange={() => setGender(g.value)} style={{ accentColor: "#ff6b81" }} />
+                  {g.label}
+                </label>
               ))}
-            </select>
-          ))}
-        </div>
+            </div>
 
-        {/* Checkboxes */}
-        <div style={{ marginBottom: "16px" }}>
-          {[
-            {
-              state: agreed, setter: setAgreed,
-              label: (
-                <span style={{ fontSize: "13px", color: "#333" }}>
-                  Tôi đã đọc và đồng ý với{" "}
-                  <a href="#" style={{ color: "#1a73e8" }}>Điều kiện giao dịch chung</a> và{" "}
-                  <a href="#" style={{ color: "#1a73e8" }}>Chính sách bảo mật thông tin</a> của Hasaki
+            {/* Ngày sinh */}
+            <div style={{ marginBottom: "4px", display: "flex", gap: "8px" }}>
+              {[
+                { label: "Ngày", value: day, setter: setDay, options: days },
+                { label: "Tháng", value: month, setter: setMonth, options: months },
+                { label: "Năm", value: year, setter: setYear, options: years },
+              ].map(item => (
+                <select key={item.label} value={item.value}
+                  onChange={e => { item.setter(e.target.value); setErrors(er => ({ ...er, dob: undefined })); }}
+                  style={{ flex: 1, padding: "10px 8px", border: `1px solid ${errors.dob ? "#e53935" : "#e0e0e0"}`, borderRadius: "6px", fontSize: "14px", color: item.value ? "#333" : "#999", background: "#fff", cursor: "pointer" }}>
+                  <option value="">{item.label}</option>
+                  {item.options.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ))}
+            </div>
+            {errors.dob && <div style={{ ...errText, marginBottom: "8px" }}>⚠ {errors.dob}</div>}
+            <div style={{ marginBottom: "12px" }} />
+
+            <div style={{ borderTop: "1px solid #f0f0f0", marginBottom: "14px" }} />
+
+            {/* Checkboxes */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "8px", cursor: "pointer" }}>
+                <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); setErrors(er => ({ ...er, agreed: undefined })); }}
+                  style={{ marginTop: "2px", accentColor: "#ff6b81", flexShrink: 0 }} />
+                <span style={{ fontSize: "13px", color: "#333", lineHeight: "1.5" }}>
+                  Tôi đã đọc và đồng ý với <a href="#" style={{ color: "#ff6b81", fontWeight: 600 }}>Điều kiện giao dịch chung</a> và <a href="#" style={{ color: "#ff6b81", fontWeight: 600 }}>Chính sách bảo mật</a>
                 </span>
-              )
-            },
-            {
-              state: newsletter, setter: setNewsletter,
-              label: <span style={{ fontSize: "13px", color: "#333" }}>Nhận thông tin khuyến mãi qua e-mail</span>
-            },
-            {
-              state: privacy, setter: setPrivacy,
-              label: (
+              </label>
+              {errors.agreed && <div style={{ ...errText, marginLeft: "24px", marginBottom: "6px" }}>⚠ {errors.agreed}</div>}
+
+              <label style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "8px", cursor: "pointer" }}>
+                <input type="checkbox" checked={newsletter} onChange={e => setNewsletter(e.target.checked)} style={{ marginTop: "2px", accentColor: "#ff6b81", flexShrink: 0 }} />
+                <span style={{ fontSize: "13px", color: "#333" }}>Nhận thông tin khuyến mãi qua e-mail</span>
+              </label>
+
+              <label style={{ display: "flex", gap: "8px", alignItems: "flex-start", cursor: "pointer" }}>
+                <input type="checkbox" checked={privacy} onChange={e => { setPrivacy(e.target.checked); setErrors(er => ({ ...er, privacy: undefined })); }}
+                  style={{ marginTop: "2px", accentColor: "#ff6b81", flexShrink: 0 }} />
                 <span style={{ fontSize: "13px", color: "#333" }}>
-                  Tôi đồng ý với{" "}
-                  <a href="#" style={{ color: "#1a73e8" }}>chính sách xử lý dữ liệu cá nhân</a> của Hasaki
+                  Tôi đồng ý với <a href="#" style={{ color: "#ff6b81", fontWeight: 600 }}>chính sách xử lý dữ liệu cá nhân</a>
                 </span>
-              )
-            },
-          ].map((item, i) => (
-            <label key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "8px", cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={item.state}
-                onChange={(e) => item.setter(e.target.checked)}
-                style={{ marginTop: "2px", accentColor: "#326e51", flexShrink: 0 }}
-              />
-              {item.label}
-            </label>
-          ))}
-        </div>
+              </label>
+              {errors.privacy && <div style={{ ...errText, marginLeft: "24px", marginTop: "4px" }}>⚠ {errors.privacy}</div>}
+            </div>
 
-        {/* Nút đăng ký */}
-        <button
-          style={{
-            width: "100%",
-            padding: "13px",
-            background: "#326e51",
-            color: "#fff",
-            border: "none",
-            borderRadius: "25px",
-            fontSize: "15px",
-            fontWeight: 700,
-            cursor: "pointer",
-            marginBottom: "14px",
-            letterSpacing: "0.5px",
-          }}
-        >
-          Đăng ký
-        </button>
+            <button onClick={handleSubmit}
+              style={{ width: "100%", padding: "13px", background: "#ff6b81", color: "#fff", border: "none", borderRadius: "25px", fontSize: "15px", fontWeight: 700, cursor: "pointer", marginBottom: "14px" }}>
+              Đăng ký
+            </button>
 
-        {/* Link đăng nhập */}
-        <p style={{ textAlign: "center", fontSize: "14px", margin: "0 0 10px", color: "#333" }}>
-          Bạn đã có tài khoản?{" "}
-          <span
-            onClick={onSwitchToLogin}
-            style={{ color: "#326e51", fontWeight: 700, cursor: "pointer" }}
-          >
-            ĐĂNG NHẬP
-          </span>
-        </p>
-
-        <p style={{ textAlign: "center", fontSize: "13px", color: "#666", marginBottom: "10px" }}>
-          Hoặc đăng nhập với:
-        </p>
-
-        {/* Facebook */}
-        <button
-          style={{
-            width: "100%",
-            padding: "11px",
-            background: "#1877f2",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            marginBottom: "10px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-            <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
-          </svg>
-          Facebook
-        </button>
-
-        {/* Google */}
-        <button
-          style={{
-            width: "100%",
-            padding: "11px",
-            background: "#fff",
-            color: "#333",
-            border: "1px solid #ddd",
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-          </svg>
-          Đăng nhập bằng Google
-        </button>
+            <p style={{ textAlign: "center", fontSize: "14px", margin: "0 0 10px", color: "#333" }}>
+              Bạn đã có tài khoản?{" "}
+              <span onClick={onSwitchToLogin} style={{ color: "#ff6b81", fontWeight: 700, cursor: "pointer" }}>ĐĂNG NHẬP</span>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
