@@ -11,6 +11,7 @@ import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import AccountPage from "./pages/AccountPage";
 import ContactPage from "./pages/ContactPage";
+import PolicyPage from "./pages/PolicyPage";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -36,6 +37,8 @@ export default function App() {
               <Route path="/account/wishlist" element={<AccountPage />} />
               <Route path="/account/address" element={<AccountPage />} />
               <Route path="/lien-he" element={<ContactPage />} />
+              <Route path="/chinh-sach" element={<PolicyPage />} />
+              <Route path="/chinh-sach/:slug" element={<PolicyPage />} />
             </Routes>
           </main>
 

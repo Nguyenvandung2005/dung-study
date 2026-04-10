@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { registerUser, isContactTaken } from "../utils/userStorage";
 
 function generateCaptcha() {
@@ -290,21 +291,32 @@ export default function RegisterModal({ show, onClose, onSwitchToLogin }) {
                 <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); setErrors(er => ({ ...er, agreed: undefined })); }}
                   style={{ marginTop: "2px", accentColor: "#ff6b81", flexShrink: 0 }} />
                 <span style={{ fontSize: "13px", color: "#333", lineHeight: "1.5" }}>
-                  Tôi đã đọc và đồng ý với <a href="#" style={{ color: "#ff6b81", fontWeight: 600 }}>Điều kiện giao dịch chung</a> và <a href="#" style={{ color: "#ff6b81", fontWeight: 600 }}>Chính sách bảo mật</a>
+                  Tôi đã đọc và đồng ý với{" "}
+                  <Link to="/chinh-sach/dieu-kien-giao-dich-chung" target="_blank"
+                    style={{ color: "#ff6b81", fontWeight: 600 }}>Điều kiện giao dịch chung</Link>
+                  {" "}và{" "}
+                  <Link to="/chinh-sach/chinh-sach-bao-mat" target="_blank"
+                    style={{ color: "#ff6b81", fontWeight: 600 }}>Chính sách bảo mật</Link>
                 </span>
               </label>
               {errors.agreed && <div style={{ ...errText, marginLeft: "24px", marginBottom: "6px" }}>⚠ {errors.agreed}</div>}
 
               <label style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "8px", cursor: "pointer" }}>
                 <input type="checkbox" checked={newsletter} onChange={e => setNewsletter(e.target.checked)} style={{ marginTop: "2px", accentColor: "#ff6b81", flexShrink: 0 }} />
-                <span style={{ fontSize: "13px", color: "#333" }}>Nhận thông tin khuyến mãi qua e-mail</span>
+                <span style={{ fontSize: "13px", color: "#333" }}>
+                  Nhận thông tin khuyến mãi qua e-mail —{" "}
+                  <Link to="/chinh-sach/chinh-sach-khuyen-mai" target="_blank"
+                    style={{ color: "#ff6b81", fontWeight: 600 }}>Xem chính sách</Link>
+                </span>
               </label>
 
               <label style={{ display: "flex", gap: "8px", alignItems: "flex-start", cursor: "pointer" }}>
                 <input type="checkbox" checked={privacy} onChange={e => { setPrivacy(e.target.checked); setErrors(er => ({ ...er, privacy: undefined })); }}
                   style={{ marginTop: "2px", accentColor: "#ff6b81", flexShrink: 0 }} />
                 <span style={{ fontSize: "13px", color: "#333" }}>
-                  Tôi đồng ý với <a href="#" style={{ color: "#ff6b81", fontWeight: 600 }}>chính sách xử lý dữ liệu cá nhân</a>
+                  Tôi đồng ý với{" "}
+                  <Link to="/chinh-sach/chinh-sach-du-lieu-ca-nhan" target="_blank"
+                    style={{ color: "#ff6b81", fontWeight: 600 }}>chính sách xử lý dữ liệu cá nhân</Link>
                 </span>
               </label>
               {errors.privacy && <div style={{ ...errText, marginLeft: "24px", marginTop: "4px" }}>⚠ {errors.privacy}</div>}
