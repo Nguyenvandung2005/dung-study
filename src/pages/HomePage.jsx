@@ -50,7 +50,6 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [showVouchers, setShowVouchers] = useState(false);
 
-
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => {
@@ -181,7 +180,10 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
           </p>
 
           <div className="d-flex flex-wrap gap-3 mb-4">
-            <a href="#featured" className="btn btn-light btn-lg hero-primary-btn">
+            <a
+              href="#featured-multi-brands"
+              className="btn btn-light btn-lg hero-primary-btn"
+            >
               Khám phá sản phẩm
             </a>
             <a
@@ -216,9 +218,14 @@ export default function HomePage() {
       document.head.appendChild(link);
     }
   }, []);
+
   const featuredProductsFromMultipleBrands = useMemo(() => {
     return shuffleArray(products).slice(0, 8);
   }, []);
+
+  const featuredShowcaseProducts = useMemo(() => {
+    return featuredProductsFromMultipleBrands.slice(0, 4);
+  }, [featuredProductsFromMultipleBrands]);
 
   const latestNewsItems = useMemo(() => {
     return [...newsItems]
@@ -244,36 +251,28 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="row g-4 mt-3">
-          {featuredProductsFromMultipleBrands.map((product) => (
-            <div key={product.id} className="col-12 col-md-6 col-xl-3">
-              <a
-                href={getBrandUrl(product.brand)}
-                target="_blank"
-                rel="noreferrer"
-                className="card h-100 product-card"
-              >
-                <div className="card-body d-flex flex-column">
-                  <div className="mb-3 product-image-box">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="product-image"
-                    />
-                  </div>
+        <div className="featured-showcase-grid mt-3">
+          {featuredShowcaseProducts.map((product, index) => (
+            <a
+              key={product.id}
+              href={getBrandUrl(product.brand)}
+              target="_blank"
+              rel="noreferrer"
+              className={`featured-showcase-card featured-showcase-card-${index + 1}`}
+            >
+              <div className="featured-showcase-image-wrap">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="featured-showcase-image"
+                />
+              </div>
 
-                  <div className="product-meta">
-                    {product.brand} • {product.category}
-                  </div>
-
-                  <h3 className="card-title product-title">{product.name}</h3>
-
-                  <div className="product-price">
-                    {product.price.toLocaleString("vi-VN")}₫
-                  </div>
-                </div>
-              </a>
-            </div>
+              <div className="featured-showcase-content">
+                <div className="featured-showcase-brand">{product.brand}</div>
+                <h3 className="featured-showcase-title">{product.name}</h3>
+              </div>
+            </a>
           ))}
         </div>
       </section>
@@ -339,6 +338,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-
-

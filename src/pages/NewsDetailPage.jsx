@@ -12,6 +12,7 @@ const fallbackImages = [
   "/IMG/anh36.png",
 ];
 
+// Tách nội dung bài viết thành các đoạn theo dòng để render dễ đọc.
 function splitContentToParagraphs(content = "") {
   return content
     .trim()
@@ -20,6 +21,7 @@ function splitContentToParagraphs(content = "") {
     .filter(Boolean);
 }
 
+// Ưu tiên ảnh từ dữ liệu bài viết; nếu thiếu thì dùng ảnh fallback theo id.
 function getNewsImage(item) {
   if (item?.image) return item.image;
   return fallbackImages[item.id % fallbackImages.length];
@@ -29,8 +31,10 @@ export default function NewsDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
+  // Tìm bài viết theo slug trên URL.
   const selectedNews = newsItems.find((item) => item.slug === slug);
 
+  // Nhánh xử lý khi URL không khớp bài viết nào.
   if (!selectedNews) {
     return (
       <section className="container news-detail-page py-5">
@@ -51,6 +55,7 @@ export default function NewsDetailPage() {
     );
   }
 
+  // Chuẩn bị dữ liệu hiển thị cho bài hiện tại và danh sách liên quan.
   const paragraphs = splitContentToParagraphs(selectedNews.content);
   const relatedNews = newsItems.filter((item) => item.slug !== slug).slice(0, 3);
   const mainImage = getNewsImage(selectedNews);
@@ -72,6 +77,7 @@ export default function NewsDetailPage() {
             src={mainImage}
             alt={selectedNews.title}
             className="news-detail-image"
+            // Nếu ảnh lỗi thì thay bằng fallback đầu tiên để tránh ảnh vỡ.
             onError={(e) => {
               e.currentTarget.src = fallbackImages[0];
             }}
@@ -106,6 +112,7 @@ export default function NewsDetailPage() {
                     src={getNewsImage(item)}
                     alt={item.title}
                     className="news-related-image"
+                    // Fallback theo index để danh sách liên quan vẫn có ảnh hiển thị.
                     onError={(e) => {
                       e.currentTarget.src =
                         fallbackImages[index % fallbackImages.length];
@@ -133,4 +140,3 @@ export default function NewsDetailPage() {
     </section>
   );
 }
-
