@@ -19,14 +19,19 @@ const storage = {
 };
 
 export function CartProvider({ children }) {
-    const [cartItems, setCartItems] = useState([]);
+    // 1. SỬA Ở ĐÂY: Khởi tạo giỏ hàng từ localStorage thay vì mảng rỗng
+    const [cartItems, setCartItems] = useState(() => storage.get("cartItems", []));
+
     const [isLoggedIn, setIsLoggedIn] = useState(() => storage.get("isLoggedIn", false));
     const [currentUser, setCurrentUser] = useState(() => storage.get("currentUser", null));
 
+    // 2. THÊM Ở ĐÂY: Tự động lưu giỏ hàng xuống localStorage mỗi khi có sự thay đổi (thêm, sửa, xóa)
+    useEffect(() => {
+        storage.set("cartItems", cartItems);
+    }, [cartItems]);
+
     // -------------------------------------------------------
     // QUẢN LÝ ĐỊA CHỈ
-    // addresses: mảng địa chỉ, mỗi phần tử có thêm `id`
-    // Key localStorage theo email user để mỗi tài khoản riêng
     // -------------------------------------------------------
     const addressKey = currentUser?.email
         ? `addresses_${currentUser.email}`
@@ -34,38 +39,32 @@ export function CartProvider({ children }) {
 
     const [addresses, setAddresses] = useState(() => storage.get(addressKey, []));
 
-    // Khi user thay đổi (login/logout) → load lại địa chỉ tương ứng
     useEffect(() => {
         setAddresses(storage.get(addressKey, []));
     }, [addressKey]);
 
-    // Lưu addresses xuống localStorage mỗi khi thay đổi
     useEffect(() => {
         storage.set(addressKey, addresses);
     }, [addresses, addressKey]);
 
-    /** Thêm địa chỉ mới */
     const addAddress = (addressData) => {
         const newAddr = {
             ...addressData,
-            id: Date.now().toString(), // id unique
+            id: Date.now().toString(),
         };
         setAddresses((prev) => {
             let updated;
             if (newAddr.isDefault) {
-                // Bỏ mặc định của các địa chỉ cũ
                 updated = prev.map((a) => ({ ...a, isDefault: false }));
             } else {
                 updated = [...prev];
             }
-            // Nếu chưa có địa chỉ nào → tự đặt làm mặc định
             if (updated.length === 0) newAddr.isDefault = true;
             return [...updated, newAddr];
         });
         return newAddr;
     };
 
-    /** Cập nhật địa chỉ đã có */
     const updateAddress = (id, updatedData) => {
         setAddresses((prev) => {
             let updated = prev.map((a) => a.id === id ? { ...a, ...updatedData } : a);
@@ -76,11 +75,9 @@ export function CartProvider({ children }) {
         });
     };
 
-    /** Xóa địa chỉ */
     const removeAddress = (id) => {
         setAddresses((prev) => {
             const filtered = prev.filter((a) => a.id !== id);
-            // Nếu xóa địa chỉ mặc định → đặt phần tử đầu tiên làm mặc định
             if (filtered.length > 0 && !filtered.some((a) => a.isDefault)) {
                 filtered[0].isDefault = true;
             }
@@ -88,14 +85,12 @@ export function CartProvider({ children }) {
         });
     };
 
-    /** Đặt địa chỉ mặc định */
     const setDefaultAddress = (id) => {
         setAddresses((prev) =>
             prev.map((a) => ({ ...a, isDefault: a.id === id }))
         );
     };
 
-    /** Lấy địa chỉ mặc định */
     const getDefaultAddress = () =>
         addresses.find((a) => a.isDefault) || addresses[0] || null;
 
@@ -119,15 +114,20 @@ export function CartProvider({ children }) {
     // -------------------------------------------------------
     // GIỎ HÀNG
     // -------------------------------------------------------
-    const addToCart = (product) => {
+
+    // 3. SỬA Ở ĐÂY: Cho phép nhận số lượng từ trang Chi tiết sản phẩm
+    const addToCart = (product, quantityToAdd = 1) => {
         setCartItems((prev) => {
-            const existing = prev.find((item) => item.id === product.id);
-            if (existing) {
+            const existingItem = prev.find((item) => item.id === product.id);
+
+            if (existingItem) {
                 return prev.map((item) =>
-                    item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                    item.id === product.id
+                        ? { ...item, quantity: item.quantity + quantityToAdd }
+                        : item
                 );
             }
-            return [...prev, { id: product.id, product, quantity: 1 }];
+            return [...prev, { id: product.id, product, quantity: quantityToAdd }];
         });
     };
 

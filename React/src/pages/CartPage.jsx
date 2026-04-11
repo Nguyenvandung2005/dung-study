@@ -1,48 +1,19 @@
-﻿import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../components/CartContext";
-import LoginModal from "../components/LoginModal";
-import RegisterModal from "../components/RegisterModal";
+import React from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "../components/CartConText";
 
 function formatVnd(value) {
     return `${value.toLocaleString("vi-VN")} đ`;
 }
 
 export default function CartPage() {
-    const { cartItems, updateQuantity, removeFromCart, isLoggedIn, login } = useCart();
-    const navigate = useNavigate();
-
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [showRegisterModal, setShowRegisterModal] = useState(false);
+    // Kéo toàn bộ dữ liệu từ kho chung ra xài
+    const { cartItems, updateQuantity, removeFromCart } = useCart();
 
     const totalAmount = cartItems.reduce(
         (sum, item) => sum + item.product.price * item.quantity,
         0
     );
-
-    const handleCheckout = () => {
-        if (isLoggedIn) {
-            navigate("/checkout");
-        } else {
-            setShowLoginModal(true);
-        }
-    };
-
-    const handleLoginSuccess = () => {
-        login();
-        setShowLoginModal(false);
-        navigate("/checkout");
-    };
-
-    const openRegister = () => {
-        setShowLoginModal(false);
-        setShowRegisterModal(true);
-    };
-
-    const openLogin = () => {
-        setShowRegisterModal(false);
-        setShowLoginModal(true);
-    };
 
     return (
         <div className="container" style={{ marginTop: 24, marginBottom: 80 }}>
@@ -61,7 +32,9 @@ export default function CartPage() {
                     {cartItems.length === 0 ? (
                         <div className="text-center p-5 bg-light rounded">
                             <h5 className="text-muted mb-3">Giỏ hàng của bạn đang trống</h5>
-                            <Link to="/san-pham" className="btn" style={{ background: "#f76c85", color: "#fff" }}>Tiếp tục mua sắm</Link>
+                            <Link to="/bo-suu-tap" className="btn" style={{ background: "#f76c85", color: "#fff" }}>
+                                Tiếp tục mua sắm
+                            </Link>
                         </div>
                     ) : (
                         <>
@@ -71,7 +44,6 @@ export default function CartPage() {
                                 <div className="col-2 text-center">Số lượng</div>
                                 <div className="col-2 text-end">Thành tiền</div>
                             </div>
-
                             {cartItems.map((item) => (
                                 <div key={item.id} className="row align-items-center py-4" style={{ borderBottom: "1px solid #eaeaea" }}>
                                     <div className="col-5 d-flex gap-3">
@@ -80,36 +52,59 @@ export default function CartPage() {
                                         </div>
                                         <div className="d-flex flex-column justify-content-between py-1">
                                             <div>
-                                                <div style={{ fontWeight: 700, fontSize: 12, textTransform: "uppercase", marginBottom: 4 }}>{item.product.brand}</div>
+                                                <div style={{ fontWeight: 700, fontSize: 12, textTransform: "uppercase", marginBottom: 4 }}>
+                                                    {item.product.brand}
+                                                </div>
                                                 <Link to={`/product/${item.product.id}`} style={{ textDecoration: "none", color: "#333", fontSize: 14 }}>
                                                     {item.product.name.length > 40 ? item.product.name.substring(0, 40) + "..." : item.product.name}
                                                 </Link>
                                             </div>
-                                            <button className="btn p-0 text-muted small text-start mt-2" onClick={() => removeFromCart(item.id)}>✕ Xóa</button>
+                                            <div className="d-flex gap-3 mt-2" style={{ fontSize: 13 }}>
+                                                <button style={{ border: "none", background: "none", padding: 0, color: "#6c757d" }}>♡ Yêu thích</button>
+                                                <button
+                                                    style={{ border: "none", background: "none", padding: 0, color: "#6c757d" }}
+                                                    onClick={() => removeFromCart(item.id)} // <--- Gọi hàm Xóa
+                                                >
+                                                    ✕ Xóa
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="col-3 text-center fw-bold">{formatVnd(item.product.price)}</div>
+
+                                    <div className="col-3 text-center">
+                                        <div style={{ fontWeight: 700 }}>{formatVnd(item.product.price)}</div>
+                                        <div style={{ textDecoration: "line-through", color: "#999", fontSize: 13, marginTop: 4 }}>
+                                            {formatVnd(item.product.price * 1.3)}
+                                        </div>
+                                    </div>
+
                                     <div className="col-2 d-flex justify-content-center">
-                                        {/* ✅ FIX: Parse sang số nguyên, fallback về 1 nếu giá trị không hợp lệ */}
                                         <input
                                             type="number"
                                             min="1"
-                                            className="form-control text-center w-75"
+                                            className="form-control text-center"
+                                            style={{ width: 65, height: 36, padding: "4px 8px" }}
                                             value={item.quantity}
-                                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                            onChange={(e) => updateQuantity(item.id, e.target.value)} // <--- Gọi hàm Cập nhật SL
                                         />
                                     </div>
-                                    <div className="col-2 text-end fw-bold">{formatVnd(item.product.price * item.quantity)}</div>
+
+                                    <div className="col-2 text-end" style={{ fontWeight: 700 }}>
+                                        {formatVnd(item.product.price * item.quantity)}
+                                    </div>
                                 </div>
                             ))}
 
                             <div className="d-flex justify-content-between align-items-center mt-4">
-                                <Link to="/" style={{ textDecoration: "none", color: "#000", fontWeight: 500 }}>◄ Tiếp tục mua hàng</Link>
+                                <Link to="/bo-suu-tap" style={{ textDecoration: "none", color: "#000000", fontWeight: 500 }}>
+                                    ◄ Tiếp tục mua hàng
+                                </Link>
                                 <div className="text-end">
                                     <div style={{ marginBottom: 4 }}>
                                         Tạm tính: <span style={{ fontWeight: 700, color: "#f76c85", fontSize: 18, marginLeft: 8 }}>{formatVnd(totalAmount)}</span>
                                     </div>
-                                    <button className="btn" style={{ background: "#f76c85", color: "#fff", fontWeight: 600, padding: "8px 24px" }} onClick={handleCheckout}>
+                                    <div style={{ fontSize: 12, color: "#999", marginBottom: 12 }}>(Đã bao gồm VAT)</div>
+                                    <button className="btn" style={{ background: "#f76c85", color: "#fff", fontWeight: 600, padding: "8px 24px" }}>
                                         Tiến hành đặt hàng
                                     </button>
                                 </div>
@@ -118,39 +113,32 @@ export default function CartPage() {
                     )}
                 </div>
 
+                {/* HÓA ĐƠN BÊN PHẢI */}
                 <div className="col-12 col-lg-4">
-                    <div className="p-4 border-top border-3" style={{ borderColor: "#285430", background: "#fff" }}>
-                        <h5 className="fw-bold mb-4">Hóa đơn của bạn</h5>
-                        <div className="d-flex justify-content-between mb-3">
-                            <span>Tạm tính:</span><b>{formatVnd(totalAmount)}</b>
+                    <div style={{ borderTop: "3px solid #285430", background: "#fff", padding: "24px 0", marginTop: (cartItems.length > 0 ? "52px" : "0") }}>
+                        <h5 style={{ fontWeight: 700, marginBottom: 24 }}>Hóa đơn của bạn</h5>
+                        <div className="d-flex justify-content-between mb-3" style={{ color: "#555" }}>
+                            <span>Tạm tính:</span><span style={{ fontWeight: 600, color: "#333" }}>{formatVnd(totalAmount)}</span>
                         </div>
-                        <hr />
-                        <div className="d-flex justify-content-between align-items-end mb-4">
-                            <span>Tổng cộng:</span><span className="fs-4 fw-bold" style={{ color: "#f76c85" }}>{formatVnd(totalAmount)}</span>
+                        <div className="d-flex justify-content-between mb-4" style={{ color: "#555" }}>
+                            <span>Giảm giá:</span><span style={{ fontWeight: 600, color: "#333" }}>0 đ</span>
                         </div>
+                        <hr style={{ borderColor: "#eaeaea" }} />
+                        <div className="d-flex justify-content-between align-items-end mt-4 mb-2">
+                            <span style={{ color: "#333", fontSize: 16 }}>Tổng cộng:</span>
+                            <span style={{ fontWeight: 700, color: "#f76c85", fontSize: 20 }}>{formatVnd(totalAmount)}</span>
+                        </div>
+                        <div className="text-end" style={{ fontSize: 12, color: "#999", marginBottom: 24 }}>(Đã bao gồm VAT)</div>
                         <button
-                            className="btn w-100 py-3 fw-bold"
-                            style={{ background: "#f76c85", color: "#fff" }}
+                            className="btn w-100"
+                            style={{ background: "#f76c85", color: "#fff", fontWeight: 600, padding: "12px", fontSize: 16 }}
                             disabled={cartItems.length === 0}
-                            onClick={handleCheckout}
                         >
                             Tiến hành đặt hàng
                         </button>
                     </div>
                 </div>
             </div>
-
-            <LoginModal
-                show={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
-                onLoginSuccess={handleLoginSuccess}
-                onSwitchToRegister={openRegister}
-            />
-            <RegisterModal
-                show={showRegisterModal}
-                onClose={() => setShowRegisterModal(false)}
-                onSwitchToLogin={openLogin}
-            />
         </div>
     );
 }

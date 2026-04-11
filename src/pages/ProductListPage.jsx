@@ -1,36 +1,34 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom"; // --- THÊM MỚI: Import useSearchParams ---
+import { Link, useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import useFetch from "../hooks/useFetch";
 
 export default function ProductListPage({ query = "" }) {
-    // 1. Lấy dữ liệu từ hook useFetch
     const { data: productsData, loading, error } = useFetch("http://localhost:3000/products");
 
-    // --- THÊM MỚI BẮT ĐẦU ---
-    // 2. Đọc giá trị category từ thanh địa chỉ (URL)
+    // --- 1. STATE & URL PARAMS ---
     const [searchParams] = useSearchParams();
-    const categoryFromUrl = searchParams.get("category"); // Lấy chữ sau dấu ?category=
-
-    // 3. Cập nhật giá trị khởi tạo của state 'category'
-    // Nếu trên URL có category (VD: Tẩy Trang) thì dùng nó, nếu không có thì mặc định là "all"
+    const categoryFromUrl = searchParams.get("category");
     const [category, setCategory] = useState(categoryFromUrl || "all");
 
-    // 4. Lắng nghe sự thay đổi của URL
-    // Đoạn này giúp giao diện tự động đổi tab lọc ngay lập tức khi bạn đang đứng ở trang Bộ Sưu Tập mà bấm chọn danh mục khác trên Header.
-    useEffect(() => {
-        if (categoryFromUrl) {
-            setCategory(categoryFromUrl);
-        } else {
-            setCategory("all");
-        }
-    }, [categoryFromUrl]);
-    // --- THÊM MỚI KẾT THÚC ---
+    // State cho tính năng Sắp xếp (Mặc định là 'popular' - Phổ biến)
+    const [sortBy, setSortBy] = useState("popular");
 
     const [page, setPage] = useState(1);
     const itemsPerPage = 12;
 
-    // Lấy danh sách các danh mục không trùng lặp
+    // --- 2. EFFECTS ---
+    useEffect(() => {
+        if (categoryFromUrl) setCategory(categoryFromUrl);
+        else setCategory("all");
+    }, [categoryFromUrl]);
+
+    // Reset về trang 1 khi đổi bộ lọc hoặc đổi kiểu sắp xếp
+    useEffect(() => {
+        setPage(1);
+    }, [category, query, sortBy]);
+
+    // --- 3. LẤY DANH MỤC ---
     const categories = useMemo(() => {
         if (!productsData) return ["all"];
         const set = new Set(productsData.map((p) => p.category));
@@ -39,10 +37,12 @@ export default function ProductListPage({ query = "" }) {
 
     const normalizedQuery = query.trim().toLowerCase();
 
-    // Lọc sản phẩm theo tìm kiếm và danh mục
-    const filtered = useMemo(() => {
+    // --- 4. LOGIC LỌC VÀ SẮP XẾP TỔNG HỢP ---
+    const filteredAndSorted = useMemo(() => {
         if (!productsData) return [];
-        return productsData.filter((p) => {
+
+        // Bước 1: Lọc theo Tên/Thương hiệu và Danh mục
+        let result = productsData.filter((p) => {
             const matchQuery =
                 !normalizedQuery ||
                 p.name.toLowerCase().includes(normalizedQuery) ||
@@ -54,66 +54,73 @@ export default function ProductListPage({ query = "" }) {
 
             return matchQuery && matchCategory;
         });
-    }, [productsData, category, normalizedQuery]);
 
-    // Reset page về 1 khi đổi filter/search
-    useEffect(() => {
-        setPage(1);
-    }, [category, normalizedQuery]);
+        // Bước 2: Sắp xếp kết quả
+        switch (sortBy) {
+            case "price-asc":
+                result.sort((a, b) => a.price - b.price); // Giá: Thấp đến Cao
+                break;
+            case "price-desc":
+                result.sort((a, b) => b.price - a.price); // Giá: Cao đến Thấp
+                break;
+            case "hot":
+                // CẬP NHẬT MỚI: Sắp xếp theo phần trăm giảm giá (discount) từ Cao xuống Thấp
+                // Nếu sản phẩm không có trường discount, mặc định coi như là 0
+                result.sort((a, b) => (b.discount || 0) - (a.discount || 0));
+                break;
+            case "popular":
+            default:
+                // Sắp xếp mặc định
+                break;
+        }
 
-    // Tính toán phân trang
-    const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+        return result;
+    }, [productsData, category, normalizedQuery, sortBy]);
+
+    // --- 5. PHÂN TRANG ---
+    const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage));
     const safePage = Math.min(page, totalPages);
 
     const pageItems = useMemo(() => {
         const start = (safePage - 1) * itemsPerPage;
-        return filtered.slice(start, start + itemsPerPage);
-    }, [filtered, safePage]);
+        return filteredAndSorted.slice(start, start + itemsPerPage);
+    }, [filteredAndSorted, safePage]);
 
-    // Xử lý giao diện chờ tải hoặc lỗi
-    if (loading) {
-        return (
-            <div className="container py-5 text-center">
-                <div className="spinner-border text-danger" role="status"></div>
-                <h4 className="mt-3" style={{ color: "#f76c85" }}>Đang tải bộ sưu tập...</h4>
-            </div>
-        );
-    }
+    // --- 6. RENDER GIAO DIỆN CHỜ/LỖI ---
+    if (loading) return <div className="container py-5 text-center"><div className="spinner-border text-danger" role="status"></div></div>;
+    if (error) return <div className="container py-5 text-center text-danger"><h4>Lỗi: {error}</h4></div>;
 
-    if (error) {
-        return (
-            <div className="container py-5 text-center text-danger">
-                <h4>Đã có lỗi xảy ra: {error}</h4>
-                <button className="btn btn-outline-danger mt-3" onClick={() => window.location.reload()}>
-                    Thử lại
-                </button>
-            </div>
-        );
-    }
+    // --- HÀM HỖ TRỢ STYLE CHO NÚT SẮP XẾP ---
+    const getSortBtnStyle = (isActive) => ({
+        padding: "8px 16px",
+        borderRadius: "20px",
+        fontSize: "0.95rem",
+        fontWeight: "500",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        transition: "all 0.2s ease",
+        backgroundColor: isActive ? "#f0f5ff" : "#f8f9fa",
+        color: isActive ? "#2b6cb0" : "#333",
+        border: isActive ? "1px solid #3182ce" : "1px solid #e9ecef",
+        cursor: "pointer",
+        whiteSpace: "nowrap"
+    });
 
     return (
         <div className="container-fluid" style={{ marginTop: 24, marginBottom: 80, padding: "0 5%" }}>
 
-            {/* BREADCRUMB & TIÊU ĐỀ */}
-            <div className="d-flex align-items-end justify-content-between mb-4">
-                <div>
-                    <nav style={{ marginBottom: 12, fontSize: "0.9rem" }}>
-                        <Link to="/" style={{ textDecoration: "none", color: "#6c757d" }}>Trang chủ</Link>
-                        <span style={{ margin: "0 8px", color: "#6c757d" }}>&gt;</span>
-                        <span style={{ color: "#333", fontWeight: 600 }}>Bộ Sưu Tập</span>
-                    </nav>
-
-                    <div style={{ opacity: 0.7, fontSize: "0.95rem", marginTop: 4 }}>
-                        Tìm thấy <b>{filtered.length}</b> sản phẩm phù hợp
-                    </div>
-                </div>
+            {/* BREADCRUMB */}
+            <div className="mb-3">
+                <nav style={{ fontSize: "0.9rem" }}>
+                    <Link to="/" style={{ textDecoration: "none", color: "#6c757d" }}>Trang chủ</Link>
+                    <span style={{ margin: "0 8px", color: "#6c757d" }}>&gt;</span>
+                    <span style={{ color: "#333", fontWeight: 600 }}>Bộ Sưu Tập</span>
+                </nav>
             </div>
 
-            {/* THANH DANH MỤC (TABS) */}
-            <div
-                className="d-flex flex-nowrap overflow-auto mb-4 pb-2"
-                style={{ gap: "12px", WebkitOverflowScrolling: "touch", borderBottom: "1px solid #f0f0f0" }}
-            >
+            {/* THANH DANH MỤC */}
+            <div className="d-flex flex-nowrap overflow-auto mb-4 pb-2" style={{ gap: "12px", WebkitOverflowScrolling: "touch" }}>
                 {categories.map((c) => (
                     <button
                         key={c}
@@ -127,13 +134,43 @@ export default function ProductListPage({ query = "" }) {
                             borderRadius: "30px",
                             whiteSpace: "nowrap",
                             cursor: "pointer",
-                            transition: "all 0.3s ease",
-                            boxShadow: category === c ? "0 4px 10px rgba(247, 108, 133, 0.3)" : "none"
+                            transition: "all 0.3s ease"
                         }}
                     >
                         {c === "all" ? "Tất cả" : c}
                     </button>
                 ))}
+            </div>
+
+            {/* KHỐI SẮP XẾP THEO (Sort Bar) */}
+            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 p-3" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #f0f0f0" }}>
+                <div style={{ opacity: 0.8, fontSize: "0.95rem", marginBottom: "12px", display: "flex", alignItems: "center" }}>
+                    Tìm thấy <b className="mx-1">{filteredAndSorted.length}</b> sản phẩm phù hợp
+                </div>
+
+                <div className="d-flex flex-wrap align-items-center gap-3">
+                    <span style={{ fontSize: "1rem", fontWeight: 700, color: "#222" }}>Sắp xếp theo</span>
+
+                    <button onClick={() => setSortBy("popular")} style={getSortBtnStyle(sortBy === "popular")}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        Phổ biến
+                    </button>
+
+                    <button onClick={() => setSortBy("hot")} style={getSortBtnStyle(sortBy === "hot")}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="2"></circle><circle cx="15" cy="15" r="2"></circle><line x1="21" y1="3" x2="3" y2="21"></line></svg>
+                        Khuyến mãi HOT
+                    </button>
+
+                    <button onClick={() => setSortBy("price-asc")} style={getSortBtnStyle(sortBy === "price-asc")}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="13" y2="6"></line><line x1="4" y1="12" x2="11" y2="12"></line><line x1="4" y1="18" x2="11" y2="18"></line><polyline points="15 10 18 6 21 10"></polyline><line x1="18" y1="6" x2="18" y2="18"></line></svg>
+                        Giá Thấp - Cao
+                    </button>
+
+                    <button onClick={() => setSortBy("price-desc")} style={getSortBtnStyle(sortBy === "price-desc")}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="11" y2="6"></line><line x1="4" y1="12" x2="11" y2="12"></line><line x1="4" y1="18" x2="13" y2="18"></line><polyline points="15 14 18 18 21 14"></polyline><line x1="18" y1="6" x2="18" y2="18"></line></svg>
+                        Giá Cao - Thấp
+                    </button>
+                </div>
             </div>
 
             {/* GRID SẢN PHẨM */}
@@ -156,43 +193,11 @@ export default function ProductListPage({ query = "" }) {
             {/* PHÂN TRANG */}
             {totalPages > 1 && (
                 <div className="d-flex justify-content-center align-items-center gap-2 mt-5">
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => setPage(1)}
-                        disabled={safePage === 1}
-                        style={{ borderRadius: "8px" }}
-                    >
-                        Đầu
-                    </button>
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={safePage === 1}
-                        style={{ borderRadius: "8px" }}
-                    >
-                        Trước
-                    </button>
-
-                    <div className="mx-3" style={{ fontWeight: 600 }}>
-                        Trang <span style={{ color: "#f76c85" }}>{safePage}</span> / {totalPages}
-                    </div>
-
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={safePage === totalPages}
-                        style={{ borderRadius: "8px" }}
-                    >
-                        Tiếp
-                    </button>
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => setPage(totalPages)}
-                        disabled={safePage === totalPages}
-                        style={{ borderRadius: "8px" }}
-                    >
-                        Cuối
-                    </button>
+                    <button className="btn btn-outline-secondary" onClick={() => setPage(1)} disabled={safePage === 1} style={{ borderRadius: "8px" }}>Đầu</button>
+                    <button className="btn btn-outline-secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1} style={{ borderRadius: "8px" }}>Trước</button>
+                    <div className="mx-3" style={{ fontWeight: 600 }}>Trang <span style={{ color: "#f76c85" }}>{safePage}</span> / {totalPages}</div>
+                    <button className="btn btn-outline-secondary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages} style={{ borderRadius: "8px" }}>Tiếp</button>
+                    <button className="btn btn-outline-secondary" onClick={() => setPage(totalPages)} disabled={safePage === totalPages} style={{ borderRadius: "8px" }}>Cuối</button>
                 </div>
             )}
         </div>

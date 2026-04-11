@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "./CartContext";
 
@@ -8,55 +8,60 @@ function formatVnd(value) {
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
+
+  // Tính giá gốc từ discount: price = originalPrice * (1 - discount/100)
+  // => originalPrice = price / (1 - discount/100)
+  const hasDiscount = product.discount && product.discount > 0;
+  const originalPrice = hasDiscount
+    ? Math.round(product.price / (1 - product.discount / 100))
+    : null;
+
+  function handleAdd(e) {
+    e.preventDefault();
+    addToCart(product, 1);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1400);
+  }
 
   return (
-    <div
-      className="card h-100"
-      style={{ borderRadius: 12, overflow: "hidden" }}
-      title={product.name}
-    >
-      <Link
-        to={`/san-pham/${product.id}`}
-        style={{ color: "inherit", textDecoration: "none" }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            padding: 12,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <img
-            src={product.image}
-            alt={product.name}
-            style={{ width: 160, height: 160, objectFit: "contain" }}
-          />
+    <div className="pc">
+      <Link to={`/san-pham/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+
+        {/* ẢNH */}
+        <div className="pc-img-wrap">
+          <img src={product.image} alt={product.name} className="pc-img" />
+          <div className="pc-shade" />
+
+          {hasDiscount ? (
+            <span className="pc-badge pc-badge--sale">-{product.discount}%</span>
+          ) : product.isNew ? (
+            <span className="pc-badge">Mới</span>
+          ) : null}
+
+          <div className="pc-add">+ Thêm vào giỏ</div>
         </div>
 
-        <div className="card-body d-flex flex-column">
-          <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
-            {product.brand} • {product.category}
-          </div>
-
-          <div className="card-title" style={{ fontWeight: 600, lineHeight: 1.25 }}>
-            {product.name}
-          </div>
-
-          <div style={{ marginTop: 10, fontWeight: 800, color: "#f76c85" }}>
-            {formatVnd(product.price)}
+        {/* NỘI DUNG */}
+        <div className="pc-body">
+          <div className="pc-meta">{product.brand} • {product.category}</div>
+          <div className="pc-name">{product.name}</div>
+          <div className="pc-price-row">
+            <span className="pc-price">{formatVnd(product.price)}</span>
+            {originalPrice && (
+              <span className="pc-old">{formatVnd(originalPrice)}</span>
+            )}
           </div>
         </div>
       </Link>
 
-      <div className="px-3 pb-3 mt-auto">
+      {/* NÚT */}
+      <div className="pc-foot">
         <button
-          type="button"
-          className="btn w-100"
-          style={{ background: "#f76c85", color: "white" }}
-          onClick={() => addToCart(product, 1)}
+          className={`pc-btn${added ? " pc-btn--added" : ""}`}
+          onClick={handleAdd}
         >
-          Thêm vào giỏ
+          {added ? "Đã thêm ✓" : "Thêm vào giỏ"}
         </button>
       </div>
     </div>
