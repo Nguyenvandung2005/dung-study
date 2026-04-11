@@ -6,8 +6,9 @@ import megaMenuData from "../data/megaMenu.json";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 
-export default function Header({ searchValue = "", onSearchChange = () => {} }) {
-  const { cartCount, login } = useCart();
+export default function Header({ searchValue = "", onSearchChange = () => { } }) {
+  const { cartItems, login, logout, isLoggedIn, currentUser } = useCart();
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [navExpanded, setNavExpanded] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
