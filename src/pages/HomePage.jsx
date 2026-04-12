@@ -1,11 +1,16 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/HomePage.css";
-import { products } from "../data/products";
+import ProductCard from "../components/ProductCard";
+import productsSource from "../data/products.json";
 import brandUrls from "../data/brandUrls.json";
 import officeLocations from "../data/officeLocations.json";
 import hotVouchers from "../data/hotVouchers.json";
 import newsItems from "../data/newsItems.json";
+
+const products = Array.isArray(productsSource)
+  ? productsSource
+  : productsSource.products ?? [];
 
 function getBrandUrl(brand) {
   return brandUrls[brand] || `https://www.google.com/search?q=${encodeURIComponent(brand)}`;
@@ -25,6 +30,19 @@ function shuffleArray(array) {
 function parseVietnameseDate(dateString) {
   const [day, month, year] = dateString.split("/").map(Number);
   return new Date(year, month - 1, day).getTime();
+}
+
+function formatVnd(value) {
+  return `${value.toLocaleString("vi-VN")} đ`;
+}
+
+function getOriginalPrice(price, discount = 0) {
+  if (!discount || discount <= 0) return null;
+  return Math.round(price / (1 - discount / 100));
+}
+
+function formatTimePart(value) {
+  return String(value).padStart(2, "0");
 }
 
 const bannerImages = [
@@ -201,6 +219,9 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [flashDealsSecondsLeft, setFlashDealsSecondsLeft] = useState(
+    1 * 3600 + 32 * 60 + 54
+  );
 
   useEffect(() => {
     const fontId = "playfair-display-font";
@@ -223,6 +244,26 @@ export default function HomePage() {
     return featuredProductsFromMultipleBrands.slice(0, 4);
   }, [featuredProductsFromMultipleBrands]);
 
+  const hotPromotionProducts = useMemo(() => {
+    return [...products]
+      .filter((product) => (product.discount || 0) > 0)
+      .sort((a, b) => (b.discount || 0) - (a.discount || 0))
+      .slice(0, 6);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFlashDealsSecondsLeft((prev) =>
+        prev <= 1 ? 1 * 3600 + 32 * 60 + 54 : prev - 1
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const flashDealHours = Math.floor(flashDealsSecondsLeft / 3600);
+  const flashDealMinutes = Math.floor((flashDealsSecondsLeft % 3600) / 60);
+  const flashDealSeconds = flashDealsSecondsLeft % 60;
   const latestNewsItems = useMemo(() => {
     return [...newsItems]
       .sort((a, b) => parseVietnameseDate(b.date) - parseVietnameseDate(a.date))
@@ -257,6 +298,11 @@ export default function HomePage() {
               className={`featured-showcase-card featured-showcase-card-${index + 1}`}
             >
               <div className="featured-showcase-image-wrap">
+                {product.discount > 0 && (
+                  <div className="featured-showcase-discount-badge">
+                    -{product.discount}%
+                  </div>
+                )}
                 <img
                   src={product.image}
                   alt={product.name}
@@ -267,9 +313,62 @@ export default function HomePage() {
               <div className="featured-showcase-content">
                 <div className="featured-showcase-brand">{product.brand}</div>
                 <h3 className="featured-showcase-title">{product.name}</h3>
+                <div className="featured-showcase-price-wrap">
+                  <span className="featured-showcase-sale-price">
+                    {formatVnd(product.price)}
+                  </span>
+                  {product.discount > 0 && (
+                    <span className="featured-showcase-old-price">
+                      {formatVnd(getOriginalPrice(product.price, product.discount))}
+                    </span>
+                  )}
+                </div>
               </div>
             </a>
           ))}
+        </div>
+      </section>
+
+      <section id="hot-promotions" className="mt-5">
+        <div className="flash-deals-head">
+          <div className="flash-deals-title-wrap">
+            <h2 className="flash-deals-title">Flash Deals</h2>
+            <div className="flash-deals-timer">
+              <span className="flash-time-chip">{formatTimePart(flashDealHours)}</span>
+              <span className="flash-time-sep">:</span>
+              <span className="flash-time-chip">{formatTimePart(flashDealMinutes)}</span>
+              <span className="flash-time-sep">:</span>
+              <span className="flash-time-chip">{formatTimePart(flashDealSeconds)}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="flash-deals-viewall"
+            onClick={() => navigate("/san-pham")}
+          >
+            Xem tất cả
+          </button>
+        </div>
+
+        <div className="row g-3 mt-1">
+          {hotPromotionProducts.map((product, index) => {
+            const soldPercent = Math.min(
+              92,
+              Math.max(25, (product.discount || 0) * 2 + 18 + index * 4)
+            );
+
+            return (
+              <div key={product.id} className="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div className="flash-deal-item-shell">
+                  <ProductCard product={product} />
+                  <div className="flash-deal-progress" role="presentation">
+                    <span style={{ width: `${soldPercent}%` }} />
+                  </div>
+                  <div className="flash-deal-progress-text">Đã bán {soldPercent}%</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
