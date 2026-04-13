@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../components/CartContext";
 import LoginModal from "../components/LoginModal";
 import RegisterModal from "../components/RegisterModal";
+import "../css/HomePage.css";
 
 //Format số tiền sang định dạng VNĐ 
 function formatVnd(value) {
@@ -119,9 +120,13 @@ export default function CartPage() {
                                                 </Link>
                                             </div>
                                             {/* Xóa sản phẩm khỏi giỏ */}
-                                            <button className="btn p-0 text-muted small text-start mt-2"
-                                                onClick={() => removeFromCart(item.id)}>
-                                                ✕ Xóa
+                                            <button
+                                                type="button"
+                                                className="cart-remove-btn mt-2"
+                                                onClick={() => removeFromCart(item.id)}
+                                            >
+                                                <span className="cart-remove-btn__icon">✕</span>
+                                                Xóa sản phẩm
                                             </button>
                                         </div>
                                     </div>

@@ -7,41 +7,49 @@ import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 
 export default function Header({ searchValue = "", onSearchChange = () => { } }) {
-  // LẤY DỮ LIỆU TỪ GIỎ HÀNG VÀ AUTH
+  // --- 1. LẤY DỮ LIỆU TỪ GIỎ HÀNG VÀ AUTHENTICATION ---
   const cartData = useCart();
   const cartList = cartData.cart || cartData.cartItems || [];
+
+  // Tính tổng số lượng sản phẩm để hiển thị trên Badge giỏ hàng
   const totalItems = cartData.cartCount !== undefined
     ? cartData.cartCount
     : cartList.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  const [showMegaMenu, setShowMegaMenu] = useState(false);
-  const [navExpanded, setNavExpanded] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  // --- 2. QUẢN LÝ TRẠNG THÁI GIAO DIỆN (UI STATE) ---
+  const [showMegaMenu, setShowMegaMenu] = useState(false); // Hiện/ẩn menu danh mục lớn
+  const [navExpanded, setNavExpanded] = useState(false);   // Bật/tắt menu trên mobile
+  const [showLoginModal, setShowLoginModal] = useState(false);       // Hiện/ẩn bảng Đăng nhập
+  const [showRegisterModal, setShowRegisterModal] = useState(false); // Hiện/ẩn bảng Đăng ký
 
+  // Hàm mở bảng Đăng nhập và đóng bảng Đăng ký
   const openLogin = () => {
     setShowRegisterModal(false);
     setShowLoginModal(true);
     setNavExpanded(false);
   };
 
+  // Hàm mở bảng Đăng ký và đóng bảng Đăng nhập
   const openRegister = () => {
     setShowLoginModal(false);
     setShowRegisterModal(true);
     setNavExpanded(false);
   };
 
+  // Xử lý sau khi người dùng đăng nhập thành công
   const handleLoginSuccess = (userInfo, token) => {
     if (cartData.login) {
-      cartData.login(userInfo || {}, token || "");
+      cartData.login(userInfo || {}, token || ""); // Cập nhật thông tin vào Context
     }
-    setShowLoginModal(false);
+    setShowLoginModal(false); // Đóng bảng đăng nhập
   };
 
   return (
     <header className="site-header">
+      {/* PHẦN TRÊN CÙNG: Logo và Thông tin thương hiệu */}
       <div className="container-fluid px-3 px-lg-4 px-xl-5">
         <div className="row align-items-center header-top gy-3">
+          {/* Khu vực Logo */}
           <div className="col-12 col-md-auto text-center text-md-start">
             <div className="logo">
               <Link to="/" className="logo-link">
@@ -50,6 +58,7 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
             </div>
           </div>
 
+          {/* Slogan thương hiệu */}
           <div className="col-12 col-xl text-center">
             <div className="header-center-brand">
               <div className="header-brand-tag">MỸ PHẨM CHÍNH HÃNG • CHĂM SÓC DA CAO CẤP</div>
@@ -57,10 +66,10 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
             </div>
           </div>
 
+          {/* Mạng xã hội */}
           <div className="col-12 col-xl-auto">
             <div className="d-flex align-items-center justify-content-center justify-content-xl-end gap-3 header-social-wrap">
               <span className="social-text">Theo dõi chúng tôi</span>
-
               <div className="d-flex gap-2 social-list">
                 <a href="#" className="social-link"><img src="/IMG/fb.png" alt="FB" className="social-icon" /></a>
                 <a href="#" className="social-link"><img src="/IMG/ins.png" alt="Instagram" className="social-icon" /></a>
@@ -72,8 +81,10 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
         </div>
       </div>
 
+      {/* THANH MENU CHÍNH (NAVBAR) */}
       <div className="container-fluid px-3 px-lg-4 px-xl-5 mb-3">
         <nav className="navbar navbar-expand-xl main-menu-bar px-3 px-lg-4 py-2 position-relative">
+          {/* Nút Hamburger cho Mobile */}
           <button
             className="navbar-toggler header-toggler ms-auto"
             type="button"
@@ -87,6 +98,8 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
 
           <div className={`collapse navbar-collapse${navExpanded ? " show" : ""}`} id="siteHeaderNav">
             <ul className="navbar-nav header-menu-list align-items-xl-center me-auto mb-0">
+
+              {/* MENU DANH MỤC (MEGA MENU) */}
               <li className="nav-item">
                 <div
                   className="mega-menu-wrapper"
@@ -128,21 +141,27 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                 </div>
               </li>
 
+              {/* CÁC LIÊN KẾT TRANG CHÍNH */}
               <li className="nav-item"><NavLink to="/" end className="nav-link menu-link" onClick={() => setNavExpanded(false)}>TRANG CHỦ</NavLink></li>
               <li className="nav-item"><NavLink to="/about" className="nav-link menu-link" onClick={() => setNavExpanded(false)}>VỀ CHÚNG TÔI</NavLink></li>
               <li className="nav-item"><NavLink to="/san-pham" className="nav-link menu-link" onClick={() => setNavExpanded(false)}>BỘ SƯU TẬP</NavLink></li>
 
-              {/* === LOGIC KIỂM TRA ĐĂNG NHẬP Ở ĐÂY === */}
+              {/* === LOGIC KIỂM TRA ĐĂNG NHẬP VÀ PHÂN QUYỀN === */}
               {cartData.isLoggedIn && cartData.currentUser ? (
                 <li className="nav-item d-flex align-items-center gap-2 px-2">
+                  {/* Hiển thị tên người dùng */}
                   <span className="nav-link menu-link" style={{ color: "#fff", fontWeight: "bold", paddingRight: "5px", cursor: "default" }}>
                     Chào, {cartData.currentUser.name}
                   </span>
+
+                  {/* Nếu là Admin thì hiện thêm nút dẫn vào trang Quản trị */}
                   {cartData.currentUser.role === "admin" && (
                     <NavLink to="/admin/san-pham" className="nav-link menu-link" onClick={() => setNavExpanded(false)}>
                       ADMIN
                     </NavLink>
                   )}
+
+                  {/* Nút Đăng xuất */}
                   <button
                     onClick={() => {
                       if (cartData.logout) cartData.logout();
@@ -165,25 +184,27 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                   </button>
                 </li>
               ) : (
+                // Nếu chưa đăng nhập, hiển thị nút Đăng nhập & Đăng ký
                 <li className="nav-item">
                   <NavLink
                     to="/login"
                     className="nav-link menu-link"
                     onClick={(e) => {
-                      e.preventDefault();
-                      openLogin();
+                      e.preventDefault(); // Ngăn chặn chuyển trang của thẻ NavLink
+                      openLogin();        // Mở Modal đăng nhập thay thế
                     }}
                   >
                     ĐĂNG NHẬP & ĐĂNG KÝ
                   </NavLink>
                 </li>
               )}
-              {/* === KẾT THÚC LOGIC ĐĂNG NHẬP === */}
 
               <li className="nav-item"><NavLink to="/lien-he" className="nav-link menu-link" onClick={() => setNavExpanded(false)}>LIÊN HỆ</NavLink></li>
             </ul>
 
+            {/* HÀNH ĐỘNG: TÌM KIẾM VÀ GIỎ HÀNG */}
             <div className="header-actions d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center gap-3 gap-xl-4 ms-xl-auto mt-3 mt-xl-0">
+              {/* Ô tìm kiếm sản phẩm */}
               <div className="search-box">
                 <input
                   type="text"
@@ -197,6 +218,7 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                 </button>
               </div>
 
+              {/* Icon Giỏ hàng */}
               <div className="d-flex align-items-center justify-content-end gap-3 header-action-row">
                 <Link
                   to="/gio-hang"
@@ -206,7 +228,7 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                 >
                   <img src="/IMG/cart.png" alt="Cart" className="header-action-image" />
 
-                  {/* VÒNG TRÒN GIỎ HÀNG */}
+                  {/* Hiển thị số lượng sản phẩm trong giỏ hàng (Badge) */}
                   {totalItems > 0 && (
                     <span className="cart-badge">
                       {totalItems}
@@ -219,6 +241,7 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
         </nav>
       </div>
 
+      {/* MODAL ĐĂNG NHẬP VÀ ĐĂNG KÝ (Ẩn/Hiện dựa trên State) */}
       <LoginModal show={showLoginModal} onClose={() => setShowLoginModal(false)} onLoginSuccess={handleLoginSuccess} onSwitchToRegister={openRegister} />
       <RegisterModal show={showRegisterModal} onClose={() => setShowRegisterModal(false)} onSwitchToLogin={openLogin} />
     </header>

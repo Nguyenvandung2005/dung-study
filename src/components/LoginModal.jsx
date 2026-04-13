@@ -1,54 +1,81 @@
 import React, { useState } from "react";
-import { loginApi } from "../services/authService";
+import { loginUser } from "../hooks/userStorage.jsx";
 
-const FAKE_GOOGLE_USER = { name: "Nguyễn Google", email: "user@gmail.com" };
-const FAKE_FACEBOOK_USER = { name: "Nguyễn Facebook", email: "user@facebook.com" };
+// Dữ liệu giả lập cho tính năng đăng nhập bằng bên thứ 3 (OAuth)
+const FAKE_GOOGLE_USER = {
+  name: "Người dùng Google",
+  email: "user@gmail.com",
+  contact: "user@gmail.com",
+  role: "user",
+};
+
+const FAKE_FACEBOOK_USER = {
+  name: "Người dùng Facebook",
+  email: "user@facebook.com",
+  contact: "user@facebook.com",
+  role: "user",
+};
 
 export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRegister }) {
+  // --- QUẢN LÝ TRẠNG THÁI (STATE) ---
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(null);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(null); // Quản lý trạng thái đang xử lý (google/facebook/normal)
+  const [error, setError] = useState("");      // Lưu thông báo lỗi
+  const [successMsg, setSuccessMsg] = useState(""); // Lưu thông báo thành công
 
+  // Nếu props "show" là false thì không hiển thị gì cả
   if (!show) return null;
 
+  // --- XỬ LÝ ĐĂNG NHẬP OAUTH (GIẢ LẬP) ---
   const simulateOAuth = (provider) => {
     setError("");
     setLoading(provider);
     setSuccessMsg("");
 
+    // Giả lập thời gian chờ phản hồi từ server
     setTimeout(() => {
       const fakeUser = provider === "google" ? FAKE_GOOGLE_USER : FAKE_FACEBOOK_USER;
       setLoading(null);
-      setSuccessMsg(`✅ Đăng nhập bằng ${provider === "google" ? "Google" : "Facebook"} thành công!`);
+      setSuccessMsg(`Đăng nhập bằng ${provider === "google" ? "Google" : "Facebook"} thành công!`);
+
+      // Sau khi hiện thông báo thành công, gọi hàm callback để báo cho App.js biết
       setTimeout(() => onLoginSuccess(fakeUser), 900);
     }, 1500);
   };
 
+  // --- XỬ LÝ ĐĂNG NHẬP THÔNG THƯỜNG ---
   const handleNormalLogin = () => {
     setError("");
+
+    // Kiểm tra dữ liệu đầu vào
     if (!emailInput.trim() || !passwordInput) {
       setError("Vui lòng nhập email/SĐT và mật khẩu.");
       return;
     }
 
     setLoading("normal");
+
     setTimeout(() => {
-      loginApi(emailInput.trim(), passwordInput)
-        .then((result) => {
-          setLoading(null);
-          setSuccessMsg(`✅ Đăng nhập thành công! Xin chào ${result.user.name}`);
-          setTimeout(() => onLoginSuccess(result.user, result.token), 900);
-        })
-        .catch((apiError) => {
-          setLoading(null);
-          setError(`❌ ${apiError.message}`);
-        });
+      // Gọi hàm kiểm tra trong LocalStorage từ Hook tùy chỉnh
+      const result = loginUser(emailInput.trim(), passwordInput);
+
+      if (!result.success) {
+        setLoading(null);
+        setError(result.error);
+        return;
+      }
+
+      setLoading(null);
+      setSuccessMsg(`Đăng nhập thành công! Xin chào ${result.user.name}`);
+
+      // Chuyển dữ liệu user về component cha (thường là Header hoặc CartProvider)
+      setTimeout(() => onLoginSuccess(result.user), 900);
     }, 800);
   };
 
+  // Định nghĩa style chung cho các ô nhập liệu
   const inputStyle = {
     width: "100%",
     padding: "12px 14px",
@@ -62,24 +89,32 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
   };
 
   return (
+    // Lớp nền mờ phủ toàn màn hình (Overlay)
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.55)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center" }}>
+
+      {/* Khung chính của bảng đăng nhập */}
       <div style={{ background: "#fff", borderRadius: "12px", width: "100%", maxWidth: "420px", padding: "28px 32px 24px", position: "relative", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+
+        {/* Nút đóng bảng (Dấu x) */}
         <button onClick={onClose} style={{ position: "absolute", top: "14px", right: "16px", background: "none", border: "none", fontSize: "22px", cursor: "pointer", color: "#888" }}>×</button>
 
         <h5 style={{ textAlign: "center", fontWeight: 700, fontSize: "18px", marginBottom: "20px", color: "#222" }}>Đăng nhập</h5>
 
+        {/* Khu vực hiển thị thông báo thành công */}
         {successMsg && (
           <div style={{ background: "#fff0f3", color: "#c2185b", borderRadius: "8px", padding: "10px 14px", marginBottom: "14px", fontSize: "14px", textAlign: "center", fontWeight: 600 }}>
             {successMsg}
           </div>
         )}
 
+        {/* Khu vực hiển thị thông báo lỗi */}
         {error && (
           <div style={{ background: "#fdecea", color: "#c62828", borderRadius: "8px", padding: "10px 14px", marginBottom: "14px", fontSize: "14px" }}>
             {error}
           </div>
         )}
 
+        {/* Nút đăng nhập Facebook */}
         <button
           onClick={() => simulateOAuth("facebook")}
           disabled={!!loading}
@@ -88,6 +123,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           {loading === "facebook" ? <><Spinner /> Đang kết nối...</> : <><FbIcon /> Facebook</>}
         </button>
 
+        {/* Nút đăng nhập Google */}
         <button
           onClick={() => simulateOAuth("google")}
           disabled={!!loading}
@@ -96,6 +132,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           {loading === "google" ? <><Spinner color="#4285F4" /> Đang kết nối...</> : <><GoogleIcon /> Đăng nhập bằng Google</>}
         </button>
 
+        {/* Đường kẻ phân cách */}
         <div style={{ position: "relative", textAlign: "center", marginBottom: "16px" }}>
           <hr style={{ borderColor: "#eee" }} />
           <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: "#fff", padding: "0 12px", fontSize: "13px", color: "#999" }}>
@@ -103,6 +140,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           </span>
         </div>
 
+        {/* Ô nhập Email/Số điện thoại */}
         <div style={{ marginBottom: "10px" }}>
           <input
             type="text"
@@ -113,6 +151,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           />
         </div>
 
+        {/* Ô nhập Mật khẩu (Có nút ẩn/hiện) */}
         <div style={{ marginBottom: "10px", position: "relative" }}>
           <input
             type={showPassword ? "text" : "password"}
@@ -123,11 +162,12 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
             style={{ ...inputStyle, paddingRight: "40px" }}
           />
           <button onClick={() => setShowPassword((s) => !s)}
-            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px" }}>
-            {showPassword ? "🙈" : "👁"}
+            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "13px" }}>
+            {showPassword ? "Ẩn" : "Hiện"}
           </button>
         </div>
 
+        {/* Tùy chọn nhớ mật khẩu và quên mật khẩu */}
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px", fontSize: "13px" }}>
           <label style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <input type="checkbox" style={{ accentColor: "#ff6b81" }} /> Nhớ mật khẩu
@@ -135,6 +175,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           <span style={{ color: "#ff6b81", cursor: "pointer", fontWeight: 600 }}>Quên mật khẩu?</span>
         </div>
 
+        {/* Nút Đăng nhập chính */}
         <button
           onClick={handleNormalLogin}
           disabled={!!loading}
@@ -143,6 +184,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           {loading === "normal" ? <><Spinner /> Đang đăng nhập...</> : "Đăng nhập"}
         </button>
 
+        {/* Chuyển sang bảng Đăng ký */}
         <p style={{ textAlign: "center", fontSize: "14px", margin: 0, color: "#333" }}>
           Chưa có tài khoản?{" "}
           <span onClick={onSwitchToRegister} style={{ color: "#ff6b81", fontWeight: 700, cursor: "pointer" }}>
@@ -153,6 +195,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
     </div>
   );
 }
+
+// --- CÁC COMPONENT PHỤ (SVG ICONS & SPINNER) ---
 
 function Spinner({ color = "#fff" }) {
   return <span style={{ width: 16, height: 16, border: `2px solid ${color}`, borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />;
@@ -173,6 +217,10 @@ function GoogleIcon() {
   );
 }
 
-const s = document.createElement("style");
-s.innerHTML = `@keyframes spin { to { transform: rotate(360deg); } }`;
-if (!document.head.querySelector("[data-login-spin]")) { s.setAttribute("data-login-spin", "1"); document.head.appendChild(s); }
+// Thêm Animation xoay cho Spinner vào Header của tài liệu
+const styleElement = document.createElement("style");
+styleElement.innerHTML = `@keyframes spin { to { transform: rotate(360deg); } }`;
+if (!document.head.querySelector("[data-login-spin]")) {
+  styleElement.setAttribute("data-login-spin", "1");
+  document.head.appendChild(styleElement);
+}
