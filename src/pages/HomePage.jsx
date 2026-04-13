@@ -8,44 +8,48 @@ import officeLocations from "../data/officeLocations.json";
 import hotVouchers from "../data/hotVouchers.json";
 import newsItems from "../data/newsItems.json";
 
-const products = Array.isArray(productsSource)
+const products = Array.isArray(productsSource) //Khai báo productsSource là một mảng
   ? productsSource
-  : productsSource.products ?? [];
+  : productsSource.products ?? []; //Kiểm tra productsSource có phải là một mảng hay không, 
+  // nếu không thì lấy productsSource.products nếu tồn tại, nếu không thì trả về mảng rỗng
 
 function getBrandUrl(brand) {
   return brandUrls[brand] || `https://www.google.com/search?q=${encodeURIComponent(brand)}`;
-}
-
-function shuffleArray(array) {
-  const newArray = [...array];
+} // Lấy url của thương hiệu của sản phẩm, 
+// nếu không có thì trả về url tìm kiếm trên google cho thương hiệu đó
+function shuffleArray(array) { //Hàm dùng để xáo trộn ngẫu nhiên một mảng
+  const newArray = [...array]; // Tạo một bản sao của mảng gốc để tránh thay đổi mảng gốc
 
   for (let i = newArray.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
+    const j = Math.floor(Math.random() * (i + 1)); //Tạo ngẫu nhiên một chỉ số j từ 0 đến i
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]]; // Hoán đổi phần tử tại chỉ số i với phần tử tại chỉ số j
+  }// Sử dụng thuật toán Fisher-Yates để xáo trộn mảng một cách hiệu quả và ngẫu nhiên
 
   return newArray;
 }
 
-function parseVietnameseDate(dateString) {
-  const [day, month, year] = dateString.split("/").map(Number);
-  return new Date(year, month - 1, day).getTime();
+function parseVietnameseDate(dateString) {// Hàm dùng để chuyển đổi chuỗi ngày tháng theo định dạng Việt Nam (dd/mm/yyyy) thành timestamp
+  const [day, month, year] = dateString.split("/").map(Number);//Tách chuỗi ngày thành một mảng STring 
+  // -> chuyển thành number và gán lần lượt cho day, month, year
+  return new Date(year, month - 1, day).getTime(); // Tạo một đối tượng Date mới với năm, tháng 
+  // (giảm 1 vì tháng trong JavaScript bắt đầu từ 0) và ngày, sau đó trả về timestamp của ngày đó
 }
 
-function formatVnd(value) {
+function formatVnd(value) { // Hàm dùng để định dạng một số thành chuỗi tiền tệ Việt Nam đồng (VND)
   return `${value.toLocaleString("vi-VN")} đ`;
 }
 
-function getOriginalPrice(price, discount = 0) {
-  if (!discount || discount <= 0) return null;
-  return Math.round(price / (1 - discount / 100));
+function getOriginalPrice(price, discount = 0) {// Hàm dùng để tính giá gốc của sản phẩm dựa 
+  if (!discount || discount <= 0) return null;//trên giá hiện tại và phần trăm giảm giá
+  return Math.round(price / (1 - discount / 100));//Math.round dùng để làm tròn tiền
 }
 
-function formatTimePart(value) {
+function formatTimePart(value) { // Hàm dùng để định dạng một phần của thời gian (giờ, phút, giây) thành chuỗi có 2 chữ số,
+// nếu giá trị nhỏ hơn 10 thì sẽ thêm số 0 vào trước
   return String(value).padStart(2, "0");
 }
 
-const bannerImages = [
+const bannerImages = [ //Khai báo một mảng chứa đường dẫn của các hình ảnh banner sẽ được sử dụng trong trang chủ
   "/IMG/banner01.png",
   "/IMG/banner02.png",
   "/IMG/banner03.png",
@@ -54,16 +58,21 @@ const bannerImages = [
   "/IMG/banner06.png"
 ];
 
-const loopImages = [...bannerImages, bannerImages[0]];
+const loopImages = [...bannerImages, bannerImages[0]];// Tạo một mảng mới bằng cách sao chép tất cả 
+// phần tử của bannerImages và thêm phần tử đầu tiên của bannerImages vào cuối mảng mới
 
 const productCategoryCount = new Set(products.map((p) => p.category)).size;
+// Tạo một tập hợp (Set) từ các danh mục của sản phẩm để loại bỏ các danh mục trùng lặp,
 const totalProducts = products.length;
+// Đếm số lượng sản phẩm trong mảng products và lưu vào biến totalProducts
 
 function HeroBanner({ totalProducts, productCategoryCount }) {
   const [activeSlide, setActiveSlide] = useState(0);
+  // Khai báo một state activeSlide để lưu trữ chỉ số của slide hiện tại đang hiển thị,
   const [isTransitioning, setIsTransitioning] = useState(true);
+  // Khai báo một state isTransitioning để lưu trữ trạng thái chuyển đổi của slider,
   const [showVouchers, setShowVouchers] = useState(false);
-
+  // Khai báo một state showVouchers để lưu trữ trạng thái hiển thị của popup voucher hotdeal
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => {
@@ -71,16 +80,18 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
           return bannerImages.length;
         }
         return prev + 1;
+        // Cập nhật activeSlide lên chỉ số tiếp theo, nếu đã vượt quá số lượng banner thì giữ nguyên chỉ số cuối cùng (để hiển thị slide clone)
       });
-    }, 4200);
+    }, 4200); // Sử dụng useEffect để thiết lập một interval tự động thay đổi slide sau mỗi 4200ms (4.2 giây)
 
     return () => clearInterval(interval);
+    // Trả về một hàm dọn dẹp để xóa interval khi component bị unmount hoặc khi activeSlide thay đổi,
   }, []);
 
-  const handleTransitionEnd = () => {
-    if (activeSlide >= bannerImages.length) {
-      setIsTransitioning(false);
-      setActiveSlide(0);
+  const handleTransitionEnd = () => { // Hàm xử lý sự kiện khi kết thúc chuyển đổi slide
+    if (activeSlide >= bannerImages.length) { // Kiểm tra nếu activeSlide đã vượt quá số lượng banner (đang hiển thị slide clone)
+      setIsTransitioning(false);// Tắt hiệu ứng chuyển đổi để có thể nhảy về slide đầu tiên mà không bị animation
+      setActiveSlide(0);// Đặt activeSlide về 0 để hiển thị slide đầu tiên (đồng thời là slide clone) mà không có hiệu ứng chuyển đổi, tạo cảm giác liền mạch khi slider quay vòng
     }
   };
 
@@ -90,29 +101,38 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
       setActiveSlide(0);
     }
   }, [activeSlide]);
+  //Đây là một phương thức dự phòng để đảm bảo rằng nếu vì lý do nào đó activeSlide 
+  // vượt quá số lượng banner (ví dụ do lỗi hoặc thay đổi không mong muốn), 
+  // thì slider vẫn sẽ được reset về slide đầu tiên một cách an toàn mà không bị kẹt ở trạng thái chuyển đổi
 
-  useEffect(() => {
-    if (!isTransitioning) {
+  useEffect(() => { // Sử dụng useEffect để thiết lập lại trạng thái chuyển đổi sau khi đã nhảy về slide đầu tiên
+    if (!isTransitioning) { // Kiểm tra nếu đang không ở trạng thái chuyển đổi (đã nhảy về slide đầu tiên)
       const raf = requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsTransitioning(true);
         });
       });
+      // Sử dụng requestAnimationFrame hai lần để đảm bảo rằng việc bật lại hiệu ứng chuyển 
+      // đổi sẽ xảy ra sau khi trình duyệt đã hoàn tất việc cập nhật DOM và đã hiển thị slide đầu tiên, tránh việc bật lại hiệu ứng quá
 
       return () => cancelAnimationFrame(raf);
+      // Trả về một hàm dọn dẹp để hủy bỏ requestAnimationFrame nếu component bị unmount hoặc 
+      // nếu isTransitioning thay đổi trước khi requestAnimationFrame được thực thi, giúp tránh lỗi và rò rỉ bộ nhớ.
     }
   }, [isTransitioning]);
 
   return (
     <section className="hero-banner rounded-4 position-relative overflow-hidden">
       <div className="hero-hotdeal position-absolute top-0 end-0 mt-3 me-3">
+        {/* Nút Hotdeal được đặt ở góc trên bên phải của banner */}
         <button
           onClick={() => setShowVouchers((prev) => !prev)}
           className="btn btn-sm btn-outline-danger hero-hotdeal-btn"
         >
           Hotdeal
         </button>
-
+        {/* Khi người dùng nhấp vào nút Hotdeal, trạng thái showVouchers sẽ được chuyển đổi giữa true và false,
+        điều này sẽ điều khiển việc hiển thị hoặc ẩn popup voucher hotdeal bên dưới nút. */}
         {showVouchers && (
           <div className="hero-voucher-popup mt-2 rounded-4">
             <div className="hero-voucher-grid">
@@ -120,15 +140,17 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
                 <div
                   key={voucher.id}
                   className="hero-voucher-card rounded-4"
-                  style={{ background: voucher.accent }}
+                  style={{ background: voucher.accent }} //Mỗi voucher sẽ có một màu nền khác nhau được lấy từ thuộc tính accent của voucher trong dữ liệu hotVouchers, tạo sự nổi bật và dễ phân biệt giữa các voucher khi hiển thị trong popup.
                 >
                   <div className="d-flex align-items-start justify-content-between gap-3">
-                    <div>
+                    <div> 
+                      {/* Trái */}
                       <div className="hero-voucher-label">VOUCHER HOT</div>
                       <h3 className="hero-voucher-title">{voucher.title}</h3>
                       <div className="hero-voucher-detail">{voucher.detail}</div>
                     </div>
-                    <div className="hero-voucher-code rounded-4">
+                    <div className="hero-voucher-code rounded-4"> 
+                      {/* Phải */}
                       {voucher.code}
                     </div>
                   </div>
@@ -140,7 +162,7 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
       </div>
 
       <div className="hero-radial-overlay position-absolute top-0 start-0 w-100 h-100" />
-
+        {/* Hiệu ứng màu nền của banner */}
       <div className="hero-slider-wrapper position-absolute top-0 end-0 h-100">
         <div className="hero-slider-mask position-absolute top-0 start-0 w-100 h-100">
           <div
@@ -149,8 +171,9 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
             style={{
               width: `${loopImages.length * 100}%`,
               transform: `translateX(-${activeSlide * (100 / loopImages.length)}%)`,
+              // Dịch chuyển các slide từ phải sang trái
               transition: isTransitioning
-                ? "transform 1400ms cubic-bezier(0.4, 0, 0.2, 1)"
+                ? "transform 1400ms cubic-bezier(0.4, 0, 0.2, 1)" //Tạo hiệu ứng chuyển đổi từ trái sang phải với thời gian 1400ms và sử dụng hàm easing cubic-bezier để tạo cảm giác mượt mà hơn
                 : "none",
             }}
           >
@@ -173,6 +196,7 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
         <div className="hero-overlay-left position-absolute top-0 start-0 h-100" />
         <div className="hero-overlay-right position-absolute top-0 end-0 h-100" />
         <div className="hero-overlay-bottom position-absolute start-0 bottom-0" />
+        {/* Các lớp phủ để tạo hiệu ứng trên banner */}
       </div>
 
       <div className="row align-items-center position-relative hero-content-row">
@@ -218,15 +242,17 @@ function HeroBanner({ totalProducts, productCategoryCount }) {
 }
 
 export default function HomePage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate();//Hook cuar React Router để điều hướng giữa các trang trong ứng dụng, cho phép chuyển hướng đến các trang khác khi người dùng tương tác với các phần tử trên trang chủ.
   const [flashDealsSecondsLeft, setFlashDealsSecondsLeft] = useState(
     1 * 3600 + 32 * 60 + 54
-  );
+  ); // State để đếm ngược thời gian còn lại cho Flash Deals, được khởi tạo với giá trị tương đương 1 giờ, 32 phút và 54 giây (tổng cộng là 5574 giây)
 
   useEffect(() => {
     const fontId = "playfair-display-font";
-
-    if (!document.getElementById(fontId)) {
+    //Dùng để load font Playfair Display từ Google Fonts, 
+    // đảm bảo rằng font này chỉ được thêm vào tài liệu một lần duy nhất, 
+    // tránh việc tải lại font nhiều lần khi component được render lại nhiều lần hoặc khi người dùng tương tác với trang chủ.
+    if (!document.getElementById(fontId)) { //Kiểm tra font đã tồn tại chưa
       const link = document.createElement("link");
       link.id = fontId;
       link.rel = "stylesheet";
@@ -234,15 +260,20 @@ export default function HomePage() {
         "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap";
       document.head.appendChild(link);
     }
+    //Nếu chưa thì thiết lập để tải font từ google về
   }, []);
 
   const featuredProductsFromMultipleBrands = useMemo(() => {
     return shuffleArray(products).slice(0, 8);
-  }, []);
+  }, []); // Sử dụng useMemo để tạo một mảng gồm 8 sản phẩm nổi bật được chọn ngẫu nhiên từ mảng products,
+  // đảm bảo rằng việc xáo trộn và chọn sản phẩm chỉ xảy ra một lần khi component được mount, 
+  // giúp cải thiện hiệu suất bằng cách tránh việc tính toán lại mỗi khi component re-render. 
+  // Việc sử dụng shuffleArray giúp đảm bảo rằng mỗi lần người dùng truy cập trang chủ sẽ thấy một tập hợp sản phẩm nổi bật khác nhau, tạo sự mới mẻ và hấp dẫn hơn.
 
   const featuredShowcaseProducts = useMemo(() => {
     return featuredProductsFromMultipleBrands.slice(0, 4);
   }, [featuredProductsFromMultipleBrands]);
+  // Sử dụng useMemo để tạo một mảng gồm 4 sản phẩm nổi bật được chọn từ mảng featuredProductsFromMultipleBrands,
 
   const hotPromotionProducts = useMemo(() => {
     return [...products]
@@ -250,7 +281,7 @@ export default function HomePage() {
       .sort((a, b) => (b.discount || 0) - (a.discount || 0))
       .slice(0, 6);
   }, []);
-
+  // Sử dụng useMemo để tạo một mảng gồm 6 sản phẩm có khuyến mãi tốt nhất (có phần trăm giảm giá cao nhất) được chọn từ mảng products,
   useEffect(() => {
     const interval = setInterval(() => {
       setFlashDealsSecondsLeft((prev) =>
@@ -260,15 +291,18 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, []);
+  //Thực hiện đếm ngược thời gian theo giây
+  //Khi thời gian kết thúc thì reset lại 
 
   const flashDealHours = Math.floor(flashDealsSecondsLeft / 3600);
   const flashDealMinutes = Math.floor((flashDealsSecondsLeft % 3600) / 60);
   const flashDealSeconds = flashDealsSecondsLeft % 60;
+  //Tách thời gian theo giờ, phút, giây
   const latestNewsItems = useMemo(() => {
     return [...newsItems]
       .sort((a, b) => parseVietnameseDate(b.date) - parseVietnameseDate(a.date))
       .slice(0, 3);
-  }, []);
+  }, []); //Lọc tin tức mới nhất bằng cách sắp xếp theo thời gian
 
   return (
     <div className="container-fluid homepage-container">
@@ -294,15 +328,19 @@ export default function HomePage() {
               key={product.id}
               href={getBrandUrl(product.brand)}
               target="_blank"
+              //Mở một tab mới
               rel="noreferrer"
+              //Đảm bảo an toàn khi mở liên kết ngoài bằng cách ngăn chặn việc truyền referrer và tránh các lỗ hổng bảo mật tiềm ẩn
               className={`featured-showcase-card featured-showcase-card-${index + 1}`}
             >
               <div className="featured-showcase-image-wrap">
+                {/* Hiển thị badge giảm giá */}
                 {product.discount > 0 && (
                   <div className="featured-showcase-discount-badge">
                     -{product.discount}%
                   </div>
                 )}
+                {/* Hiển thị hình ảnh sản phẩm */}
                 <img
                   src={product.image}
                   alt={product.name}
