@@ -24,7 +24,7 @@ const SOCIAL_LINKS = [
   { name: "YouTube", icon: "YT", color: "#ff0000", bg: "#ffe8e8", href: "#" },
 ];
 
-// Google Maps embed — thay src bằng địa chỉ thật của bạn
+// Google Maps embed — thay src bằng địa chỉ thật 
 const MAP_SRC = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.4851!2d106.6654!3d10.8384!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529f77b37c5a9%3A0x9c6e7a36!2zUXXhuq1uIEfDsiBW4bqlcA!5e0!3m2!1svi!2svn";
 
 export default function ContactPage() {

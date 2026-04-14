@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { provinces, getDistricts, getWards } from "../data/vietnamAddress";
+import addressData from "../data/vietnamAddress.json";
+
+const provinces = Object.keys(addressData);
+
+function getDistricts(province) {
+  if (!province || !addressData[province]) return [];
+  return Object.keys(addressData[province]);
+}
+
+function getWards(province, district) {
+  if (!province || !district) return [];
+  return addressData[province]?.[district] || [];
+}
 
 // editData: truyền vào khi muốn chỉnh sửa địa chỉ đã có (không truyền = thêm mới)
 export default function AddressModal({ show, onClose, onSave, editData = null }) {

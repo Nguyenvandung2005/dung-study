@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-
+import { Link, useSearchParams } from "react-router-dom";
 export default function AboutUs() {
   const [hoveredBox, setHoveredBox] = useState(null);
 
   const getBoxStyle = (boxId) => {
     const whiteBackgroundBoxes = ['sanxuat', '2', 'uytín', 'chatlüong', 'tuте'];
-    
+
     let backgroundColor = '#fff';
     let color = '333';
-    
+
     if (hoveredBox === boxId && whiteBackgroundBoxes.includes(boxId)) {
       backgroundColor = '#E23E8C';
       color = '#fff';
     }
-    
+
     return {
       backgroundColor,
       transform: hoveredBox === boxId ? "scale(1.05)" : "scale(1)",
@@ -24,20 +24,33 @@ export default function AboutUs() {
 
   return (
     <div>
+      {/* ── PHẦN BREADCRUMB (ĐƯỜNG DẪN) ────────────────────────────────── */}
+      <div className="container" style={{ marginTop: "20px", marginBottom: "20px" }}>
+        <nav aria-label="breadcrumb">
+          <ol className="breadcrumb" style={{ background: "transparent", padding: 0, fontSize: "14px" }}>
+            <li className="breadcrumb-item">
+              <Link to="/" style={{ textDecoration: "none", color: "#6c757d" }}>Trang chủ</Link>
+            </li>
+            <li className="breadcrumb-item active" aria-current="page" style={{ color: "#E23E8C", fontWeight: "bold" }}>
+              Về chúng tôi
+            </li>
+          </ol>
+        </nav>
+      </div>
       <div className="container about-header">
         <div className="row align-items-center">
           <div className="col-md-6 text-center mb-4 mb-md-0">
-            <img 
-              src="/IMG/logoQuangba.png" 
+            <img
+              src="/IMG/logoQuangba.png"
               className="img-fluid about-header-image"
               alt="Thương Hiệu PinkyCloud"
             />
           </div>
 
           <div className="col-md-6">
-            <h2 style={{ 
-              fontSize: "28px", 
-              fontWeight: "bold", 
+            <h2 style={{
+              fontSize: "28px",
+              fontWeight: "bold",
               color: "#E23E8C",
               marginBottom: "20px"
             }}>
@@ -62,17 +75,17 @@ export default function AboutUs() {
       <div className="container" style={{ marginBottom: "50px" }}>
         <div className="row g-4">
           <div className="col-md-6">
-            <div 
+            <div
               onMouseEnter={() => setHoveredBox('sanxuat')}
               onMouseLeave={() => setHoveredBox(null)}
               style={{
-              padding: "30px",
-              backgroundColor: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              borderRadius: "5px",
-              ...getBoxStyle('sanxuat'),
-              cursor: "pointer"
-            }}>
+                padding: "30px",
+                backgroundColor: "#fff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                borderRadius: "5px",
+                ...getBoxStyle('sanxuat'),
+                cursor: "pointer"
+              }}>
               <div className="d-flex align-items-start mb-3">
                 <span style={{
                   fontSize: "24px",
@@ -82,7 +95,7 @@ export default function AboutUs() {
                 }}>
                   ❯
                 </span>
-              <h5 style={{
+                <h5 style={{
                   fontSize: "28px",
                   fontWeight: "bold",
                   color: hoveredBox === 'sanxuat' ? "#fff" : "#333",
@@ -105,17 +118,17 @@ export default function AboutUs() {
           </div>
 
           <div className="col-md-6">
-            <div 
+            <div
               onMouseEnter={() => setHoveredBox('2')}
               onMouseLeave={() => setHoveredBox(null)}
               style={{
-              padding: "30px",
-              backgroundColor: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              borderRadius: "5px",
-              ...getBoxStyle('2'),
-              cursor: "pointer"
-            }}>
+                padding: "30px",
+                backgroundColor: "#fff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                borderRadius: "5px",
+                ...getBoxStyle('2'),
+                cursor: "pointer"
+              }}>
               <div className="d-flex align-items-start mb-3">
                 <span style={{
                   fontSize: "24px",
@@ -142,7 +155,7 @@ export default function AboutUs() {
                 marginLeft: "39px",
                 transition: "color 0.3s ease-in-out"
               }}>
-                Luôn có mặt khi khách hàng cần. Luôn lắng nghe khi khách hàng nói. Luôn cố gắng đáp ứng mọi nhu cầu của khách hàng.      
+                Luôn có mặt khi khách hàng cần. Luôn lắng nghe khi khách hàng nói. Luôn cố gắng đáp ứng mọi nhu cầu của khách hàng.
                 Chúng tôi không ngừng nỗ lực để mang đến trải nghiệm mua sắm tốt nhất cho khách hàng.
               </p>
             </div>
@@ -151,9 +164,9 @@ export default function AboutUs() {
       </div>
 
       <div className="container" style={{ marginBottom: "50px", textAlign: "center" }}>
-        <img 
-          src="/IMG/ceo.jpg" 
-          alt="CEO" 
+        <img
+          src="/IMG/ceo.jpg"
+          alt="CEO"
           className="img-fluid rounded shadow-lg"
           style={{ maxWidth: "100%", height: "auto" }}
         />
@@ -178,21 +191,21 @@ export default function AboutUs() {
           </h2>
           <div className="row">
             <div className="col-md-4 mb-4">
-              <div 
+              <div
                 onMouseEnter={() => setHoveredBox('uytín')}
                 onMouseLeave={() => setHoveredBox(null)}
                 style={{
-                padding: "30px",
-                backgroundColor: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                borderRadius: "5px",
-                minHeight: "250px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                ...getBoxStyle('uytín'),
-                cursor: "pointer"
-              }}>
+                  padding: "30px",
+                  backgroundColor: "#fff",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  borderRadius: "5px",
+                  minHeight: "250px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  ...getBoxStyle('uytín'),
+                  cursor: "pointer"
+                }}>
                 <h4 style={{
                   fontSize: "50px",
                   fontWeight: "bold",
@@ -214,21 +227,21 @@ export default function AboutUs() {
             </div>
 
             <div className="col-md-4 mb-4">
-              <div 
+              <div
                 onMouseEnter={() => setHoveredBox('chatlüong')}
                 onMouseLeave={() => setHoveredBox(null)}
                 style={{
-                padding: "30px",
-                backgroundColor: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                borderRadius: "5px",
-                minHeight: "250px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                ...getBoxStyle('chatlüong'),
-                cursor: "pointer"
-              }}>
+                  padding: "30px",
+                  backgroundColor: "#fff",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  borderRadius: "5px",
+                  minHeight: "250px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  ...getBoxStyle('chatlüong'),
+                  cursor: "pointer"
+                }}>
                 <h4 style={{
                   fontSize: "50px",
                   fontWeight: "bold",
@@ -250,21 +263,21 @@ export default function AboutUs() {
             </div>
 
             <div className="col-md-4 mb-4">
-              <div 
+              <div
                 onMouseEnter={() => setHoveredBox('tuте')}
                 onMouseLeave={() => setHoveredBox(null)}
                 style={{
-                padding: "30px",
-                backgroundColor: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                borderRadius: "5px",
-                minHeight: "250px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                ...getBoxStyle('tuте'),
-                cursor: "pointer"
-              }}>
+                  padding: "30px",
+                  backgroundColor: "#fff",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  borderRadius: "5px",
+                  minHeight: "250px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  ...getBoxStyle('tuте'),
+                  cursor: "pointer"
+                }}>
                 <h4 style={{
                   fontSize: "50px",
                   fontWeight: "bold",
@@ -293,19 +306,19 @@ export default function AboutUs() {
           <div className="row">
             {/* Mission */}
             <div className="col-md-6 mb-4 mb-md-0">
-              <div 
+              <div
                 onMouseEnter={() => setHoveredBox('mission')}
                 onMouseLeave={() => setHoveredBox(null)}
                 style={{
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: "5px",
-                height: "300px",
-                ...getBoxStyle('mission'),
-                cursor: "pointer"
-              }}>
-                <img 
-                  src="/IMG/GT4.png" 
+                  position: "relative",
+                  overflow: "hidden",
+                  borderRadius: "5px",
+                  height: "300px",
+                  ...getBoxStyle('mission'),
+                  cursor: "pointer"
+                }}>
+                <img
+                  src="/IMG/GT4.png"
                   alt="Mission"
                   style={{
                     width: "100%",
@@ -348,19 +361,19 @@ export default function AboutUs() {
             </div>
 
             <div className="col-md-6">
-              <div 
+              <div
                 onMouseEnter={() => setHoveredBox('vision')}
                 onMouseLeave={() => setHoveredBox(null)}
                 style={{
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: "5px",
-                height: "300px",
-                ...getBoxStyle('vision'),
-                cursor: "pointer"
-              }}>
-                <img 
-                  src="/IMG/GT5.png" 
+                  position: "relative",
+                  overflow: "hidden",
+                  borderRadius: "5px",
+                  height: "300px",
+                  ...getBoxStyle('vision'),
+                  cursor: "pointer"
+                }}>
+                <img
+                  src="/IMG/GT5.png"
                   alt="Vision"
                   style={{
                     width: "100%",

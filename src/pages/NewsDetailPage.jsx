@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import newsItems from "../data/newsItems.json";
 import "../css/NewsDetailPage.css";
 
-const fallbackImages = [
+const fallbackImages = [ //Khai báo một mảng các đường dẫn ảnh dự phòng để sử dụng khi bài viết không có ảnh chính thức
   "/IMG/anh31.png",
   "/IMG/anh32.png",
   "/IMG/anh33.png",
@@ -11,25 +11,23 @@ const fallbackImages = [
   "/IMG/anh35.png",
   "/IMG/anh36.png",
 ];
-
-// Tách nội dung bài viết thành các đoạn theo dòng để render dễ đọc.
 function splitContentToParagraphs(content = "") {
   return content
     .trim()
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
-}
+}//Hàm để tách nội dung các bài viết thành các đoạn riêng
 
-// Ưu tiên ảnh từ dữ liệu bài viết; nếu thiếu thì dùng ảnh fallback theo id.
 function getNewsImage(item) {
   if (item?.image) return item.image;
   return fallbackImages[item.id % fallbackImages.length];
-}
+}//Hàm để lấy ảnh cho bài viết
+//Trả về ảnh chính thức nếu có, ngược lại thì sử dụng ảnh trong mảng fallbackImages
 
 export default function NewsDetailPage() {
-  const { slug } = useParams();
-  const navigate = useNavigate();
+  const { slug } = useParams();//Khai báo hook useParams để lấy tham số slug từ url
+  const navigate = useNavigate();//Khai báo hook useNavigate để điều hướng người dùng khi cần thiết
 
   // Tìm bài viết theo slug trên URL.
   const selectedNews = newsItems.find((item) => item.slug === slug);
@@ -57,8 +55,11 @@ export default function NewsDetailPage() {
 
   // Chuẩn bị dữ liệu hiển thị cho bài hiện tại và danh sách liên quan.
   const paragraphs = splitContentToParagraphs(selectedNews.content);
+  //Lấy nội dung bài viết và tách thành từng đoạn
   const relatedNews = newsItems.filter((item) => item.slug !== slug).slice(0, 3);
+  //Lấy danh sách các bài viết khác
   const mainImage = getNewsImage(selectedNews);
+  //Lấy ảnh chính cho bài viết
 
   return (
     <section className="container news-detail-page py-5">

@@ -26,8 +26,8 @@ export default function Login() {
     navigate("/");
   };
 
-  const handleLoginSuccess = (userInfo) => {
-    login(userInfo || {});
+  const handleLoginSuccess = (userInfo, token) => {
+    login(userInfo || {}, token || "");
     setShowLoginModal(false);
     navigate("/");
   };

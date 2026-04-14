@@ -13,7 +13,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [showForgot, setShowForgot] = useState(true);
+  const [showForgot, setShowForgot] = useState(false);
 
   if (!show) return null;
 

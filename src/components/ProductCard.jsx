@@ -10,8 +10,6 @@ export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
 
-  // Tính giá gốc từ discount: price = originalPrice * (1 - discount/100)
-  // => originalPrice = price / (1 - discount/100)
   const hasDiscount = product.discount && product.discount > 0;
   const originalPrice = hasDiscount
     ? Math.round(product.price / (1 - product.discount / 100))
@@ -27,8 +25,6 @@ export default function ProductCard({ product }) {
   return (
     <div className="pc">
       <Link to={`/san-pham/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-
-        {/* ẢNH */}
         <div className="pc-img-wrap">
           <img src={product.image} alt={product.name} className="pc-img" />
           <div className="pc-shade" />
@@ -42,7 +38,6 @@ export default function ProductCard({ product }) {
           <div className="pc-add">+ Thêm vào giỏ</div>
         </div>
 
-        {/* NỘI DUNG */}
         <div className="pc-body">
           <div className="pc-meta">{product.brand} • {product.category}</div>
           <div className="pc-name">{product.name}</div>
@@ -55,13 +50,12 @@ export default function ProductCard({ product }) {
         </div>
       </Link>
 
-      {/* NÚT */}
       <div className="pc-foot">
         <button
           className={`pc-btn${added ? " pc-btn--added" : ""}`}
           onClick={handleAdd}
         >
-          {added ? "Đã thêm ✓" : "Thêm vào giỏ"}
+          {added ? "Đã thêm" : "Thêm vào giỏ"}
         </button>
       </div>
     </div>
