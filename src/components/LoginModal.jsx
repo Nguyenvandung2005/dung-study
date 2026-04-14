@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { loginUser } from "../hooks/userStorage";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 // Thông tin giả lập OAuth
 const FAKE_GOOGLE_USER = { name: "Nguyễn Google", email: "user@gmail.com" };
@@ -12,6 +13,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [showForgot, setShowForgot] = useState(true);
 
   if (!show) return null;
 
@@ -121,7 +123,10 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
           <label style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <input type="checkbox" style={{ accentColor: "#ff6b81" }} /> Nhớ mật khẩu
           </label>
-          <span style={{ color: "#ff6b81", cursor: "pointer", fontWeight: 600 }}>Quên mật khẩu?</span>
+          <p style={{ cursor: "pointer", color: "#ff6b81"}} onClick={() => {setShowForgot(true);}}>
+              Quên mật khẩu?
+          </p>
+          
         </div>
 
         {/* Nút đăng nhập */}
@@ -136,6 +141,9 @@ export default function LoginModal({ show, onClose, onLoginSuccess, onSwitchToRe
             ĐĂNG KÝ NGAY
           </span>
         </p>
+        {showForgot && (
+  <ForgotPasswordModal onClose={() => setShowForgot(false)} />
+)}
       </div>
     </div>
   );
