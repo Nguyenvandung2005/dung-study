@@ -1,164 +1,247 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+// Tạo Context để chia sẻ dữ liệu giỏ hàng và người dùng trong toàn bộ ứng dụng
 const CartContext = createContext();
 
-// Helper đọc/ghi localStorage an toàn
-const storage = {
-    get: (key, fallback = null) => {
-        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-        catch { return fallback; }
-    },
-    set: (key, value) => {
-        try { localStorage.setItem(key, JSON.stringify(value)); }
-        catch { console.warn("localStorage không khả dụng"); }
-    },
-    remove: (key) => {
-        try { localStorage.removeItem(key); }
-        catch { }
-    },
-};
+// Các từ khóa hằng số để lưu trữ vào LocalStorage
+const CURRENT_USER_KEY = "currentUser";
+const GUEST_CART_KEY = "guestCartItems";
+
+// --- CÁC HÀM HỖ TRỢ XỬ LÝ LOCALSTORAGE ---
+
+// Lưu dữ liệu vào LocalStorage (chuyển vật thể JS sang chuỗi JSON)
+function saveToLocal(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// Đọc dữ liệu từ LocalStorage (chuyển chuỗi JSON ngược lại thành vật thể JS)
+function loadFromLocal(key, fallback = null) {
+  const raw = localStorage.getItem(key);
+  if (raw === null) return fallback;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+// Xóa dữ liệu khỏi LocalStorage
+function removeFromLocal(key) {
+  localStorage.removeItem(key);
+}
+
+// Tạo khóa lưu trữ riêng biệt cho từng người dùng (dựa trên email hoặc ID)
+function getUserStorageKey(prefix, user) {
+  const identity = user?.contact || user?.email || user?.id;
+  return identity ? `${prefix}_${identity}` : `${prefix}_guest`;
+}
 
 export function CartProvider({ children }) {
-    const [cartItems, setCartItems] = useState([]);
-    const [isLoggedIn, setIsLoggedIn] = useState(() => storage.get("isLoggedIn", false));
-    const [currentUser, setCurrentUser] = useState(() => storage.get("currentUser", null));
+  // --- QUẢN LÝ TRẠNG THÁI NGƯỜI DÙNG (AUTH) ---
+  const [currentUser, setCurrentUser] = useState(() =>
+    loadFromLocal(CURRENT_USER_KEY, null)
+  );
+  const [isLoggedIn, setIsLoggedIn] = useState(() =>
+    Boolean(loadFromLocal(CURRENT_USER_KEY, null))
+  );
+  const [authLoading] = useState(false);
 
-    // -------------------------------------------------------
-    // QUẢN LÝ ĐỊA CHỈ
-    // addresses: mảng địa chỉ, mỗi phần tử có thêm `id`
-    // Key localStorage theo email user để mỗi tài khoản riêng
-    // -------------------------------------------------------
-    const addressKey = currentUser?.email
-        ? `addresses_${currentUser.email}`
-        : "addresses_guest";
+  // Tạo khóa động cho giỏ hàng và địa chỉ dựa trên người dùng hiện tại
+  const cartStorageKey = useMemo(
+    () => getUserStorageKey("cartItems", currentUser),
+    [currentUser]
+  );
+  const addressStorageKey = useMemo(
+    () => getUserStorageKey("addresses", currentUser),
+    [currentUser]
+  );
 
-    const [addresses, setAddresses] = useState(() => storage.get(addressKey, []));
+  // --- QUẢN LÝ GIỎ HÀNG ---
+  const [cartItems, setCartItems] = useState(() => {
+    const user = loadFromLocal(CURRENT_USER_KEY, null);
+    const initialKey = user ? getUserStorageKey("cartItems", user) : GUEST_CART_KEY;
+    return loadFromLocal(initialKey, []);
+  });
 
-    // Khi user thay đổi (login/logout) → load lại địa chỉ tương ứng
-    useEffect(() => {
-        setAddresses(storage.get(addressKey, []));
-    }, [addressKey]);
+  // --- QUẢN LÝ SỔ ĐỊA CHỈ ---
+  const [addresses, setAddresses] = useState(() =>
+    loadFromLocal(getUserStorageKey("addresses", loadFromLocal(CURRENT_USER_KEY, null)), [])
+  );
 
-    // Lưu addresses xuống localStorage mỗi khi thay đổi
-    useEffect(() => {
-        storage.set(addressKey, addresses);
-    }, [addresses, addressKey]);
+  // Tự động nạp lại dữ liệu giỏ hàng/địa chỉ khi thay đổi tài khoản đăng nhập
+  useEffect(() => {
+    const nextCartKey = currentUser ? cartStorageKey : GUEST_CART_KEY;
+    setCartItems(loadFromLocal(nextCartKey, []));
+    setAddresses(loadFromLocal(addressStorageKey, []));
+  }, [currentUser, cartStorageKey, addressStorageKey]);
 
-    /** Thêm địa chỉ mới */
-    const addAddress = (addressData) => {
-        const newAddr = {
-            ...addressData,
-            id: Date.now().toString(), // id unique
-        };
-        setAddresses((prev) => {
-            let updated;
-            if (newAddr.isDefault) {
-                // Bỏ mặc định của các địa chỉ cũ
-                updated = prev.map((a) => ({ ...a, isDefault: false }));
-            } else {
-                updated = [...prev];
-            }
-            // Nếu chưa có địa chỉ nào → tự đặt làm mặc định
-            if (updated.length === 0) newAddr.isDefault = true;
-            return [...updated, newAddr];
-        });
-        return newAddr;
-    };
+  // Lưu giỏ hàng vào LocalStorage mỗi khi danh sách sản phẩm thay đổi
+  useEffect(() => {
+    const targetKey = currentUser ? cartStorageKey : GUEST_CART_KEY;
+    saveToLocal(targetKey, cartItems);
+  }, [cartItems, currentUser, cartStorageKey]);
 
-    /** Cập nhật địa chỉ đã có */
-    const updateAddress = (id, updatedData) => {
-        setAddresses((prev) => {
-            let updated = prev.map((a) => a.id === id ? { ...a, ...updatedData } : a);
-            if (updatedData.isDefault) {
-                updated = updated.map((a) => ({ ...a, isDefault: a.id === id }));
-            }
-            return updated;
-        });
-    };
+  // Lưu danh sách địa chỉ vào LocalStorage mỗi khi có thay đổi
+  useEffect(() => {
+    saveToLocal(addressStorageKey, addresses);
+  }, [addresses, addressStorageKey]);
 
-    /** Xóa địa chỉ */
-    const removeAddress = (id) => {
-        setAddresses((prev) => {
-            const filtered = prev.filter((a) => a.id !== id);
-            // Nếu xóa địa chỉ mặc định → đặt phần tử đầu tiên làm mặc định
-            if (filtered.length > 0 && !filtered.some((a) => a.isDefault)) {
-                filtered[0].isDefault = true;
-            }
-            return filtered;
-        });
-    };
+  // --- CÁC HÀM XỬ LÝ ĐỊA CHỈ ---
 
-    /** Đặt địa chỉ mặc định */
-    const setDefaultAddress = (id) => {
-        setAddresses((prev) =>
-            prev.map((a) => ({ ...a, isDefault: a.id === id }))
-        );
-    };
+  // Thêm địa chỉ mới và xử lý trạng thái mặc định
+  const addAddress = (addressData) => {
+    const newAddress = { ...addressData, id: Date.now().toString() };
 
-    /** Lấy địa chỉ mặc định */
-    const getDefaultAddress = () =>
-        addresses.find((a) => a.isDefault) || addresses[0] || null;
+    setAddresses((prev) => {
+      let nextAddresses = prev;
 
-    // -------------------------------------------------------
-    // ĐĂNG NHẬP / ĐĂNG XUẤT
-    // -------------------------------------------------------
-    const login = (userInfo = {}) => {
-        setIsLoggedIn(true);
-        setCurrentUser(userInfo);
-        storage.set("isLoggedIn", true);
-        storage.set("currentUser", userInfo);
-    };
+      // Nếu địa chỉ mới là mặc định, bỏ trạng thái mặc định của các địa chỉ cũ
+      if (newAddress.isDefault) {
+        nextAddresses = prev.map((item) => ({ ...item, isDefault: false }));
+      }
 
-    const logout = () => {
-        setIsLoggedIn(false);
-        setCurrentUser(null);
-        storage.remove("isLoggedIn");
-        storage.remove("currentUser");
-    };
+      // Nếu đây là địa chỉ đầu tiên, tự động đặt làm mặc định
+      if (nextAddresses.length === 0) {
+        newAddress.isDefault = true;
+      }
 
-    // -------------------------------------------------------
-    // GIỎ HÀNG
-    // -------------------------------------------------------
-    const addToCart = (product) => {
-        setCartItems((prev) => {
-            const existing = prev.find((item) => item.id === product.id);
-            if (existing) {
-                return prev.map((item) =>
-                    item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-                );
-            }
-            return [...prev, { id: product.id, product, quantity: 1 }];
-        });
-    };
+      return [...nextAddresses, newAddress];
+    });
 
-    const updateQuantity = (id, quantity) => {
-        const qty = parseInt(quantity) || 1;
-        setCartItems((prev) =>
-            prev.map((item) => (item.id === id ? { ...item, quantity: Math.max(1, qty) } : item))
-        );
-    };
+    return newAddress;
+  };
 
-    const removeFromCart = (id) => {
-        setCartItems((prev) => prev.filter((item) => item.id !== id));
-    };
+  // Cập nhật thông tin địa chỉ đã tồn tại
+  const updateAddress = (id, updatedData) => {
+    setAddresses((prev) => {
+      let nextAddresses = prev.map((item) =>
+        item.id === id ? { ...item, ...updatedData } : item
+      );
 
-    const clearCart = () => setCartItems([]);
+      // Đảm bảo chỉ có duy nhất một địa chỉ mặc định
+      if (updatedData.isDefault) {
+        nextAddresses = nextAddresses.map((item) => ({
+          ...item,
+          isDefault: item.id === id,
+        }));
+      }
 
-    return (
-        <CartContext.Provider value={{
-            // Giỏ hàng
-            cartItems, addToCart, updateQuantity, removeFromCart, clearCart,
-            // Auth
-            isLoggedIn, currentUser, login, logout,
-            // Địa chỉ
-            addresses, addAddress, updateAddress, removeAddress,
-            setDefaultAddress, getDefaultAddress,
-        }}>
-            {children}
-        </CartContext.Provider>
+      return nextAddresses;
+    });
+  };
+
+  // Xóa địa chỉ và tự động chuyển trạng thái mặc định cho địa chỉ khác nếu cần
+  const removeAddress = (id) => {
+    setAddresses((prev) => {
+      const filtered = prev.filter((item) => item.id !== id);
+
+      if (filtered.length > 0 && !filtered.some((item) => item.isDefault)) {
+        filtered[0] = { ...filtered[0], isDefault: true };
+      }
+
+      return filtered;
+    });
+  };
+
+  // Đặt một địa chỉ cụ thể làm địa chỉ mặc định
+  const setDefaultAddress = (id) => {
+    setAddresses((prev) =>
+      prev.map((item) => ({ ...item, isDefault: item.id === id }))
     );
+  };
+
+  // Lấy ra địa chỉ mặc định hiện tại
+  const getDefaultAddress = () =>
+    addresses.find((item) => item.isDefault) || addresses[0] || null;
+
+  // --- CÁC HÀM XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT ---
+
+  // Xử lý đăng nhập: Lưu thông tin user và cập nhật trạng thái
+  const login = (userInfo = {}) => {
+    saveToLocal(CURRENT_USER_KEY, userInfo);
+    setCurrentUser(userInfo);
+    setIsLoggedIn(true);
+  };
+
+  // Xử lý đăng xuất: Xóa thông tin user và quay về giỏ hàng của khách (guest)
+  const logout = () => {
+    removeFromLocal(CURRENT_USER_KEY);
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+    setCartItems(loadFromLocal(GUEST_CART_KEY, []));
+    setAddresses(loadFromLocal("addresses_guest", []));
+  };
+
+  // --- CÁC HÀM XỬ LÝ GIỎ HÀNG (CART) ---
+
+  // Thêm sản phẩm vào giỏ hàng hoặc tăng số lượng nếu đã tồn tại
+  const addToCart = (product, quantityToAdd = 1) => {
+    setCartItems((prev) => {
+      const existingItem = prev.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        return prev.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantityToAdd }
+            : item
+        );
+      }
+
+      return [...prev, { id: product.id, product, quantity: quantityToAdd }];
+    });
+  };
+
+  // Cập nhật số lượng của một sản phẩm cụ thể trong giỏ
+  const updateQuantity = (id, quantity) => {
+    const normalizedQuantity = parseInt(quantity, 10) || 1;
+
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, quantity: Math.max(1, normalizedQuantity) }
+          : item
+      )
+    );
+  };
+
+  // Xóa hoàn toàn một sản phẩm khỏi giỏ hàng
+  const removeFromCart = (id) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // Làm trống toàn bộ giỏ hàng
+  const clearCart = () => setCartItems([]);
+
+  // Cung cấp các giá trị và hàm xử lý cho các Component con
+  return (
+    <CartContext.Provider
+      value={{
+        cartItems,
+        cart: cartItems,
+        // Tính tổng số lượng tất cả sản phẩm trong giỏ để hiển thị ở Icon giỏ hàng
+        cartCount: cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0),
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        isLoggedIn,
+        currentUser,
+        login,
+        logout,
+        authLoading,
+        addresses,
+        addAddress,
+        updateAddress,
+        removeAddress,
+        setDefaultAddress,
+        getDefaultAddress,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 }
 
-export function useCart() {
-    return useContext(CartContext);
-}
+// Hook tùy chỉnh để sử dụng CartContext một cách nhanh chóng
+export const useCart = () => useContext(CartContext);

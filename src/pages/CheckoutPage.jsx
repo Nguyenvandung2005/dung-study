@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../components/CartConText";
+import { useCart } from "../components/CartContext";
 import AddressModal from "../components/AddressModal";
 import PaymentModal from "../components/PaymentModal";
 

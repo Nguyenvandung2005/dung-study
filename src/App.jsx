@@ -14,6 +14,7 @@ import Register from "./components/Register";
 import PolicyPage from "./pages/PolicyPage";
 import ContactPage from "./pages/ContactPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import AdminProductsPage from "./pages/AdminProductsPage";
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/lien-he" element={<ContactPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/tin-tuc/:slug" element={<NewsDetailPage />} />
+            <Route path="/admin/san-pham" element={<AdminProductsPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>
