@@ -6,7 +6,11 @@ import megaMenuData from "../data/megaMenu.json";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 
-export default function Header({ searchValue = "", onSearchChange = () => { } }) {
+export default function Header({
+  searchValue = "",
+  onSearchChange = () => { },
+  onSearchSubmit = () => { },
+}) {
   // --- 1. LẤY DỮ LIỆU TỪ GIỎ HÀNG VÀ AUTHENTICATION ---
   const cartData = useCart();
   const cartList = cartData.cart || cartData.cartItems || [];
@@ -212,8 +216,15 @@ export default function Header({ searchValue = "", onSearchChange = () => { } })
                   placeholder="Nhập từ khóa bạn cần tìm kiếm..."
                   value={searchValue}
                   onChange={(e) => onSearchChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") onSearchSubmit(searchValue);
+                  }}
                 />
-                <button type="button" className="search-icon-btn">
+                <button
+                  type="button"
+                  className="search-icon-btn"
+                  onClick={() => onSearchSubmit(searchValue)}
+                >
                   <img src="/IMG/search.png" alt="Search" className="header-action-image" />
                 </button>
               </div>
