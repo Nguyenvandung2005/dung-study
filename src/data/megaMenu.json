@@ -5,11 +5,11 @@
     "items": [
       {
         "name": "Sữa Rửa Mặt",
-        "link": "/san-pham?category=R%E1%BB%ADa%20m%E1%BA%B7t"
+        "link": "/san-pham?category=Rửa mặt"
       },
       {
         "name": "Nước Tẩy Trang",
-        "link": "/san-pham?category=T%E1%BA%A9y%20trang"
+        "link": "/san-pham?category=Tẩy trang"
       },
       {
         "name": "Toner",
@@ -21,11 +21,11 @@
       },
       {
         "name": "Mặt Nạ",
-        "link": "/san-pham?category=M%E1%BA%B7t%20n%E1%BA%A1"
+        "link": "/san-pham?category=Mặt nạ"
       },
       {
         "name": "Xịt Khoáng",
-        "link": "/san-pham?category=X%E1%BB%8Bt%20kho%C3%A1ng"
+        "link": "/san-pham?category=Xịt khoáng"
       }
     ]
   },
@@ -35,19 +35,19 @@
     "items": [
       {
         "name": "Kem Chống Nắng",
-        "link": "/san-pham?category=Ch%E1%BB%91ng%20n%E1%BA%AFng"
+        "link": "/san-pham?category=Chống nắng"
       },
       {
         "name": "Dưỡng Ẩm",
-        "link": "/san-pham?category=D%C6%B0%E1%BB%A1ng%20%E1%BA%A9m"
+        "link": "/san-pham?category=Dưỡng ẩm"
       },
       {
         "name": "Trị Mụn",
-        "link": "/san-pham?category=Tr%E1%BB%8B%20m%E1%BB%A5n"
+        "link": "/san-pham?category=Trị mụn"
       },
       {
         "name": "Chăm Sóc Mắt",
-        "link": "/san-pham?category=Ch%C4%83m%20s%C3%B3c%20m%E1%BA%AFt"
+        "link": "/san-pham?category=Chăm sóc mắt"
       }
     ]
   },
@@ -57,19 +57,19 @@
     "items": [
       {
         "name": "Son & Dưỡng Môi",
-        "link": "/san-pham?category=Trang%20%C4%91i%E1%BB%83m"
+        "link": "/san-pham?category=Trang điểm"
       },
       {
         "name": "Phấn & Kem Nền",
-        "link": "/san-pham?category=Trang%20%C4%91i%E1%BB%83m"
+        "link": "/san-pham?category=Trang điểm"
       },
       {
         "name": "Mắt & Chân Mày",
-        "link": "/san-pham?category=Trang%20%C4%91i%E1%BB%83m"
+        "link": "/san-pham?category=Trang điểm"
       },
       {
         "name": "Dưỡng Môi",
-        "link": "/san-pham?category=D%C6%B0%E1%BB%A1ng%20m%C3%B4i"
+        "link": "/san-pham?category=Dưỡng môi"
       }
     ]
   },
@@ -79,23 +79,23 @@
     "items": [
       {
         "name": "Chăm Sóc Tóc",
-        "link": "/san-pham?category=Ch%C4%83m%20s%C3%B3c%20t%C3%B3c"
+        "link": "/san-pham?category=Chăm sóc tóc"
       },
       {
         "name": "Chăm Sóc Cơ Thể",
-        "link": "/san-pham?category=Ch%C4%83m%20s%C3%B3c%20c%C6%A1%20th%E1%BB%83"
+        "link": "/san-pham?category=Chăm sóc cơ thể"
       },
       {
         "name": "Nước Hoa",
-        "link": "/san-pham?category=N%C6%B0%E1%BB%9Bc%20hoa"
+        "link": "/san-pham?category=Nước hoa"
       },
       {
         "name": "Thiết Bị Làm Đẹp",
-        "link": "/san-pham?category=Thi%E1%BA%BFt%20b%E1%BB%8B%20l%C3%A0m%20%C4%91%E1%BA%B9p"
+        "link": "/san-pham?category=Thiết bị làm đẹp"
       },
       {
         "name": "Phụ Kiện",
-        "link": "/san-pham?category=Ph%E1%BB%A5%20ki%E1%BB%87n"
+        "link": "/san-pham?category=Phụ kiện"
       }
     ]
   }

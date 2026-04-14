@@ -1,77 +1,74 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
-import useFetch from "../hooks/useFetch";
+import useProductsData from "../hooks/useProductsData";
 
 export default function ProductListPage({ query = "" }) {
   //  Fetch toàn bộ sản phẩm từ API 
-  const { data, loading, error } = useFetch("/api/products");
+  const { products, loading, error } = useProductsData();
 
-  // Lấy tham số ?category=... từ URL 
+  //  Lấy tham số ?category=... từ URL
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
 
-  //  State điều khiển bộ lọc & phân trang 
+  // State điều khiển bộ lọc & phân trang 
   const [category, setCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("popular"); // kiểu sắp xếp
-  const [page, setPage] = useState(1);         // trang hiện tại
+  const [sortBy, setSortBy] = useState("popular");
+  const [page, setPage] = useState(1);
 
   const itemsPerPage = 12; // số sản phẩm mỗi trang
 
-  // Đảm bảo data luôn là array dù API trả về null/undefined
-  const productsData = Array.isArray(data) ? data : [];
-
-  //  Khi URL thay đổi category
+  // Khi URL thay đổi category → cập nhật state & reset về trang 1
   useEffect(() => {
     setCategory(categoryFromUrl || "all");
     setPage(1);
   }, [categoryFromUrl]);
 
-  //  bỏ khoảng trắng, chuyển thường
+  // Chuẩn hóa từ khóa tìm kiếm: bỏ khoảng trắng, chuyển thường
   const normalizedQuery = query.trim().toLowerCase();
 
-  //  Tạo danh sách danh mục từ dữ liệu sản phẩm 
+  //  Tạo danh sách danh mục từ dữ liệu sản phẩm (không trùng lặp ────────
   const categories = useMemo(() => {
-    const set = new Set(productsData.map((p) => p.category));
-    return ["all", ...Array.from(set)];
-  }, [productsData]);
+    const categorySet = new Set(products.map((product) => product.category));
+    return ["all", ...Array.from(categorySet)];
+  }, [products]);
 
-  // Lọc + sắp xếp sản phẩm 
+  //  Lọc + sắp xếp sản phẩm theo query, danh mục, kiểu sort
   const filteredAndSorted = useMemo(() => {
-    let result = productsData.filter((p) => {
+    const result = products.filter((product) => {
       // Khớp từ khóa tìm kiếm với tên hoặc thương hiệu
       const matchQuery =
         !normalizedQuery ||
-        p.name.toLowerCase().includes(normalizedQuery) ||
-        p.brand.toLowerCase().includes(normalizedQuery);
+        product.name.toLowerCase().includes(normalizedQuery) ||
+        product.brand.toLowerCase().includes(normalizedQuery);
 
       // Khớp danh mục đang chọn
       const matchCategory =
         category === "all" ||
-        p.category.toLowerCase() === category.toLowerCase();
+        product.category.toLowerCase() === category.toLowerCase();
 
       return matchQuery && matchCategory;
     });
 
-    // Sắp xếp theo lựa chọn của user
+    // Sắp xếp theo lựa chọn của người dùng
     switch (sortBy) {
       case "price-asc":
-        result.sort((a, b) => a.price - b.price);       // giá tăng dần
+        result.sort((a, b) => a.price - b.price);                          // giá tăng dần
         break;
       case "price-desc":
-        result.sort((a, b) => b.price - a.price);       // giá giảm dần
+        result.sort((a, b) => b.price - a.price);                          // giá giảm dần
         break;
       case "hot":
-        result.sort((a, b) => (b.discount || 0) - (a.discount || 0)); // discount cao nhất lên đầu
+        result.sort((a, b) => (b.discount || 0) - (a.discount || 0));      // discount cao nhất lên đầu
         break;
       default:
-        break; // "popular" → giữ nguyên
+        break; // "popular" → giữ nguyên thứ tự từ API
     }
 
     return result;
-  }, [productsData, normalizedQuery, category, sortBy]);
+  }, [products, normalizedQuery, category, sortBy]);
 
-  //  Tính toán phân trang 
+  //  Tính toán phân trang
   const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage));
   const safePage = Math.min(page, totalPages); // tránh page vượt quá tổng số trang
   const pageItems = filteredAndSorted.slice(    // cắt đúng slice cho trang hiện tại
@@ -79,7 +76,7 @@ export default function ProductListPage({ query = "" }) {
     safePage * itemsPerPage
   );
 
-  //  Style động cho các nút sắp xếp (active vs inactive)
+  //  Style động cho nút sắp xếp (active vs inactive)
   const getSortBtnStyle = (isActive) => ({
     padding: "8px 16px",
     borderRadius: "20px",
@@ -96,23 +93,28 @@ export default function ProductListPage({ query = "" }) {
     whiteSpace: "nowrap",
   });
 
-  // ─── Trạng thái loading / error 
-  if (loading) return (
-    <div className="container py-5 text-center">
-      <div className="spinner-border text-danger" role="status"></div>
-    </div>
-  );
-  if (error) return (
-    <div className="container py-5 text-center text-danger">
-      <h4>Lỗi: {error}</h4>
-    </div>
-  );
+  // Trạng thái loading / error 
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-danger" role="status" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5 text-center text-danger">
+        <h4>Lỗi: {error}</h4>
+      </div>
+    );
+  }
 
 
   return (
     <div className="container-fluid" style={{ marginTop: 24, marginBottom: 80, padding: "0 5%" }}>
 
-      {/* Breadcrumb điều hướng: Trang chủ > Bộ sưu tập */}
+      {/* Breadcrumb: Trang chủ > Bộ sưu tập */}
       <div className="mb-3">
         <nav style={{ fontSize: "0.9rem" }}>
           <Link to="/" style={{ textDecoration: "none", color: "#6c757d" }}>Trang chủ</Link>
@@ -123,32 +125,33 @@ export default function ProductListPage({ query = "" }) {
 
       {/* Thanh lọc danh mục — scroll ngang trên mobile */}
       <div className="d-flex flex-nowrap overflow-auto mb-4 pb-2" style={{ gap: "12px", WebkitOverflowScrolling: "touch" }}>
-        {categories.map((c) => (
+        {categories.map((value) => (
           <button
-            key={c}
-            onClick={() => { setCategory(c); setPage(1); }}
+            key={value}
+            onClick={() => { setCategory(value); setPage(1); }} // đổi danh mục + reset trang
             style={{
               padding: "8px 24px",
-              background: category === c ? "#f0f5ff" : "#fff",
-              border: `1px solid ${category === c ? "#3182ce" : "#eaeaea"}`,
-              color: category === c ? "#2b6cb0" : "#555",
-              fontWeight: category === c ? "600" : "500",
+              background: category === value ? "#f0f5ff" : "#fff",
+              border: `1px solid ${category === value ? "#3182ce" : "#eaeaea"}`,
+              color: category === value ? "#2b6cb0" : "#555",
+              fontWeight: category === value ? "600" : "500",
               borderRadius: "30px",
               whiteSpace: "nowrap",
               cursor: "pointer",
               transition: "all 0.3s ease",
             }}
           >
-            {c === "all" ? "Tất cả" : c}
+            {value === "all" ? "Tất cả" : value}
           </button>
         ))}
       </div>
 
-      {/* Thanh thông tin + sắp xếp */}
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 p-3"
-        style={{ background: "#fff", borderRadius: "12px", border: "1px solid #f0f0f0" }}>
-
-        {/* Số lượng sản phẩm tìm được */}
+      {/* Thanh thông tin kết quả + nhóm nút sắp xếp */}
+      <div
+        className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 p-3"
+        style={{ background: "#fff", borderRadius: "12px", border: "1px solid #f0f0f0" }}
+      >
+        {/* Số sản phẩm tìm được */}
         <div style={{ opacity: 0.8, fontSize: "0.95rem", marginBottom: "12px", display: "flex", alignItems: "center" }}>
           Tìm thấy <b className="mx-1">{filteredAndSorted.length}</b> sản phẩm phù hợp
         </div>
@@ -163,12 +166,12 @@ export default function ProductListPage({ query = "" }) {
         </div>
       </div>
 
-      {/* Grid sản phẩm  */}
+      {/* Grid sản phẩm — responsive: 1/2/3/4 cột tuỳ màn hình */}
       <div className="row g-4">
         {pageItems.length > 0 ? (
-          pageItems.map((p) => (
-            <div key={p.id} className="col-12 col-sm-6 col-md-4 col-lg-3">
-              <ProductCard product={p} />
+          pageItems.map((product) => (
+            <div key={product.id} className="col-12 col-sm-6 col-md-4 col-lg-3">
+              <ProductCard product={product} />
             </div>
           ))
         ) : (
@@ -184,11 +187,11 @@ export default function ProductListPage({ query = "" }) {
       {totalPages > 1 && (
         <div className="d-flex justify-content-center align-items-center gap-2 mt-5">
           <button className="btn btn-outline-secondary" onClick={() => setPage(1)} disabled={safePage === 1} style={{ borderRadius: "8px" }}>Đầu</button>
-          <button className="btn btn-outline-secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1} style={{ borderRadius: "8px" }}>Trước</button>
+          <button className="btn btn-outline-secondary" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={safePage === 1} style={{ borderRadius: "8px" }}>Trước</button>
           <div className="mx-3" style={{ fontWeight: 600 }}>
             Trang <span style={{ color: "#f76c85" }}>{safePage}</span> / {totalPages}
           </div>
-          <button className="btn btn-outline-secondary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages} style={{ borderRadius: "8px" }}>Tiếp</button>
+          <button className="btn btn-outline-secondary" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={safePage === totalPages} style={{ borderRadius: "8px" }}>Tiếp</button>
           <button className="btn btn-outline-secondary" onClick={() => setPage(totalPages)} disabled={safePage === totalPages} style={{ borderRadius: "8px" }}>Cuối</button>
         </div>
       )}
