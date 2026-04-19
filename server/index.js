@@ -177,7 +177,7 @@ app.get("/api/office-locations", async (_req, res) => {
 // 8. Lấy URL thương hiệu
 app.get("/api/brand-urls", async (_req, res) => {
   const brandUrlItems = await getCollectionItems("brand_urls");
-  const brandUrls = brandUrlItems.reduce((result, item) => {
+  const brandUrls = brandUrlItems.reduce((result, item) => {//Chuyển mảng thành object để đọc nhanh
     result[item.brand] = item.url;
     return result;
   }, {});

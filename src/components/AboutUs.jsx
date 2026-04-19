@@ -1,415 +1,224 @@
-import React, { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+﻿import React from "react";
+import { Link } from "react-router-dom";
+import "../css/AboutUs.css";
+
+const values = [
+  {
+    title: "Uy tín",
+    description:
+      "Minh bạch trong từng cam kết, giữ chuẩn chất lượng trong mọi sản phẩm và dịch vụ.",
+  },
+  {
+    title: "Chất lượng",
+    description:
+      "Quy trình kiểm định nghiêm ngặt giúp sản phẩm an toàn, hiệu quả và phù hợp làn da Việt.",
+  },
+  {
+    title: "Tử tế",
+    description:
+      "Lấy khách hàng làm trọng tâm, phục vụ bằng sự chân thành và tinh thần trách nhiệm.",
+  },
+];
+
+const highlights = [
+  {
+    number: "2023",
+    label: "Năm thương hiệu được đăng ký độc quyền tại Việt Nam",
+  },
+  {
+    number: "1.500m²",
+    label: "Quy mô nhà máy với dây chuyền sản xuất hiện đại",
+  },
+  {
+    number: "200+",
+    label: "Nhân sự đồng hành trong sản xuất và vận hành",
+  },
+];
+
+const teamMembers = [
+  {
+    name: "Nguyễn Văn Dụng",
+    studentId: "23657251",
+    role: "Phụ trách giao diện",
+    image: "/IMG/Dung.jpg",
+    focus: "Trang Chủ, Trang tin tức, Trang AdminProduct",
+    skills: ["HomePage", "News", "AdminProduct"],
+  },
+  {
+    name: "Nguyễn Văn Đức",
+    studentId: "23648601",
+    role: "Backend & tính năng",
+    image: "/IMG/Duc.jpg",
+    focus: "Kết nối server, Trang Sản phẩm, Giỏ hàng",
+    skills: ["Server", "Product", "Cart"],
+  },
+  {
+    name: "Lê Văn Dương",
+    studentId: "23660591",
+    role: "Nội dung & tài liệu",
+    image: "/IMG/Duong.jpg",
+    focus: "Trang Về chúng tôi, Làm tài liệu báo cáo, Backend Account",
+    skills: ["AboutUs", "Report", "Backend Account"],
+  },
+  {
+    name: "Phạm Thị Hồng Dung",
+    studentId: "23639641",
+    role: "Auth & Checkout",
+    image: "/IMG/HongDung.jpg",
+    focus: "Trang đăng nhập đăng ký, Thanh toán, Trang liên hệ",
+    skills: ["Login", "Checkout", "Contact"],
+  },
+];
+
 export default function AboutUs() {
-  const [hoveredBox, setHoveredBox] = useState(null);
-
-  const getBoxStyle = (boxId) => {
-    const whiteBackgroundBoxes = ['sanxuat', '2', 'uytín', 'chatlüong', 'tuте'];
-
-    let backgroundColor = '#fff';
-    let color = '333';
-
-    if (hoveredBox === boxId && whiteBackgroundBoxes.includes(boxId)) {
-      backgroundColor = '#E23E8C';
-      color = '#fff';
-    }
-
-    return {
-      backgroundColor,
-      transform: hoveredBox === boxId ? "scale(1.05)" : "scale(1)",
-      transition: "all 0.3s ease-in-out",
-      color: hoveredBox === boxId && whiteBackgroundBoxes.includes(boxId) ? color : 'inherit'
-    };
-  };
-
   return (
-    <div>
-      {/* ── PHẦN BREADCRUMB (ĐƯỜNG DẪN) ────────────────────────────────── */}
-      <div className="container" style={{ marginTop: "20px", marginBottom: "20px" }}>
-        <nav aria-label="breadcrumb">
-          <ol className="breadcrumb" style={{ background: "transparent", padding: 0, fontSize: "14px" }}>
-            <li className="breadcrumb-item">
-              <Link to="/" style={{ textDecoration: "none", color: "#6c757d" }}>Trang chủ</Link>
-            </li>
-            <li className="breadcrumb-item active" aria-current="page" style={{ color: "#E23E8C", fontWeight: "bold" }}>
-              Về chúng tôi
-            </li>
-          </ol>
-        </nav>
-      </div>
-      <div className="container about-header">
-        <div className="row align-items-center">
-          <div className="col-md-6 text-center mb-4 mb-md-0">
-            <img
-              src="/IMG/logoQuangba.png"
-              className="img-fluid about-header-image"
-              alt="Thương Hiệu PinkyCloud"
-            />
-          </div>
+    <div className="about-page">
+      <section className="about-hero">
+        <div className="container py-4 py-lg-5">
+          <nav aria-label="breadcrumb">
+            <ol className="breadcrumb about-breadcrumb">
+              <li className="breadcrumb-item">
+                <Link to="/">Trang chủ</Link>
+              </li>
+              <li className="breadcrumb-item active" aria-current="page">
+                Về chúng tôi
+              </li>
+            </ol>
+          </nav>
 
-          <div className="col-md-6">
-            <h2 style={{
-              fontSize: "28px",
-              fontWeight: "bold",
-              color: "#E23E8C",
-              marginBottom: "20px"
-            }}>
-              VỀ THƯƠNG HIỆU PINKYCLOUD
-            </h2>
-            <p style={{ lineHeight: "1.8", marginBottom: "15px", textAlign: "justify" }}>
-              Thương hiệu mỹ phẩm <strong>PINKYCLOUD</strong> thuộc sở hữu của Công ty TNHH Sản Xuất & Thương Mại PinkyCloud, được đăng ký độc quyền tại Việt Nam từ năm 2023. PINKYCLOUD tự hào là một trong những đơn vị tiên phong trong lĩnh vực cung cấp mỹ phẩm trang điểm và chăm sóc da với phong cách hiện đại, dễ thương và phù hợp với làn da phụ nữ Việt.
-            </p>
-            <p style={{ lineHeight: "1.8", marginBottom: "15px", textAlign: "justify" }}>
-              Trụ sở chính của PINKYCLOUD được đặt tại Quận Gò Vấp, TP. Hồ Chí Minh. Hiện nay, hệ thống chi nhánh của PINKYCLOUD đã có mặt tại TP. Hồ Chí Minh, Nha Trang, Đà Nẵng, Bình Dương và Kiên Giang, nhằm phục vụ khách hàng trên khắp cả nước. Đặc biệt, cửa hàng trải nghiệm và mua sắm <strong>PINKYCLOUD Beauty Concept Store</strong> chính thức khai trương vào tháng 03/2024.
-            </p>
-            <p style={{ lineHeight: "1.8", marginBottom: "15px", textAlign: "justify" }}>
-              PINKYCLOUD sở hữu nhà máy sản xuất hiện đại với diện tích hơn 1.500m², bao gồm 5 phân xưởng, 10 dây chuyền đóng gói và hơn 200 nhân sự lành nghề. Toàn bộ quy trình sản xuất được thực hiện 100% tại Việt Nam, từ nghiên cứu công thức đến đóng gói thành phẩm.
-            </p>
-            <p style={{ lineHeight: "1.8", textAlign: "justify" }}>
-              Các sản phẩm của PINKYCLOUD đều phải trải qua quy trình kiểm định chất lượng nghiêm ngặt, đảm bảo độ an toàn, hiệu quả và phù hợp với làn da phụ nữ Việt trước khi chính thức phân phối ra thị trường.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="container" style={{ marginBottom: "50px" }}>
-        <div className="row g-4">
-          <div className="col-md-6">
-            <div
-              onMouseEnter={() => setHoveredBox('sanxuat')}
-              onMouseLeave={() => setHoveredBox(null)}
-              style={{
-                padding: "30px",
-                backgroundColor: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                borderRadius: "5px",
-                ...getBoxStyle('sanxuat'),
-                cursor: "pointer"
-              }}>
-              <div className="d-flex align-items-start mb-3">
-                <span style={{
-                  fontSize: "24px",
-                  color: "#E23E8C",
-                  fontWeight: "bold",
-                  marginRight: "15px"
-                }}>
-                  ❯
-                </span>
-                <h5 style={{
-                  fontSize: "28px",
-                  fontWeight: "bold",
-                  color: hoveredBox === 'sanxuat' ? "#fff" : "#333",
-                  margin: 0,
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  100% SẢN XUẤT TẠI VIỆT NAM
-                </h5>
+          <div className="about-hero-frame">
+            <div className="row g-4 align-items-center">
+              <div className="col-12 col-lg-6">
+                <div className="about-hero-content">
+                  <span className="about-chip">PinkyCloud Beauty</span>
+                  <h1 className="about-title mt-3">Nâng tầm trải nghiệm làm đẹp mỗi ngày</h1>
+                  <p className="about-lead mt-3">
+                    PinkyCloud là thương hiệu mỹ phẩm Việt theo đuổi chất lượng thực tế,
+                    thiết kế hiện đại và dịch vụ tận tâm. Chúng tôi xây dựng hệ sinh thái
+                    làm đẹp từ nghiên cứu, sản xuất đến tư vấn cá nhân hóa.
+                  </p>
+                  <div className="about-actions mt-4">
+                    <a href="/san-pham" className="btn about-btn-primary">
+                      Khám phá sản phẩm
+                    </a>
+                    <a href="/lien-he" className="btn about-btn-outline">
+                      Liên hệ tư vấn
+                    </a>
+                  </div>
+                </div>
               </div>
-              <p style={{
-                fontSize: "15px",
-                color: hoveredBox === 'sanxuat' ? "#fff" : "#666",
-                lineHeight: "1.6",
-                marginLeft: "39px",
-                transition: "color 0.3s ease-in-out"
-              }}>
-                Tất cả sản phẩm tại PinkyCloud đều tuyển chọn kỹ lưỡng, phân phối chính hãng. Chúng tôi tự hào là thương hiệu Việt, đồng hành cùng vẻ đẹp của phụ nữ Việt Nam.
-              </p>
-            </div>
-          </div>
 
-          <div className="col-md-6">
-            <div
-              onMouseEnter={() => setHoveredBox('2')}
-              onMouseLeave={() => setHoveredBox(null)}
-              style={{
-                padding: "30px",
-                backgroundColor: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                borderRadius: "5px",
-                ...getBoxStyle('2'),
-                cursor: "pointer"
-              }}>
-              <div className="d-flex align-items-start mb-3">
-                <span style={{
-                  fontSize: "24px",
-                  color: "#E23E8C",
-                  fontWeight: "bold",
-                  marginRight: "15px"
-                }}>
-                  ❯
-                </span>
-                <h5 style={{
-                  fontSize: "28px",
-                  fontWeight: "bold",
-                  color: hoveredBox === '2' ? "#fff" : "#333",
-                  margin: 0,
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  HÀI LÒNG KHÁCH HÀNG
-                </h5>
-              </div>
-              <p style={{
-                fontSize: "15px",
-                color: hoveredBox === '2' ? "#fff" : "#666",
-                lineHeight: "1.6",
-                marginLeft: "39px",
-                transition: "color 0.3s ease-in-out"
-              }}>
-                Luôn có mặt khi khách hàng cần. Luôn lắng nghe khi khách hàng nói. Luôn cố gắng đáp ứng mọi nhu cầu của khách hàng.
-                Chúng tôi không ngừng nỗ lực để mang đến trải nghiệm mua sắm tốt nhất cho khách hàng.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container" style={{ marginBottom: "50px", textAlign: "center" }}>
-        <img
-          src="/IMG/ceo.jpg"
-          alt="CEO"
-          className="img-fluid rounded shadow-lg"
-          style={{ maxWidth: "100%", height: "auto" }}
-        />
-      </div>
-
-      <section style={{
-        backgroundColor: "#f5f5f5",
-        padding: "60px 0",
-        marginBottom: "50px",
-        position: "relative"
-      }}>
-        <div className="container">
-          <h2 style={{
-            textAlign: "center",
-            fontSize: "32px",
-            fontWeight: "bold",
-            textTransform: "uppercase",
-            color: "#333",
-            marginBottom: "50px"
-          }}>
-            Giá Trị Cốt Lõi
-          </h2>
-          <div className="row">
-            <div className="col-md-4 mb-4">
-              <div
-                onMouseEnter={() => setHoveredBox('uytín')}
-                onMouseLeave={() => setHoveredBox(null)}
-                style={{
-                  padding: "30px",
-                  backgroundColor: "#fff",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  borderRadius: "5px",
-                  minHeight: "250px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  ...getBoxStyle('uytín'),
-                  cursor: "pointer"
-                }}>
-                <h4 style={{
-                  fontSize: "50px",
-                  fontWeight: "bold",
-                  color: hoveredBox === 'uytín' ? "#fff" : "#E23E8C",
-                  marginBottom: "15px",
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  Uy Tín
-                </h4>
-                <p style={{
-                  fontSize: "14px",
-                  color: hoveredBox === 'uytín' ? "#fff" : "#666",
-                  lineHeight: "1.6",
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  Uy tín với triết lý kinh doanh của công ty, với khách hàng, với đối tác, với cộng sự. Uy tín trong từng giao dịch và từng sản phẩm.
-                </p>
-              </div>
-            </div>
-
-            <div className="col-md-4 mb-4">
-              <div
-                onMouseEnter={() => setHoveredBox('chatlüong')}
-                onMouseLeave={() => setHoveredBox(null)}
-                style={{
-                  padding: "30px",
-                  backgroundColor: "#fff",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  borderRadius: "5px",
-                  minHeight: "250px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  ...getBoxStyle('chatlüong'),
-                  cursor: "pointer"
-                }}>
-                <h4 style={{
-                  fontSize: "50px",
-                  fontWeight: "bold",
-                  color: hoveredBox === 'chatlüong' ? "#fff" : "#E23E8C",
-                  marginBottom: "15px",
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  Chất Lượng
-                </h4>
-                <p style={{
-                  fontSize: "14px",
-                  color: hoveredBox === 'chatlüong' ? "#fff" : "#666",
-                  lineHeight: "1.6",
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  Sản phẩm tung ra thị trường phải là những sản phẩm chất lượng nhất, được làm ra từ khối óc và bàn tay người Việt Nam.
-                </p>
-              </div>
-            </div>
-
-            <div className="col-md-4 mb-4">
-              <div
-                onMouseEnter={() => setHoveredBox('tuте')}
-                onMouseLeave={() => setHoveredBox(null)}
-                style={{
-                  padding: "30px",
-                  backgroundColor: "#fff",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  borderRadius: "5px",
-                  minHeight: "250px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  ...getBoxStyle('tuте'),
-                  cursor: "pointer"
-                }}>
-                <h4 style={{
-                  fontSize: "50px",
-                  fontWeight: "bold",
-                  color: hoveredBox === 'tuте' ? "#fff" : "#E23E8C",
-                  marginBottom: "15px",
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  Tử Tế
-                </h4>
-                <p style={{
-                  fontSize: "14px",
-                  color: hoveredBox === 'tuте' ? "#fff" : "#666",
-                  lineHeight: "1.6",
-                  transition: "color 0.3s ease-in-out"
-                }}>
-                  Tử tế với khách hàng, với cộng sự, với đối tác và xã hội. Tôn trọng các tiêu chuẩn đã được thiết lập.
-                </p>
+              <div className="col-12 col-lg-6">
+                <div className="about-hero-image-wrap">
+                  <img src="/IMG/logoQuangba.png" alt="Thương hiệu PinkyCloud" className="about-hero-image" />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section style={{ marginBottom: "50px" }}>
+      <section className="about-section">
         <div className="container">
-          <div className="row">
-            {/* Mission */}
-            <div className="col-md-6 mb-4 mb-md-0">
-              <div
-                onMouseEnter={() => setHoveredBox('mission')}
-                onMouseLeave={() => setHoveredBox(null)}
-                style={{
-                  position: "relative",
-                  overflow: "hidden",
-                  borderRadius: "5px",
-                  height: "300px",
-                  ...getBoxStyle('mission'),
-                  cursor: "pointer"
-                }}>
-                <img
-                  src="/IMG/GT4.png"
-                  alt="Mission"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
-                  }}
-                />
-                <div style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: hoveredBox === 'mission' ? "rgba(200, 40, 120, 1)" : "rgba(231, 62, 140, 0.8)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: "20px",
-                  textAlign: "center",
-                  transition: "background-color 0.3s ease-in-out"
-                }}>
-                  <h3 style={{
-                    fontSize: "48px",
-                    fontWeight: "bold",
-                    color: "#fff",
-                    marginBottom: "15px"
-                  }}>
-                    SỨ MỆNH
-                  </h3>
-                  <p style={{
-                    fontSize: "16px",
-                    color: "#fff",
-                    lineHeight: "1.6"
-                  }}>
-                    Mang đến những sản phẩm làm đẹp chất lượng nhất với giá thành tối ưu, giúp bạn tự tin tỏa sáng mỗi ngày.
+          <div className="about-surface">
+            <div className="row g-4">
+              {highlights.map((item) => (
+                <div key={item.number} className="col-12 col-md-4">
+                  <div className="about-stat-card">
+                    <div className="about-stat-number">{item.number}</div>
+                    <p className="about-stat-label">{item.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="about-section">
+        <div className="container">
+          <article className="about-article about-article-full">
+            <h2>Về thương hiệu PinkyCloud</h2>
+            <p>
+              Trụ sở chính của PinkyCloud đặt tại Gò Vấp, TP. Hồ Chí Minh và mạng lưới
+              chi nhánh đã mở rộng tại nhiều tỉnh thành. Với mô hình Beauty Concept Store,
+              khách hàng có thể trải nghiệm, được tư vấn trực tiếp và chọn sản phẩm phù hợp.
+            </p>
+            <p>
+              Toàn bộ quá trình từ nghiên cứu công thức đến đóng gói được triển khai tại Việt Nam.
+              Chúng tôi tập trung vào tính an toàn, độ ổn định và hiệu quả sử dụng lâu dài.
+            </p>
+          </article>
+
+          <div className="about-members-strip">
+            <div className="about-members-head">
+              <h3>Thành viên PinkyCloud</h3>
+            </div>
+
+            <div className="about-members-row">
+              {teamMembers.map((member) => (
+                <div key={member.studentId} className="about-member-profile">
+                  <div className="about-member-badge">Nhóm 04</div>
+                  <img src={member.image} alt={member.name} className="about-member-avatar" />
+                  <h4>{member.name}</h4>
+                  <div className="about-member-id">MSSV: {member.studentId}</div>
+                  <p className="about-member-role">{member.role}</p>
+                  <div className="about-member-tags">
+                    {member.skills.map((skill) => (
+                      <span key={`${member.studentId}-${skill}`}>{skill}</span>
+                    ))}
+                  </div>
+                  <p className="about-member-focus">{member.focus}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="about-section about-values-section">
+        <div className="container">
+          <div className="about-section-head text-center">
+            <h2>Giá trị cốt lõi</h2>
+            <p>Ba nguyên tắc vận hành tạo nên chất lượng thương hiệu và niềm tin khách hàng.</p>
+          </div>
+
+          <div className="row g-4">
+            {values.map((value, index) => (
+              <div key={value.title} className="col-12 col-md-4">
+                <div className="about-value-card">
+                  <div className="about-value-index">0{index + 1}</div>
+                  <h3>{value.title}</h3>
+                  <p>{value.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="about-section pb-5">
+        <div className="container">
+          <div className="row g-4">
+            <div className="col-12 col-lg-6">
+              <div className="about-media-card">
+                <img src="/IMG/GT4.png" alt="Sứ mệnh PinkyCloud" />
+                <div className="about-media-overlay">
+                  <h3>Sứ mệnh</h3>
+                  <p>
+                    Cung cấp giải pháp làm đẹp chất lượng cao với mức giá hợp lý, giúp khách hàng tự tin hơn mỗi ngày.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="col-md-6">
-              <div
-                onMouseEnter={() => setHoveredBox('vision')}
-                onMouseLeave={() => setHoveredBox(null)}
-                style={{
-                  position: "relative",
-                  overflow: "hidden",
-                  borderRadius: "5px",
-                  height: "300px",
-                  ...getBoxStyle('vision'),
-                  cursor: "pointer"
-                }}>
-                <img
-                  src="/IMG/GT5.png"
-                  alt="Vision"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
-                  }}
-                />
-                <div style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: hoveredBox === 'vision' ? "rgba(200, 40, 120, 1)" : "rgba(231, 62, 140, 0.8)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: "20px",
-                  textAlign: "center",
-                  transition: "background-color 0.3s ease-in-out"
-                }}>
-                  <h3 style={{
-                    fontSize: "48px",
-                    fontWeight: "bold",
-                    color: "#fff",
-                    marginBottom: "15px"
-                  }}>
-                    TẦM NHÌN
-                  </h3>
-                  <p style={{
-                    fontSize: "16px",
-                    color: "#fff",
-                    lineHeight: "1.6"
-                  }}>
-                    Trở thành thương hiệu mỹ phẩm được phái đẹp Việt tin chọn và yêu mến.
+            <div className="col-12 col-lg-6">
+              <div className="about-media-card">
+                <img src="/IMG/GT5.png" alt="Tầm nhìn PinkyCloud" />
+                <div className="about-media-overlay">
+                  <h3>Tầm nhìn</h3>
+                  <p>
+                    Trở thành thương hiệu mỹ phẩm Việt được yêu thích nhờ chất lượng bền vững và dịch vụ khác biệt.
                   </p>
                 </div>
               </div>

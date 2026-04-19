@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../css/NewsDetailPage.css";
 import useFetch from "../hooks/useFetch";
@@ -33,7 +33,7 @@ function getNewsImage(item) {
   return fallbackImages[item.id % fallbackImages.length];
 }
 
-export default function NewsDetailPage() {
+export default function NewsDetailPage({ searchNotice = "" }) {
   const { slug } = useParams(); // Lấy tham số 'slug' từ URL (ví dụ: /tin-tuc/bi-quyet-cham-soc-da)
   const navigate = useNavigate(); // Hook dùng để chuyển trang bằng lập trình
 
@@ -87,6 +87,12 @@ export default function NewsDetailPage() {
 
   return (
     <section className="container news-detail-page py-5">
+      {searchNotice && (
+        <div className="alert alert-warning news-search-notice mb-4" role="alert">
+          {searchNotice}
+        </div>
+      )}
+
       {/* Nội dung chi tiết bài viết */}
       <article className="news-detail-card">
         <div className="news-detail-meta">
@@ -122,7 +128,7 @@ export default function NewsDetailPage() {
             className="btn news-back-btn btn-outline-pink"
             onClick={() => navigate("/tin-tuc")}
           >
-            <i className="bi bi-arrow-left"></i> Quay lại danh sách tin
+            <i className="bi bi-arrow-left"></i> Quay lại Trang chủ
           </button>
         </div>
       </article>

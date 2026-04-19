@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { CartProvider } from "./components/CartContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -19,33 +19,48 @@ import useFetch from "./hooks/useFetch";
 
 export default function App() {
   const [query, setQuery] = useState("");
+  const [searchNotice, setSearchNotice] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: newsItemsData } = useFetch("/api/news-items");
   const newsItems = Array.isArray(newsItemsData) ? newsItemsData : [];
 
   const handleSearchSubmit = (rawKeyword = "") => {
     const keyword = rawKeyword.trim().toLowerCase();
     if (!keyword) return;
+    setSearchNotice("");
 
-    const matchedNews = newsItems.find((item) => {
-      const joinedContent = [
-        item.title,
-        item.excerpt,
-        item.content,
-        item.category,
-      ]
-        .join(" ")
-        .toLowerCase();
+    const isInNewsContext = location.pathname.startsWith("/tin-tuc");
+    const isInHomeContext = location.pathname === "/";
+    const isInProductsContext = location.pathname.startsWith("/san-pham");
 
-      return joinedContent.includes(keyword);
-    });
+    if (isInNewsContext) {
+      const matchedNews = newsItems.find((item) => {
+        const joinedContent = [
+          item.title,
+          item.excerpt,
+          item.content,
+          item.category,
+        ]
+          .join(" ")
+          .toLowerCase();
 
-    if (matchedNews?.slug) {
-      navigate(`/tin-tuc/${matchedNews.slug}`);
+        return joinedContent.includes(keyword);
+      });
+
+      if (matchedNews?.slug) {
+        navigate(`/tin-tuc/${matchedNews.slug}`);
+        return;
+      }
+
+      setSearchNotice(`Không tìm thấy bài viết phù hợp với từ khóa "${rawKeyword.trim()}".`);
       return;
     }
 
-    navigate("/san-pham");
+    // Tim kiem tai cho: Trang chu va Trang san pham se tu xu ly theo prop query.
+    if (isInHomeContext || isInProductsContext) {
+      return;
+    }
   };
 
   return (
@@ -72,7 +87,10 @@ export default function App() {
             <Route path="/chinh-sach/:slug" element={<PolicyPage />} />
             <Route path="/lien-he" element={<ContactPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="/tin-tuc/:slug" element={<NewsDetailPage />} />
+            <Route
+              path="/tin-tuc/:slug"
+              element={<NewsDetailPage searchNotice={searchNotice} />}
+            />
             <Route path="/admin/san-pham" element={<AdminProductsPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>

@@ -221,15 +221,16 @@ function HeroBanner({ totalProducts, productCategoryCount, hotVouchers }) {//Hà
 
 export default function HomePage({ query = "" }) {
   const navigate = useNavigate(); //Sử dụng hook useNavigate để điều hướng trang
-  const { products } = useProductsData();
-  const { data: brandUrlsData } = useFetch("/api/brand-urls");
-  const { data: officeLocationsData } = useFetch("/api/office-locations");
-  const { data: hotVouchersData } = useFetch("/api/hot-vouchers");
-  const { data: newsItemsData } = useFetch("/api/news-items");
+  const { products } = useProductsData();//Sử dụng hook useProductsData để lấy dữ liệu sản phẩm từ API và lưu vào biến products
+  const { data: brandUrlsData } = useFetch("/api/brand-urls");//Sử dụng hook useFetch để lấy dữ liệu đường dẫn các thương hiệu từ API và lưu vào biến brandUrlsData
+  const { data: officeLocationsData } = useFetch("/api/office-locations");//Sử dụng hook useFetch để lấy dữ liệu địa điểm văn phòng từ API và lưu vào biến officeLocationsData
+  const { data: hotVouchersData } = useFetch("/api/hot-vouchers");//Sử dụng hook useFetch để lấy dữ liệu phiếu giảm giá nổi bật từ API và lưu vào biến hotVouchersData
+  const { data: newsItemsData } = useFetch("/api/news-items");//Sử dụng hook useFetch để lấy dữ liệu tin tức từ API và lưu vào biến newsItemsData
   const [flashDealsSecondsLeft, setFlashDealsSecondsLeft] = useState(
     1 * 3600 + 32 * 60 + 54
   );//Khai báo một state để đếm ngược thời gian, thời gian mặc định là 1h32p54s
   const brandUrls = brandUrlsData && typeof brandUrlsData === "object" ? brandUrlsData : {};
+  //Khai báo biến brandUrls, nếu brandUrlsData tồn tại và là một object thì gán giá trị đó cho brandUrls, ngược lại gán một object rỗng để tránh lỗi khi truy cập
   const officeLocations = Array.isArray(officeLocationsData) ? officeLocationsData : [];
   const hotVouchers = Array.isArray(hotVouchersData) ? hotVouchersData : [];
   const newsItems = Array.isArray(newsItemsData) ? newsItemsData : [];
