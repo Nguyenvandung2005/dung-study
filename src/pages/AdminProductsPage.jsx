@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useCart } from "../components/CartContext";
 import useProductsData from "../hooks/useProductsData";
 
-// Khởi tạo giá trị mặc định cho Form
+// Object mặc định cho form thêm/sửa sản phẩm
 const emptyForm = {
   id: "",
   name: "",
@@ -18,62 +18,75 @@ const emptyForm = {
 };
 
 export default function AdminProductsPage() {
-  // 1. Lấy dữ liệu từ Context và Hook tùy chỉnh
+  // Lấy thông tin tài khoản hiện tại để kiểm tra quyền admin
   const { currentUser, authLoading } = useCart();
+  // Lấy danh sách sản phẩm, trạng thái tải và hàm cập nhật danh sách
   const { products, setProducts, loading, error: seedError } = useProductsData();
 
-  // 2. Quản lý State cho giao diện
+  // Lưu lỗi validate local ở form
   const [error, setError] = useState("");
-  const [editingId, setEditingId] = useState(""); // Lưu ID sản phẩm đang được sửa
-  const [form, setForm] = useState(emptyForm);    // Dữ liệu trong các ô nhập
-  const [saving, setSaving] = useState(false);    // Trạng thái khi đang lưu
-  const [imagePreview, setImagePreview] = useState(""); // Hiển thị ảnh xem trước
+  // ID sản phẩm đang ở chế độ sửa; rỗng nghĩa là thêm mới
+  const [editingId, setEditingId] = useState("");
+  // Dữ liệu các ô nhập trong form
+  const [form, setForm] = useState(emptyForm);
+  // Cờ đang lưu để tránh submit nhiều lần
+  const [saving, setSaving] = useState(false);
+  // URL/base64 ảnh để hiển thị xem trước
+  const [imagePreview, setImagePreview] = useState("");
 
-  // 3. Kiểm tra trạng thái tải dữ liệu
+  // Khi auth hoặc danh sách sản phẩm chưa tải xong thì hiển thị loading
   if (authLoading || loading) {
     return <div className="container py-5 text-center">Đang tải dữ liệu sản phẩm...</div>;
   }
 
-  // 4. Kiểm tra phân quyền Admin (Bảo mật cơ bản)
+  // Chặn truy cập nếu không phải tài khoản admin
   if (!currentUser || currentUser.role !== "admin") {
     return <div className="container py-5 text-center text-danger">Bạn không có quyền truy cập khu vực quản trị.</div>;
   }
 
-  // Hàm reset form về trạng thái trống
+  // Reset form về trạng thái mặc định sau khi lưu hoặc khi hủy sửa
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId("");
     setImagePreview("");
   };
 
-  // Xử lý thay đổi dữ liệu trong các ô input văn bản
+  // Xử lý khi thay đổi giá trị các input/textarea
   const handleChange = (event) => {
     const { name, value } = event.target;
+    // Cập nhật đúng field theo thuộc tính name
     setForm((prev) => ({ ...prev, [name]: value }));
 
-    // Nếu người dùng dán URL ảnh trực tiếp vào ô input
+    // Nếu đang nhập URL ảnh thì cập nhật preview ngay
     if (name === "image") {
       setImagePreview(value);
     }
   };
 
-  // Xử lý chọn file ảnh từ máy tính và chuyển sang dạng Base64
+  // Xử lý upload file ảnh và chuyển sang Data URL (base64)
   const handleImageFile = (event) => {
+    // Lấy file đầu tiên từ input file
     const file = event.target.files?.[0];
+    // Không có file thì dừng xử lý
     if (!file) return;
 
+    // Dùng FileReader để đọc ảnh thành chuỗi base64
     const reader = new FileReader();
     reader.onload = () => {
+      // Khi đọc xong: cập nhật ảnh vào form và preview
       const result = String(reader.result || "");
       setForm((prev) => ({ ...prev, image: result }));
       setImagePreview(result);
     };
+    // Bắt đầu đọc file dưới dạng Data URL
     reader.readAsDataURL(file);
   };
 
-  // Đưa dữ liệu của sản phẩm cũ vào form để bắt đầu chỉnh sửa
+  // Đưa dữ liệu sản phẩm lên form để chỉnh sửa
   const handleEdit = (product) => {
+    // Lưu id đang sửa để chuyển form sang chế độ update
     setEditingId(product.id);
+    // Nạp dữ liệu sản phẩm cũ vào form
     setForm({
       id: product.id,
       name: product.name || "",
@@ -87,16 +100,19 @@ export default function AdminProductsPage() {
       ingredients: product.ingredients || "",
       usage: product.usage || "",
     });
+    // Đồng bộ ảnh preview theo sản phẩm đang sửa
     setImagePreview(product.image || "");
   };
 
-  // Xử lý khi bấm nút "Tạo mới" hoặc "Cập nhật"
+  // Xử lý submit cho cả tạo mới và cập nhật sản phẩm
   const handleSubmit = (event) => {
+    // Chặn reload trang mặc định
     event.preventDefault();
+    // Bật cờ lưu và xóa lỗi cũ
     setSaving(true);
     setError("");
 
-    // Chuẩn bị dữ liệu gửi đi (ép kiểu số cho giá và giảm giá)
+    // Chuẩn hóa dữ liệu trước khi ghi vào state products
     const payload = {
       ...form,
       id: form.id || `pc-${Date.now()}`,
@@ -105,41 +121,46 @@ export default function AdminProductsPage() {
       currency: "VND",
     };
 
-    // Kiểm tra các trường bắt buộc
+    // Validate các trường bắt buộc
     if (!payload.name || !payload.brand || !payload.category) {
       setSaving(false);
       setError("Vui lòng nhập đầy đủ tên, thương hiệu và danh mục.");
       return;
     }
 
+    // Cập nhật danh sách sản phẩm theo ngữ cảnh sửa/thêm
     setProducts((prevProducts) => {
-      // Trường hợp 1: Đang sửa sản phẩm cũ
+      // Trường hợp đang sửa: thay item có id trùng editingId
       if (editingId) {
         return prevProducts.map((item) => (item.id === editingId ? payload : item));
+        //Trả về danh sách mới với item đã được cập nhật
       }
 
-      // Trường hợp 2: Thêm mới nhưng trùng ID
+      // Trường hợp thêm mới nhưng id đã tồn tại
       if (prevProducts.some((item) => item.id === payload.id)) {
         setError("ID sản phẩm đã tồn tại.");
         setSaving(false);
         return prevProducts;
       }
 
-      // Trường hợp 3: Thêm mới thành công vào đầu danh sách
+      // Trường hợp thêm mới thành công: thêm vào đầu danh sách
       return [payload, ...prevProducts];
     });
 
+    // Hoàn tất lưu: reset form và tắt trạng thái saving
     resetForm();
     setSaving(false);
   };
 
-  // Xử lý xóa sản phẩm
+  // Xóa sản phẩm khỏi danh sách
   const handleDelete = (id) => {
+    // Xác nhận trước khi xóa
     if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) return;
 
+    // Lọc bỏ sản phẩm theo id
     setProducts((prevProducts) => prevProducts.filter((item) => item.id !== id));
 
-    // Nếu đang sửa sản phẩm đó mà bấm xóa luôn thì reset form
+    // Nếu đang sửa đúng sản phẩm vừa xóa thì reset form
     if (editingId === id) {
       resetForm();
     }
@@ -149,15 +170,16 @@ export default function AdminProductsPage() {
     <div className="container py-4">
       <h2 className="mb-4">Quản lý sản phẩm</h2>
 
-      {/* Hiển thị thông báo lỗi nếu có */}
+      {/* Hiển thị lỗi từ form hoặc lỗi lấy dữ liệu seed */}
       {(error || seedError) && <div className="alert alert-danger">{error || seedError}</div>}
 
-      {/* KHỐI 1: FORM NHẬP LIỆU */}
+      {/* Khối form thêm mới / cập nhật */}
       <form onSubmit={handleSubmit} className="card p-4 mb-4 shadow-sm">
+        {/* Đổi tiêu đề theo chế độ thêm mới hay chỉnh sửa */}
         <h5 className="mb-3">{editingId ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}</h5>
 
         <div className="row g-3">
-          {/* Tự động tạo các ô input cơ bản */}
+          {/* Render động nhóm input cơ bản để tránh lặp code */}
           {[
             { key: "id", label: "Mã sản phẩm (ID)" },
             { key: "name", label: "Tên sản phẩm" },
@@ -165,7 +187,7 @@ export default function AdminProductsPage() {
             { key: "category", label: "Danh mục" },
             { key: "price", label: "Giá bán" },
             { key: "discount", label: "Giảm giá (%)" },
-            { key: "origin", label: "Xuất xứ" }
+            { key: "origin", label: "Xuất xứ" },
           ].map((field) => (
             <div key={field.key} className="col-md-6">
               <label className="form-label small fw-bold">{field.label}</label>
@@ -175,12 +197,13 @@ export default function AdminProductsPage() {
                 placeholder={`Nhập ${field.label.toLowerCase()}...`}
                 value={form[field.key]}
                 onChange={handleChange}
-                disabled={editingId && field.key === "id"} // Không cho sửa ID khi đang cập nhật
+                // Khi sửa thì khóa input ID để tránh đổi khóa chính
+                disabled={editingId && field.key === "id"}
               />
             </div>
           ))}
 
-          {/* Chọn ảnh sản phẩm */}
+          {/* Nhập ảnh bằng URL hoặc upload file */}
           <div className="col-12">
             <label className="form-label fw-bold">Ảnh sản phẩm</label>
             <div className="row g-3 align-items-start">
@@ -201,7 +224,7 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          {/* Khu vực xem trước ảnh */}
+          {/* Khung xem trước ảnh */}
           <div className="col-12">
             <div className="border rounded p-3 bg-light text-center">
               <div className="fw-bold mb-2">Xem trước ảnh</div>
@@ -217,7 +240,7 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          {/* Các ô nhập liệu dài */}
+          {/* Các ô nhập nội dung dài */}
           <div className="col-12">
             <label className="form-label fw-bold">Mô tả sản phẩm</label>
             <textarea className="form-control" rows="3" name="description" placeholder="Mô tả chi tiết..." value={form.description} onChange={handleChange} />
@@ -232,7 +255,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* Nút điều hướng form */}
+        {/* Nút thao tác form */}
         <div className="d-flex gap-2 mt-4">
           <button className="btn btn-danger px-4" type="submit" disabled={saving}>
             {saving ? "Đang lưu..." : editingId ? "Cập nhật sản phẩm" : "Tạo sản phẩm mới"}
@@ -245,7 +268,7 @@ export default function AdminProductsPage() {
         </div>
       </form>
 
-      {/* KHỐI 2: BẢNG DANH SÁCH SẢN PHẨM */}
+      {/* Khối bảng danh sách sản phẩm */}
       <div className="card p-4 shadow-sm">
         <h5 className="mb-3">Danh sách sản phẩm hiện có</h5>
         <div className="table-responsive">
@@ -279,7 +302,9 @@ export default function AdminProductsPage() {
                   <td><span className="badge bg-info text-dark">{product.category}</span></td>
                   <td>{Number(product.price || 0).toLocaleString("vi-VN")}đ</td>
                   <td className="text-end">
+                    {/* Nút đẩy dữ liệu sản phẩm vào form để sửa */}
                     <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(product)}>Sửa</button>
+                    {/* Nút xóa sản phẩm khỏi danh sách */}
                     <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(product.id)}>Xóa</button>
                   </td>
                 </tr>

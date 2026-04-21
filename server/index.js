@@ -4,7 +4,8 @@ import cors from "cors";
 import mongoose from "mongoose"; // Thư viện kết nối và thao tác với MongoDB
 
 const app = express();
-const PORT = process.env.PORT || 4000; // Cổng chạy server, mặc định là 4000
+const PORT = Number.parseInt(process.env.PORT, 10) || 4000; // Cổng chạy server, mặc định là 4000
+const PORT_RETRY_COUNT = Number.parseInt(process.env.PORT_RETRY_COUNT, 10) || 10;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/pinkycloud";
 
 // --- MIDDLEWARE ---
@@ -282,15 +283,38 @@ app.get("/api/orders/:userId", async (req, res) => {
 /**
  * Khởi động Server
  */
+function listenOnAvailablePort(startPort, retryCount) {
+  return new Promise((resolve, reject) => {
+    const tryListen = (port, retriesLeft) => {
+      const server = app.listen(port, () => {
+        resolve({ server, port });
+      });
+
+      server.on("error", (error) => {
+        if (error.code === "EADDRINUSE" && retriesLeft > 0) {
+          console.warn(`Cổng ${port} đang được sử dụng, thử chuyển sang cổng ${port + 1}...`);
+          tryListen(port + 1, retriesLeft - 1);
+          return;
+        }
+
+        reject(error);
+      });
+    };
+
+    tryListen(startPort, retryCount);
+  });
+}
+
 async function startServer() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("Đã kết nối cơ sở dữ liệu:", MONGODB_URI);
-    app.listen(PORT, () => {
-      console.log(`Server API đang chạy tại: http://localhost:${PORT}`);
-    });
+
+    const { port } = await listenOnAvailablePort(PORT, PORT_RETRY_COUNT);
+    console.log(`Server API đang chạy tại: http://localhost:${port}`);
   } catch (err) {
-    console.error("Lỗi kết nối MongoDB:", err);
+    console.error("Không thể khởi động server:", err);
+    process.exit(1);
   }
 }
 
