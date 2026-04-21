@@ -14,6 +14,7 @@ import Register from "./components/Register";
 import PolicyPage from "./pages/PolicyPage";
 import ContactPage from "./pages/ContactPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import AccountPage from "./pages/AccountPage";
 import AdminProductsPage from "./pages/AdminProductsPage";
 import useFetch from "./hooks/useFetch";
 
@@ -91,6 +92,10 @@ export default function App() {
               path="/tin-tuc/:slug"
               element={<NewsDetailPage searchNotice={searchNotice} />}
             />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/account/orders" element={<AccountPage />} />
+            <Route path="/account/wishlist" element={<AccountPage />} />
+            <Route path="/account/address" element={<AccountPage />} />
             <Route path="/admin/san-pham" element={<AdminProductsPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>

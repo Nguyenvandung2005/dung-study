@@ -195,7 +195,90 @@ app.get("/api/vietnam-addresses", async (_req, res) => {
 
   res.json(addressMap);
 });
+// 10. Validate mã voucher
+app.post("/api/vouchers/validate", async (req, res) => {
+  const { code = "", totalAmount = 0 } = req.body || {};
+  const normalizedCode = String(code).trim().toUpperCase();
 
+  if (!normalizedCode) {
+    return res.status(400).json({ message: "Vui lòng nhập mã voucher." });
+  }
+
+  const voucher = await mongoose.connection.db
+    .collection("hot_vouchers")
+    .findOne({ code: normalizedCode });
+
+  if (!voucher) {
+    return res.status(404).json({ message: "Mã voucher không hợp lệ." });
+  }
+
+  // Kiểm tra đơn tối thiểu
+  if (voucher.minOrder && totalAmount < voucher.minOrder) {
+    return res.status(400).json({
+      message: `Đơn hàng tối thiểu ${voucher.minOrder.toLocaleString("vi-VN")}đ để dùng mã này.`,
+    });
+  }
+
+  // Tính tiền giảm
+  let discountAmount = 0;
+  if (voucher.discountType === "percent") {
+    discountAmount = Math.round((totalAmount * voucher.discountValue) / 100);
+    if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
+      discountAmount = voucher.maxDiscount;
+    }
+  } else {
+    discountAmount = voucher.discountValue || 0;
+  }
+
+  return res.json({
+    success: true,
+    voucher: {
+      code: voucher.code,
+      title: voucher.title,
+      discountType: voucher.discountType,
+      discountValue: voucher.discountValue,
+      discountAmount,
+    },
+  });
+});
+// 10. Tạo đơn hàng mới
+app.post("/api/orders", async (req, res) => {
+  const { userId, userContact, items, address, paymentMethod, totalAmount, discountAmount, finalAmount, voucherCode, note } = req.body || {};
+
+  if (!items?.length || !address) {
+    return res.status(400).json({ message: "Thiếu thông tin đơn hàng." });
+  }
+
+  const newOrder = {
+    id: `DH${Date.now()}`,
+    userId,
+    userContact,
+    items,
+    address,
+    paymentMethod,
+    totalAmount,
+    discountAmount: discountAmount || 0,
+    finalAmount,
+    voucherCode: voucherCode || null,
+    note: note || "",
+    status: "processing",
+    createdAt: new Date().toISOString(),
+  };
+
+  await mongoose.connection.db.collection("orders").insertOne(newOrder);
+  return res.status(201).json({ order: newOrder });
+});
+
+// 11. Lấy danh sách đơn hàng theo userId
+app.get("/api/orders/:userId", async (req, res) => {
+  const orders = await mongoose.connection.db
+    .collection("orders")
+    .find({ userId: req.params.userId })
+    .sort({ createdAt: -1 })
+    .toArray();
+
+  return res.json(orders.map(removeMongoFields));
+});
 /**
  * Khởi động Server
  */
