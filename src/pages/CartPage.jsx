@@ -51,14 +51,14 @@ export default function CartPage() {
     const finalAmount = Math.max(0, totalAmount - discountAmount);
 
     const handleCheckout = () => {
-        if (isLoggedIn) navigate("/checkout", { state: { voucherInfo } });
+        if (isLoggedIn) { if (voucherInfo) sessionStorage.setItem("voucherInfo", JSON.stringify(voucherInfo)); else sessionStorage.removeItem("voucherInfo"); navigate("/checkout"); }
         else setShowLoginModal(true);
     };
 
     const handleLoginSuccess = (userInfo, token) => {
         login(userInfo || {}, token || "");
         setShowLoginModal(false);
-        navigate("/checkout", { state: { voucherInfo } });
+        if (voucherInfo) sessionStorage.setItem("voucherInfo", JSON.stringify(voucherInfo)); else sessionStorage.removeItem("voucherInfo"); navigate("/checkout");
     };
 
     const openRegister = () => { setShowLoginModal(false); setShowRegisterModal(true); };

@@ -63,7 +63,7 @@ export default function CheckoutPage() {
 
   // Nhận voucherInfo từ CartPage nếu có
   const { voucherCode, setVoucherCode, voucherInfo, voucherError, voucherLoading, applyVoucher, removeVoucher } =
-    useVoucher(location.state?.voucherInfo || null);
+    useVoucher((() => { try { const v = sessionStorage.getItem("voucherInfo"); return v ? JSON.parse(v) : null; } catch { return null; } })());
 
   const totalAmount = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const discountAmount = voucherInfo?.discountAmount || 0;
