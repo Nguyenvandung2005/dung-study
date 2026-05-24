@@ -13,9 +13,7 @@ const fallbackImages = [
   "/IMG/anh36.png",
 ];
 
-/**
- * Hàm tách nội dung văn bản thành các đoạn văn dựa trên dấu xuống dòng
- */
+
 function splitContentToParagraphs(content = "") {
   return content
     .trim()
@@ -24,10 +22,6 @@ function splitContentToParagraphs(content = "") {
     .filter(Boolean); // Loại bỏ các dòng trống
 }
 
-/**
- * Hàm lấy ảnh hiển thị cho bài viết: 
- * Ưu tiên ảnh từ dữ liệu, nếu không có sẽ lấy ngẫu nhiên trong danh sách dự phòng
- */
 function getNewsImage(item) {
   if (item?.image) return item.image;
   return fallbackImages[item.id % fallbackImages.length];

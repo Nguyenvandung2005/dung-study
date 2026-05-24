@@ -23,23 +23,16 @@ export default function AdminProductsPage() {
   // Lấy danh sách sản phẩm, trạng thái tải và hàm cập nhật danh sách
   const { products, setProducts, loading, error: seedError } = useProductsData();
 
-  // Lưu lỗi validate local ở form
   const [error, setError] = useState("");
-  // ID sản phẩm đang ở chế độ sửa; rỗng nghĩa là thêm mới
   const [editingId, setEditingId] = useState("");
-  // Dữ liệu các ô nhập trong form
   const [form, setForm] = useState(emptyForm);
-  // Cờ đang lưu để tránh submit nhiều lần
   const [saving, setSaving] = useState(false);
-  // URL/base64 ảnh để hiển thị xem trước
   const [imagePreview, setImagePreview] = useState("");
 
-  // Khi auth hoặc danh sách sản phẩm chưa tải xong thì hiển thị loading
   if (authLoading || loading) {
     return <div className="container py-5 text-center">Đang tải dữ liệu sản phẩm...</div>;
   }
 
-  // Chặn truy cập nếu không phải tài khoản admin
   if (!currentUser || currentUser.role !== "admin") {
     return <div className="container py-5 text-center text-danger">Bạn không có quyền truy cập khu vực quản trị.</div>;
   }
@@ -54,7 +47,6 @@ export default function AdminProductsPage() {
   // Xử lý khi thay đổi giá trị các input/textarea
   const handleChange = (event) => {
     const { name, value } = event.target;
-    // Cập nhật đúng field theo thuộc tính name
     setForm((prev) => ({ ...prev, [name]: value }));
 
     // Nếu đang nhập URL ảnh thì cập nhật preview ngay
@@ -67,7 +59,6 @@ export default function AdminProductsPage() {
   const handleImageFile = (event) => {
     // Lấy file đầu tiên từ input file
     const file = event.target.files?.[0];
-    // Không có file thì dừng xử lý
     if (!file) return;
 
     // Dùng FileReader để đọc ảnh thành chuỗi base64
@@ -130,7 +121,6 @@ export default function AdminProductsPage() {
 
     // Cập nhật danh sách sản phẩm theo ngữ cảnh sửa/thêm
     setProducts((prevProducts) => {
-      // Trường hợp đang sửa: thay item có id trùng editingId
       if (editingId) {
         return prevProducts.map((item) => (item.id === editingId ? payload : item));
         //Trả về danh sách mới với item đã được cập nhật
@@ -154,10 +144,8 @@ export default function AdminProductsPage() {
 
   // Xóa sản phẩm khỏi danh sách
   const handleDelete = (id) => {
-    // Xác nhận trước khi xóa
     if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) return;
 
-    // Lọc bỏ sản phẩm theo id
     setProducts((prevProducts) => prevProducts.filter((item) => item.id !== id));
 
     // Nếu đang sửa đúng sản phẩm vừa xóa thì reset form

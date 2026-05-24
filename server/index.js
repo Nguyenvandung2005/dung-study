@@ -51,6 +51,51 @@ function getContactType(contact = "") {
   return String(contact).includes("@") ? "email" : "phone";
 }
 
+function parseNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Tương thích dữ liệu voucher cũ và mới:
+ * - Mới: discountType + discountValue
+ * - Cũ: discountPercent / discountAmount / amount / percent ...
+ */
+function normalizeVoucherDiscount(voucher = {}) {
+  const explicitType = String(voucher.discountType || "").trim().toLowerCase();
+  const explicitValue = parseNumber(voucher.discountValue);
+
+  if (explicitType && explicitValue !== null) {
+    return { discountType: explicitType, discountValue: explicitValue };
+  }
+
+  const percentLike = [
+    voucher.discountPercent,
+    voucher.percent,
+    voucher.percentage,
+  ];
+  for (const value of percentLike) {
+    const parsed = parseNumber(value);
+    if (parsed !== null) {
+      return { discountType: "percent", discountValue: parsed };
+    }
+  }
+
+  const fixedLike = [
+    voucher.discountAmount,
+    voucher.amount,
+    voucher.fixedAmount,
+  ];
+  for (const value of fixedLike) {
+    const parsed = parseNumber(value);
+    if (parsed !== null) {
+      return { discountType: "fixed", discountValue: parsed };
+    }
+  }
+
+  return { discountType: "", discountValue: 0 };
+}
+
 // --- CÁC ĐƯỜNG DẪN API (ENDPOINTS) ---
 
 // 1. Kiểm tra tình trạng server
@@ -213,6 +258,13 @@ app.post("/api/vouchers/validate", async (req, res) => {
     return res.status(404).json({ message: "Mã voucher không hợp lệ." });
   }
 
+  const { discountType, discountValue } = normalizeVoucherDiscount(voucher);
+  if (!discountType || discountValue <= 0) {
+    return res.status(400).json({
+      message: "Mã voucher chưa được cấu hình giảm giá. Vui lòng chọn mã khác.",
+    });
+  }
+
   // Kiểm tra đơn tối thiểu
   if (voucher.minOrder && totalAmount < voucher.minOrder) {
     return res.status(400).json({
@@ -222,13 +274,13 @@ app.post("/api/vouchers/validate", async (req, res) => {
 
   // Tính tiền giảm
   let discountAmount = 0;
-  if (voucher.discountType === "percent") {
-    discountAmount = Math.round((totalAmount * voucher.discountValue) / 100);
+  if (discountType === "percent") {
+    discountAmount = Math.round((totalAmount * discountValue) / 100);
     if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
       discountAmount = voucher.maxDiscount;
     }
   } else {
-    discountAmount = voucher.discountValue || 0;
+    discountAmount = discountValue;
   }
 
   return res.json({
@@ -236,8 +288,8 @@ app.post("/api/vouchers/validate", async (req, res) => {
     voucher: {
       code: voucher.code,
       title: voucher.title,
-      discountType: voucher.discountType,
-      discountValue: voucher.discountValue,
+      discountType,
+      discountValue,
       discountAmount,
     },
   });

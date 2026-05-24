@@ -4,9 +4,7 @@ import useFetch from "./useFetch";
 // Từ khóa để định danh dữ liệu sản phẩm trong bộ nhớ trình duyệt
 const KEY_PRODUCTS = "admin_products";
 
-/**
- * Hàm hỗ trợ: Đọc danh sách sản phẩm đã lưu từ LocalStorage
- */
+
 export function loadStoredProducts() {
   try {
     const storedProducts = JSON.parse(localStorage.getItem(KEY_PRODUCTS));
@@ -29,18 +27,14 @@ export function saveStoredProducts(products) {
  * Custom Hook: Quản lý toàn bộ dữ liệu sản phẩm cho ứng dụng
  */
 export default function useProductsData() {
-  // 1. Khởi tạo State sản phẩm: Ưu tiên lấy từ LocalStorage trước để hiển thị ngay lập tức
   const [products, setProducts] = useState(() => loadStoredProducts());
 
-  // 2. Kiểm tra xem có cần nạp dữ liệu từ API không (Chỉ nạp nếu LocalStorage đang trống)
   const needsSeed = products.length === 0;
 
   // 3. Sử dụng Hook useFetch để gọi API lấy dữ liệu sản phẩm mẫu (Seed data)
   const { data, loading, error } = useFetch(needsSeed ? "/api/products" : null);
 
-  // 4. Cập nhật dữ liệu vào LocalStorage khi API trả về kết quả thành công
   useEffect(() => {
-    // Nếu máy đã có dữ liệu hoặc API chưa trả về data thì không làm gì cả
     if (!needsSeed) return;
     if (!Array.isArray(data) || data.length === 0) return;
 
@@ -49,10 +43,7 @@ export default function useProductsData() {
     setProducts(data);
   }, [data, needsSeed]);
 
-  /**
-   * Vừa cập nhật State của React để thay đổi giao diện,
-   * Vừa lưu ngay vào LocalStorage để tránh mất dữ liệu khi F5.
-   */
+ 
   const updateProducts = (nextValue) => {
     //  Tính toán giá trị mới (xử lý cả trường hợp truyền vào function hoặc giá trị)
     const nextProducts = typeof nextValue === "function"
@@ -60,7 +51,6 @@ export default function useProductsData() {
       : nextValue;
     //  Cập nhật vào State để hiển thị giao diện
     setProducts(nextProducts);
-    // Lưu vào bộ nhớ LocalStorage
     saveStoredProducts(nextProducts);
   };
   // Trả về các giá trị cần thiết cho Component sử dụng
