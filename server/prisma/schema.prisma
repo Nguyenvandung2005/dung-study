@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  ESSAY
+}
+
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          Role      @default(STUDENT)
+  grade         Int?      // 1-12 for students, null for admin/teacher
+  avatar        String?
+  isVerified    Boolean   @default(false)
+  isLocked      Boolean   @default(false)
+  verifyToken   String?
+  resetToken    String?
+  resetTokenExp DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  exams         Exam[]         @relation("CreatedExams")
+  submissions   Submission[]
+  securityLogs  SecurityLog[]
+  gradingTasks  GradingTask[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Exam {
+  id             String    @id @default(uuid())
+  title          String
+  description    String?   @db.Text
+  subject        String
+  grade          Int       // 1-12
+  timeLimit      Int       // minutes
+  shuffleQuestions Boolean @default(false)
+  shuffleOptions   Boolean @default(false)
+  showAnswerAfter  Boolean @default(true)
+  maxAttempts    Int?      // null = unlimited
+  startAt        DateTime?
+  endAt          DateTime?
+  isPublished    Boolean   @default(false)
+  createdById    String
+  createdBy      User      @relation("CreatedExams", fields: [createdById], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  questions      Question[]
+  submissions    Submission[]
+
+  @@index([grade])
+  @@index([createdById])
+}
+
+model Question {
+  id            String       @id @default(uuid())
+  examId        String
+  exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  content       String       @db.Text
+  type          QuestionType
+  options       Json?        // [{id, text}] for MCQ
+  correctAnswer Json?        // string[] of option ids (or correct text for ESSAY reference)
+  explanation   String?      @db.Text
+  points        Float        @default(1)
+  order         Int
+  imageUrl      String?
+  createdAt     DateTime     @default(now())
+
+  submissionAnswers SubmissionAnswer[]
+
+  @@index([examId])
+}
+
+model Submission {
+  id             String    @id @default(uuid())
+  examId         String
+  exam           Exam      @relation(fields: [examId], references: [id])
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  attempt        Int       @default(1)
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  totalScore     Float?
+  maxScore       Float?
+  percentage     Float?
+  status         String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime  @default(now())
+
+  answers        SubmissionAnswer[]
+  gradingTasks   GradingTask[]
+
+  @@index([examId])
+  @@index([userId])
+}
+
+model SubmissionAnswer {
+  id             String     @id @default(uuid())
+  submissionId   String
+  submission     Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer         Json?      // string[] for MCQ, string for ESSAY
+  isCorrect      Boolean?
+  scoreEarned    Float?
+  timeSpentSec   Float      @default(0) // seconds on this question
+  aiScore        Float?     // AI grading score (for essay)
+  aiRemark       String?    @db.Text
+  teacherScore   Float?     // Teacher override
+  teacherRemark  String?    @db.Text
+  createdAt      DateTime   @default(now())
+
+  @@index([submissionId])
+  @@index([questionId])
+}
+
+model GradingTask {
+  id             String     @id @default(uuid())
+  submissionId   String
+  submission     Submission @relation(fields: [submissionId], references: [id])
+  teacherId      String?
+  teacher        User?      @relation(fields: [teacherId], references: [id])
+  status         String     @default("PENDING") // PENDING | AI_GRADED | TEACHER_GRADED
+  createdAt      DateTime   @default(now())
+  gradedAt       DateTime?
+
+  @@index([submissionId])
+}
+
+model SecurityLog {
+  id        String           @id @default(uuid())
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id])
+  ip        String
+  userAgent String?
+  action    String           // LOGIN_SUCCESS, LOGIN_FAIL, REGISTER, BRUTE_FORCE, etc.
+  severity  SecuritySeverity @default(LOW)
+  details   Json?
+  createdAt DateTime         @default(now())
+
+  @@index([ip])
+  @@index([userId])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model AnimationTheme {
+  id          String   @id @default(uuid())
+  name        String
+  displayName String
+  config      Json     // Animation config object
+  isActive    Boolean  @default(false)
+  preview     String?  // CSS class or preview image
+  createdAt   DateTime @default(now())
+}

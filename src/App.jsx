@@ -1,108 +1,122 @@
-import React, { useState } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { CartProvider } from "./components/CartContext";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import HomePage from "./pages/HomePage";
-import NewsDetailPage from "./pages/NewsDetailPage";
-import ProductListPage from "./pages/ProductListPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import CartPage from "./pages/CartPage";
-import AboutUs from "./components/AboutUs";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import PolicyPage from "./pages/PolicyPage";
-import ContactPage from "./pages/ContactPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import AccountPage from "./pages/AccountPage";
-import AdminProductsPage from "./pages/AdminProductsPage";
-import useFetch from "./hooks/useFetch";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import PrivateRoute from './components/ui/PrivateRoute';
+
+// Dashboards
+import StudentDashboard from './pages/StudentDashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+
+// Admin sub-pages
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminExams from './pages/admin/AdminExams';
+import AdminSecurity from './pages/admin/AdminSecurity';
+import AdminThemeSettings from './pages/admin/AdminThemeSettings';
+
+import TeacherCreateExam from './pages/teacher/TeacherCreateExam';
+import TeacherEditExam from './pages/teacher/TeacherEditExam';
+import TeacherStats from './pages/teacher/TeacherStats';
+import TeacherGrading from './pages/teacher/TeacherGrading';
+
+// Student sub-pages
+import StudentExams from './pages/student/StudentExams';
+import StudentHistory from './pages/student/StudentHistory';
+import StudentTakeExam from './pages/student/StudentTakeExam';
+import StudentResult from './pages/student/StudentResult';
+
+const TEACHER_ROLES = ['TEACHER', 'ADMIN'];
+const STUDENT_ROLES = ['STUDENT', 'ADMIN'];
+const ADMIN_ROLES = ['ADMIN'];
+
+function ProtectedRoute({ roles, children }) {
+  return <PrivateRoute roles={roles}>{children}</PrivateRoute>;
+}
 
 export default function App() {
-  const [query, setQuery] = useState("");
-  const [searchNotice, setSearchNotice] = useState("");
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { data: newsItemsData } = useFetch("/api/news-items");
-  const newsItems = Array.isArray(newsItemsData) ? newsItemsData : [];
+  const { loading } = useAuth();
 
-  const handleSearchSubmit = (rawKeyword = "") => {
-    const keyword = rawKeyword.trim().toLowerCase();
-    if (!keyword) return;
-    setSearchNotice("");
-
-    const isInNewsContext = location.pathname.startsWith("/tin-tuc");
-    const isInHomeContext = location.pathname === "/";
-    const isInProductsContext = location.pathname.startsWith("/san-pham");
-
-    if (isInNewsContext) {
-      const matchedNews = newsItems.find((item) => {
-        const joinedContent = [
-          item.title,
-          item.excerpt,
-          item.content,
-          item.category,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return joinedContent.includes(keyword);
-      });
-
-      if (matchedNews?.slug) {
-        navigate(`/tin-tuc/${matchedNews.slug}`);
-        return;
-      }
-
-      setSearchNotice(`Không tìm thấy bài viết phù hợp với từ khóa "${rawKeyword.trim()}".`);
-      return;
-    }
-
-    // Tim kiem tai cho: Trang chu va Trang san pham se tu xu ly theo prop query.
-    if (isInHomeContext || isInProductsContext) {
-      return;
-    }
-  };
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080818' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ width: 48, height: 48, margin: '0 auto 16px' }} />
+          <p style={{ color: '#a0a0c8', fontFamily: 'sans-serif' }}>Đang khởi tạo Dung-Study...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <CartProvider>
-      <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
-        <Header
-          searchValue={query}
-          onSearchChange={setQuery}
-          onSearchSubmit={handleSearchSubmit}
-        />
+    <Router>
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-        <main style={{ flex: 1 }}>
-          <Routes>
-            <Route path="/" element={<HomePage query={query} />} />
-            <Route path="/san-pham" element={<ProductListPage query={query} />} />
-            <Route path="/san-pham/:id" element={<ProductDetailPage />} />
-            <Route path="/gio-hang" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/thanh-toan" element={<CheckoutPage />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/chinh-sach" element={<PolicyPage />} />
-            <Route path="/chinh-sach/:slug" element={<PolicyPage />} />
-            <Route path="/lien-he" element={<ContactPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route
-              path="/tin-tuc/:slug"
-              element={<NewsDetailPage searchNotice={searchNotice} />}
-            />
-            <Route path="/account" element={<AccountPage />} />
-            <Route path="/account/orders" element={<AccountPage />} />
-            <Route path="/account/wishlist" element={<AccountPage />} />
-            <Route path="/account/address" element={<AccountPage />} />
-            <Route path="/admin/san-pham" element={<AdminProductsPage />} />
-            <Route path="*" element={<HomePage />} />
-          </Routes>
-        </main>
+        {/* ─── Student Routes ─── */}
+        <Route path="/student" element={
+          <ProtectedRoute roles={STUDENT_ROLES}><StudentDashboard /></ProtectedRoute>
+        } />
+        <Route path="/student/exams" element={
+          <ProtectedRoute roles={STUDENT_ROLES}><StudentExams /></ProtectedRoute>
+        } />
+        <Route path="/student/history" element={
+          <ProtectedRoute roles={STUDENT_ROLES}><StudentHistory /></ProtectedRoute>
+        } />
+        {/* Placeholder routes for exam-taking and results (to be built in next phase) */}
+        <Route path="/student/exam/:examId" element={
+          <ProtectedRoute roles={STUDENT_ROLES}><StudentTakeExam /></ProtectedRoute>
+        } />
+        <Route path="/student/result/:submissionId" element={
+          <ProtectedRoute roles={STUDENT_ROLES}><StudentResult /></ProtectedRoute>
+        } />
 
-        <Footer />
-      </div>
-    </CartProvider>
+        {/* ─── Teacher Routes ─── */}
+        <Route path="/teacher" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherDashboard /></ProtectedRoute>
+        } />
+        <Route path="/teacher/exams" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherDashboard /></ProtectedRoute>
+        } />
+        <Route path="/teacher/create" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherCreateExam /></ProtectedRoute>
+        } />
+        <Route path="/teacher/edit/:examId" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherEditExam /></ProtectedRoute>
+        } />
+        <Route path="/teacher/statistics" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherStats /></ProtectedRoute>
+        } />
+        <Route path="/teacher/statistics/:examId" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherStats /></ProtectedRoute>
+        } />
+        <Route path="/teacher/grading" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherGrading /></ProtectedRoute>
+        } />
+
+        {/* ─── Admin Routes ─── */}
+        <Route path="/admin" element={
+          <ProtectedRoute roles={ADMIN_ROLES}><AdminDashboard /></ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute roles={ADMIN_ROLES}><AdminUsers /></ProtectedRoute>
+        } />
+        <Route path="/admin/exams" element={
+          <ProtectedRoute roles={ADMIN_ROLES}><AdminExams /></ProtectedRoute>
+        } />
+        <Route path="/admin/security" element={
+          <ProtectedRoute roles={ADMIN_ROLES}><AdminSecurity /></ProtectedRoute>
+        } />
+        <Route path="/admin/animation" element={
+          <ProtectedRoute roles={ADMIN_ROLES}><AdminThemeSettings /></ProtectedRoute>
+        } />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }

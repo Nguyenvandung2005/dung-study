@@ -1,0 +1,224 @@
+/* TeacherCreateExam styles */
+
+/* Mode Selection */
+
+.mode-selector {
+  max-width: 900px;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-6);
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  transition: all var(--transition-base);
+  border-radius: var(--radius-lg);
+  min-height: 280px;
+}
+
+.mode-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--clr-primary-400);
+  box-shadow: 0 12px 40px rgba(99,102,241,0.2);
+  background: rgba(99,102,241,0.05);
+}
+
+.mode-icon {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 0 16px rgba(99,102,241,0.4));
+}
+
+.mode-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.mode-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* File Upload Zone */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-12);
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  text-align: center;
+  min-height: 300px;
+  transition: all var(--transition-base);
+  background: rgba(255,255,255,0.02);
+}
+
+.upload-zone:hover,
+.upload-zone.dragging {
+  border-color: var(--clr-primary-400);
+  background: rgba(99,102,241,0.06);
+  box-shadow: 0 0 40px rgba(99,102,241,0.1);
+}
+
+/* Exam Metadata Form */
+.exam-meta-form {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.meta-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr;
+  gap: var(--space-4);
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .meta-row { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .meta-row { grid-template-columns: 1fr; }
+}
+
+/* Question Editor */
+.question-editor {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: border-color var(--transition-base);
+}
+
+.question-editor:hover {
+  border-color: var(--border-strong);
+}
+
+.question-editor-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.question-num {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--clr-primary-400);
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+/* Options */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .options-grid { grid-template-columns: 1fr; }
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.option-row.correct {
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: var(--radius-md);
+}
+
+.option-bullet {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  font-size: 0.85rem;
+}
+
+.option-bullet.active {
+  background: var(--clr-emerald-500);
+  border-color: var(--clr-emerald-500);
+  color: white;
+  box-shadow: 0 0 12px rgba(16,185,129,0.4);
+}
+
+/* ─── Content Preview (HTML from Word / pre-wrap from PDF) ─────────────── */
+.content-preview {
+  display: flex;
+  flex-direction: column;
+}
+
+/* HTML rendered from Word */
+.content-html-render {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  min-height: 60px;
+}
+
+/* Tables from Word */
+.content-html-render table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: auto;
+}
+.content-html-render th,
+.content-html-render td {
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+.content-html-render th {
+  background: rgba(99,102,241,0.15);
+  font-weight: 600;
+}
+.content-html-render p { margin: 4px 0; }
+.content-html-render strong, .content-html-render b { color: var(--text-primary); }
+
+/* Textarea for plain text — preserve newlines and alignment */
+.content-textarea {
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+

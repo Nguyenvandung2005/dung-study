@@ -1,0 +1,151 @@
+/* AuthPage Styles */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  position: relative;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.auth-brand {
+  text-align: center;
+}
+
+.auth-logo {
+  font-size: 3rem;
+  margin-bottom: var(--space-3);
+  filter: drop-shadow(0 0 20px rgba(99,102,241,0.5));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.auth-title {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: var(--space-2);
+}
+
+.auth-card {
+  padding: var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 70% 30%, rgba(99,102,241,0.08), transparent 60%);
+  pointer-events: none;
+}
+
+.auth-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: var(--space-6);
+  color: var(--text-primary);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(244,63,94,0.12);
+  border: 1px solid rgba(244,63,94,0.25);
+  border-radius: var(--radius-md);
+  color: #fb7185;
+  font-size: 0.875rem;
+  margin-bottom: var(--space-4);
+}
+
+.auth-link {
+  text-align: center;
+  margin-top: var(--space-5);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.auth-link a {
+  color: var(--clr-primary-400);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.auth-link a:hover { color: var(--clr-violet-400); }
+
+/* Role selector cards */
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+  outline: none;
+}
+
+.role-card:hover {
+  border-color: var(--clr-primary-400);
+  background: rgba(99,102,241,0.08);
+}
+
+.role-card.active {
+  border-color: var(--clr-primary-400);
+  background: rgba(99,102,241,0.12);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+}
+
+.role-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.role-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

@@ -1,0 +1,208 @@
+/* Landing Page Styles */
+.landing {
+  min-height: 100vh;
+  position: relative;
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-8);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.header-logo { font-size: 1.5rem; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Hero */
+.hero-section {
+  text-align: center;
+  padding: var(--space-20) var(--space-8);
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-badge {
+  margin-bottom: var(--space-6);
+  animation: fadeIn 0.6s ease;
+}
+
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-6);
+  animation: slideUp 0.7s ease;
+}
+
+.hero-desc {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: var(--space-8);
+  animation: slideUp 0.8s ease;
+}
+
+.hero-cta {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-10);
+  animation: slideUp 0.9s ease;
+}
+
+.grade-pills {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeIn 1.1s ease;
+}
+
+.grade-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--pill-color, var(--border-subtle));
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
+}
+
+.grade-pill:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.grade-pill-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Features */
+.features-section {
+  padding: var(--space-16) var(--space-8);
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: var(--space-12);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.feature-card {
+  padding: var(--space-6);
+  transition: all var(--transition-base);
+  animation: slideUp 0.6s ease both;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--glass-border);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-4);
+  filter: drop-shadow(0 0 10px rgba(99,102,241,0.3));
+}
+
+.feature-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+  color: var(--text-primary);
+}
+
+.feature-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* CTA */
+.cta-section {
+  padding: var(--space-16) var(--space-8);
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.cta-card {
+  text-align: center;
+  padding: var(--space-12);
+  background: var(--gradient-card);
+}
+
+.cta-card h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: var(--space-4);
+}
+
+.cta-card p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-8);
+  font-size: 1rem;
+}
+
+.landing-footer {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .landing-header { padding: var(--space-4); }
+  .hero-section { padding: var(--space-12) var(--space-4); }
+  .features-section { padding: var(--space-8) var(--space-4); }
+  .hero-cta { flex-direction: column; align-items: center; }
+}
