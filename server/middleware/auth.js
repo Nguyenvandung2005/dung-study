@@ -10,7 +10,8 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'dung_study_secret_key_123456_secure';
+    const decoded = jwt.verify(token, secret);
 
     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
     if (!user || user.isLocked) {

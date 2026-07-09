@@ -15,8 +15,10 @@ const authLimiter = rateLimit({
 });
 
 const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '2h' });
-  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  const secret = process.env.JWT_SECRET || 'dung_study_secret_key_123456_secure';
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || secret;
+  const accessToken = jwt.sign({ userId }, secret, { expiresIn: '2h' });
+  const refreshToken = jwt.sign({ userId }, refreshSecret, { expiresIn: '7d' });
   return { accessToken, refreshToken };
 };
 
@@ -100,7 +102,8 @@ router.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) return res.status(401).json({ message: 'Không có refresh token' });
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'dung_study_secret_key_123456_secure';
+    const decoded = jwt.verify(refreshToken, refreshSecret);
     const user = await prisma.user.findUnique({ where: { id: decoded.userId }, select: { id: true, name: true, email: true, role: true, grade: true, avatar: true, isLocked: true } });
     if (!user || user.isLocked) return res.status(401).json({ message: 'Token không hợp lệ' });
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user.id);
