@@ -42,8 +42,8 @@ app.get('/api/health', (req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Lỗi máy chủ nội bộ', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
+  console.error('[Global Error]', err.stack || err);
+  res.status(500).json({ message: err.message || 'Lỗi máy chủ nội bộ', detail: err.toString() });
 });
 
 app.listen(PORT, () => {

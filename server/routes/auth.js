@@ -94,7 +94,7 @@ router.post('/login', authLimiter, async (req, res) => {
     res.json({ message: 'Đăng nhập thành công', user: userData, accessToken, refreshToken });
   } catch (error) {
     console.error('[Login Error]', error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 });
 
