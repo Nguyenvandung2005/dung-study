@@ -34,6 +34,7 @@ model User {
   role          Role      @default(STUDENT)
   grade         Int?      // 1-12 for students, null for admin/teacher
   avatar        String?
+  settings      Json?     // Lưu cấu hình giao diện: theme, primaryColor, fontSize, animation
   isVerified    Boolean   @default(false)
   isLocked      Boolean   @default(false)
   verifyToken   String?
@@ -88,7 +89,7 @@ model Question {
   explanation   String?      @db.Text
   points        Float        @default(1)
   order         Int
-  imageUrl      String?
+  imageUrl      String?      @db.LongText
   createdAt     DateTime     @default(now())
 
   submissionAnswers SubmissionAnswer[]
@@ -111,6 +112,8 @@ model Submission {
   status         String    @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | GRADED
   ipAddress      String?
   userAgent      String?
+  cheatCount     Int       @default(0)
+  cheatLogs      Json?     // Mảng các chuỗi mô tả hành vi vi phạm
   createdAt      DateTime  @default(now())
 
   answers        SubmissionAnswer[]

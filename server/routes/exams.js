@@ -5,13 +5,23 @@ const { authMiddleware, requireRole } = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// GET /api/exams — list exams (student: by grade, teacher: their exams, admin: all)
+// GET /api/exams — list exams (student: all published exams, teacher: their exams, admin: all)
 router.get('/', authMiddleware, async (req, res) => {
   try {
+    const now = new Date();
+    await prisma.exam.updateMany({
+      where: {
+        isPublished: false,
+        startAt: { lte: now },
+        OR: [{ endAt: null }, { endAt: { gt: now } }]
+      },
+      data: { isPublished: true }
+    });
+
     const { user } = req;
     let where = {};
     if (user.role === 'STUDENT') {
-      where = { grade: user.grade, isPublished: true };
+      where = { isPublished: true };
     } else if (user.role === 'TEACHER') {
       where = { createdById: user.id };
     }
@@ -30,6 +40,17 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET /api/exams/:id — get exam detail
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
+    const now = new Date();
+    await prisma.exam.updateMany({
+      where: {
+        id: req.params.id,
+        isPublished: false,
+        startAt: { lte: now },
+        OR: [{ endAt: null }, { endAt: { gt: now } }]
+      },
+      data: { isPublished: true }
+    });
+
     const { user } = req;
     const exam = await prisma.exam.findUnique({
       where: { id: req.params.id },
@@ -39,9 +60,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
       }
     });
     if (!exam) return res.status(404).json({ message: 'Không tìm thấy bài kiểm tra' });
-    // Students can only see published exams matching their grade
+    // Students can only see published exams
     if (user.role === 'STUDENT') {
-      if (!exam.isPublished || exam.grade !== user.grade) {
+      if (!exam.isPublished) {
         return res.status(403).json({ message: 'Bạn không có quyền truy cập bài kiểm tra này' });
       }
       // Hide correct answers during exam
@@ -135,6 +156,8 @@ router.put('/:id', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, 
         ...examData,
         grade: examData.grade ? parseInt(examData.grade) : undefined,
         timeLimit: examData.timeLimit ? parseInt(examData.timeLimit) : undefined,
+        startAt: examData.startAt ? new Date(examData.startAt) : null,
+        endAt: examData.endAt ? new Date(examData.endAt) : null,
       }
     });
     res.json(updated);
@@ -164,9 +187,28 @@ router.delete('/:id', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (re
 router.patch('/:id/publish', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
     const { isPublished } = req.body;
+    const updateData = { isPublished };
+
+    if (!isPublished) {
+      const exam = await prisma.exam.findUnique({ where: { id: req.params.id } });
+      const now = new Date();
+      if (exam && exam.startAt && exam.startAt <= now) {
+        if (!exam.endAt || exam.endAt > now) {
+          updateData.endAt = now;
+        }
+      }
+    } else {
+      // Khi CỐ TÌNH BẬT thủ công, nếu bài thi đang có endAt trong quá khứ (bị đóng trước đó) -> XÓA endAt để mở lại vô thời hạn
+      const exam = await prisma.exam.findUnique({ where: { id: req.params.id } });
+      const now = new Date();
+      if (exam && exam.endAt && exam.endAt <= now) {
+        updateData.endAt = null;
+      }
+    }
+
     const exam = await prisma.exam.update({
       where: { id: req.params.id },
-      data: { isPublished }
+      data: updateData
     });
     res.json(exam);
   } catch (error) {

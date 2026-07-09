@@ -190,3 +190,13 @@
 .data-table tr:last-child td { border-bottom: none; }
 
 .data-table tr:hover td { background: var(--bg-card); }
+
+/* Option Interactive styling for exam taking */
+.option-item-interactive {
+  transition: all var(--transition-fast);
+}
+.option-item-interactive:hover {
+  background: var(--bg-card-hover) !important;
+  border-color: var(--border-strong) !important;
+  transform: translateX(4px) !important;
+}

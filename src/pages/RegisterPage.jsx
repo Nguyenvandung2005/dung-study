@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
+import LogoWaveBounce from '../components/ui/LogoWaveBounce';
 import './AuthPage.css';
+
 
 const ROLES = [
   { value: 'STUDENT', label: '🎓 Học sinh', desc: 'Làm bài kiểm tra, xem điểm' },
@@ -10,6 +12,49 @@ const ROLES = [
 ];
 
 const GRADES = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Lớp ${i + 1}` }));
+
+const ImagePuzzle = () => {
+  const cols = 10;
+  const rows = 1;
+  const pieces = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const xPos = cols > 1 ? (c / (cols - 1)) * 100 : 0;
+      const yPos = 0;
+      
+      const randY = (Math.random() - 0.5) * 6;
+      // Trượt vào tuần tự theo thứ tự cột từ PHẢI sang TRÁI
+      const delay = (cols - 1 - c) * 0.1;
+
+      pieces.push(
+        <div
+          key={`${r}-${c}`}
+          className="puzzle-piece"
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: `url('/bg-asian-art.png')`,
+            backgroundSize: `cover`,
+            backgroundPosition: `center`,
+            backgroundRepeat: 'no-repeat',
+            clipPath: `inset(0% ${100 - (c + 1) * (100 / cols)}% 0% ${c * (100 / cols)}%)`,
+            '--rx': 0,
+            '--ry': randY,
+            '--rr': 0,
+            animationDelay: `${delay}s`
+          }}
+        />
+      );
+    }
+  }
+
+  return (
+    <div className="puzzle-container">
+      {pieces}
+    </div>
+  );
+};
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT', grade: 1 });
@@ -35,71 +80,82 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <AnimatedBackground />
-      <div className="auth-container fade-in" style={{ maxWidth: 480 }}>
-        <div className="auth-brand">
-          <div className="auth-logo">📚</div>
-          <h1 className="auth-title">Dung-<span className="gradient-text">Study</span></h1>
-          <p className="auth-subtitle">Tạo tài khoản miễn phí</p>
-        </div>
+    <div className="auth-page-asian">
+      {/* Register Form Pane (Left Side) */}
+      <div className="auth-split-form anim-slide-left">
+        <div className="auth-container" style={{ width: '100%', maxWidth: '440px', background: 'transparent' }}>
+          <div className="auth-brand anim-stagger-1" style={{ marginBottom: '15px' }}>
+            <div className="auth-logo" style={{ marginBottom: '12px' }}><LogoWaveBounce size="lg" /></div>
+            <h1 className="auth-title">Dung-<span className="gradient-text">Study</span></h1>
 
-        <div className="glass-card auth-card">
-          <h2 className="auth-card-title">Đăng ký</h2>
-          {error && <div className="auth-error"><span>⚠️</span> {error}</div>}
+            <p className="auth-subtitle">Tạo tài khoản học tập miễn phí</p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="input-group">
-              <label className="input-label">Họ và tên</label>
-              <input type="text" className="input" placeholder="Nguyễn Văn A"
-                value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-            </div>
-            <div className="input-group">
-              <label className="input-label">Email</label>
-              <input type="email" className="input" placeholder="email@example.com"
-                value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
-            </div>
-            <div className="input-group">
-              <label className="input-label">Mật khẩu</label>
-              <input type="password" className="input" placeholder="Ít nhất 6 ký tự"
-                value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
-            </div>
+          <div className="glass-card auth-card anim-stagger-2" style={{ padding: '24px', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Đăng ký</h2>
+            {error && <div className="auth-error"><span>⚠️</span> {error}</div>}
 
-            {/* Role selector */}
-            <div className="input-group">
-              <label className="input-label">Vai trò</label>
-              <div className="role-grid">
-                {ROLES.map(r => (
-                  <button key={r.value} type="button"
-                    className={`role-card ${form.role === r.value ? 'active' : ''}`}
-                    onClick={() => setForm({ ...form, role: r.value })}>
-                    <span className="role-label">{r.label}</span>
-                    <span className="role-desc">{r.desc}</span>
-                  </button>
-                ))}
+            <form onSubmit={handleSubmit} className="auth-form" style={{ gap: '16px' }}>
+              <div className="input-group">
+                <label className="input-label">Họ và tên</label>
+                <input type="text" className="input" placeholder="Nguyễn Văn A"
+                  value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
               </div>
-            </div>
-
-            {/* Grade selector for students */}
-            {form.role === 'STUDENT' && (
-              <div className="input-group fade-in">
-                <label className="input-label">Khối lớp</label>
-                <select className="input" value={form.grade} onChange={e => setForm({ ...form, grade: parseInt(e.target.value) })}>
-                  {GRADES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
-                </select>
+              
+              <div className="input-group">
+                <label className="input-label">Email</label>
+                <input type="email" className="input" placeholder="email@example.com"
+                  value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
               </div>
-            )}
+              
+              <div className="input-group">
+                <label className="input-label">Mật khẩu</label>
+                <input type="password" className="input" placeholder="Ít nhất 6 ký tự"
+                  value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+              </div>
 
-            <button type="submit" className="btn btn-primary btn-lg" disabled={loading} id="register-submit-btn">
-              {loading ? <><span className="spinner" /> Đang tạo tài khoản...</> : '✨ Tạo tài khoản'}
-            </button>
-          </form>
+              {/* Role selector */}
+              <div className="input-group">
+                <label className="input-label">Vai trò</label>
+                <div className="role-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {ROLES.map(r => (
+                    <button key={r.value} type="button"
+                      className={`role-card ${form.role === r.value ? 'active' : ''}`}
+                      onClick={() => setForm({ ...form, role: r.value })}
+                      style={{ padding: '10px', minHeight: 'auto' }}>
+                      <span className="role-label" style={{ fontSize: '0.9rem' }}>{r.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          <p className="auth-link">
-            Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-          </p>
+              {/* Grade selector for students */}
+              {form.role === 'STUDENT' && (
+                <div className="input-group fade-in">
+                  <label className="input-label">Khối lớp</label>
+                  <select className="input" value={form.grade} onChange={e => setForm({ ...form, grade: parseInt(e.target.value) })}>
+                    {GRADES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ marginTop: '8px' }}>
+                {loading ? <><span className="spinner" /> Đang tạo...</> : '✨ Tạo tài khoản'}
+              </button>
+            </form>
+
+            <p className="auth-link" style={{ marginTop: '20px' }}>
+              Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Background Image Pane (Puzzle Effect) (Right Side) */}
+      <div className="auth-split-image fade-left">
+        <ImagePuzzle />
+      </div>
+
     </div>
   );
 }

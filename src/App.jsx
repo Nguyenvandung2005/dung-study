@@ -26,6 +26,11 @@ import StudentExams from './pages/student/StudentExams';
 import StudentHistory from './pages/student/StudentHistory';
 import StudentTakeExam from './pages/student/StudentTakeExam';
 import StudentResult from './pages/student/StudentResult';
+import StudentLeaderboard from './pages/student/StudentLeaderboard';
+import ProfilePage from './pages/ProfilePage';
+import ScrollToTop from './components/ui/ScrollToTop';
+
+const ALL_ROLES = ['STUDENT', 'TEACHER', 'ADMIN'];
 
 const TEACHER_ROLES = ['TEACHER', 'ADMIN'];
 const STUDENT_ROLES = ['STUDENT', 'ADMIN'];
@@ -51,11 +56,17 @@ export default function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* Global Protected Routes */}
+        <Route path="/profile" element={
+          <ProtectedRoute roles={ALL_ROLES}><ProfilePage /></ProtectedRoute>
+        } />
 
         {/* ─── Student Routes ─── */}
         <Route path="/student" element={
@@ -73,6 +84,9 @@ export default function App() {
         } />
         <Route path="/student/result/:submissionId" element={
           <ProtectedRoute roles={STUDENT_ROLES}><StudentResult /></ProtectedRoute>
+        } />
+        <Route path="/student/leaderboard" element={
+          <ProtectedRoute roles={STUDENT_ROLES}><StudentLeaderboard /></ProtectedRoute>
         } />
 
         {/* ─── Teacher Routes ─── */}

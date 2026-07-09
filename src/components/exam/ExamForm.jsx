@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import api from '../../api/client';
 
 export const SUBJECTS = ['Toán', 'Văn', 'Anh', 'Lý', 'Hóa', 'Sinh', 'Sử', 'Địa', 'GDCD', 'Tin học', 'Khác'];
@@ -13,15 +13,193 @@ export const emptyQuestion = () => ({
   correctAnswer: '',
   points: 1,
   explanation: '',
+  imageUrl: '',
 });
 
-export function QuestionEditor({ q, idx, onChange, onRemove }) {
+// ─── Interactive Image Cropper Modal (Cắt hình từ ảnh đề thi OCR) ───────────
+function OCRImageCropperModal({ ocrImages = [], onCrop, onClose }) {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [startPt, setStartPt] = useState(null);
+  const [endPt, setEndPt] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const imgRef = useRef(null);
+
+  const activeImg = ocrImages[selectedIdx] || ocrImages[0];
+
+  const handleMouseDown = (e) => {
+    const rect = imgRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setStartPt({ x, y });
+    setEndPt({ x, y });
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging || !startPt) return;
+    const rect = imgRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    setEndPt({ x, y });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleConfirmCrop = () => {
+    if (!imgRef.current || !startPt || !endPt) return;
+    const rect = imgRef.current.getBoundingClientRect();
+    const scaleX = imgRef.current.naturalWidth / rect.width;
+    const scaleY = imgRef.current.naturalHeight / rect.height;
+
+    const x = Math.min(startPt.x, endPt.x) * scaleX;
+    const y = Math.min(startPt.y, endPt.y) * scaleY;
+    const w = Math.abs(endPt.x - startPt.x) * scaleX;
+    const h = Math.abs(endPt.y - startPt.y) * scaleY;
+
+    if (w < 10 || h < 10) {
+      alert('Vui lòng kéo khung chọn vùng hình ảnh cần cắt!');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgRef.current, x, y, w, h, 0, 0, w, h);
+    const croppedUrl = canvas.toDataURL('image/png');
+    onCrop(croppedUrl);
+    onClose();
+  };
+
+  const getSelectionBox = () => {
+    if (!startPt || !endPt) return null;
+    const left = Math.min(startPt.x, endPt.x);
+    const top = Math.min(startPt.y, endPt.y);
+    const width = Math.abs(endPt.x - startPt.x);
+    const height = Math.abs(endPt.y - startPt.y);
+    if (width < 2 || height < 2) return null;
+    return { left, top, width, height };
+  };
+
+  const box = getSelectionBox();
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99999,
+      background: 'rgba(10,14,26,0.85)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+    }}>
+      <div className="glass-card" style={{ width: '100%', maxWidth: 900, maxHeight: '92vh', display: 'flex', flexDirection: 'column', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#60a5fa' }}>✂️ Cắt hình từ ảnh đề thi đã quét</h3>
+            <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Kéo giữ chuột để khoanh vùng hình ảnh cần đưa vào câu hỏi</p>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose} style={{ fontSize: '1.2rem' }}>✕</button>
+        </div>
+
+        {ocrImages.length > 1 && (
+          <div style={{ padding: '8px 24px', background: 'rgba(255,255,255,0.03)', display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
+            {ocrImages.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => { setSelectedIdx(idx); setStartPt(null); setEndPt(null); }}
+                className={`btn btn-sm ${idx === selectedIdx ? 'btn-primary' : 'btn-ghost'}`}
+              >
+                Trang {idx + 1}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px', display: 'flex', justifyContent: 'center', background: '#090d16' }}>
+          {activeImg ? (
+            <div
+              style={{ position: 'relative', display: 'inline-block', userSelect: 'none', cursor: 'crosshair' }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+            >
+              <img
+                ref={imgRef}
+                src={activeImg.base64 || activeImg.url || activeImg}
+                alt="Trang đề thi"
+                style={{ maxHeight: '65vh', display: 'block', borderRadius: '4px' }}
+                draggable={false}
+              />
+              {box && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: box.left,
+                    top: box.top,
+                    width: box.width,
+                    height: box.height,
+                    border: '2px solid #3b82f6',
+                    background: 'rgba(59, 130, 246, 0.25)',
+                    pointerEvents: 'none',
+                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)'
+                  }}
+                />
+              )}
+            </div>
+          ) : (
+            <p style={{ color: 'var(--text-muted)' }}>Không có ảnh đề thi gốc.</p>
+          )}
+        </div>
+
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            {box ? `Đã chọn vùng (${Math.round(box.width)}x${Math.round(box.height)}px)` : '💡 Click chuột và kéo trên hình để khoanh vùng'}
+          </span>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
+            <button type="button" className="btn btn-primary" onClick={handleConfirmCrop} disabled={!box}>
+              ✅ Đính kèm hình đã cắt
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [] }) {
   const [editingContent, setEditingContent] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const fileInputRef = useRef(null);
+
   const update = (key, val) => onChange({ ...q, [key]: val });
   const updateOption = (i, val) => {
     const opts = [...q.options];
     opts[i] = val;
     onChange({ ...q, options: opts });
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      update('imageUrl', ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePaste = (e) => {
+    if (e.clipboardData && e.clipboardData.files.length > 0) {
+      const file = e.clipboardData.files[0];
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          update('imageUrl', ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
   };
 
   const renderContentArea = () => {
@@ -62,7 +240,7 @@ export function QuestionEditor({ q, idx, onChange, onRemove }) {
   };
 
   return (
-    <div className="question-editor glass-card">
+    <div className="question-editor glass-card" onPaste={handlePaste}>
       <div className="question-editor-header">
         <span className="question-num">Câu {idx + 1}</span>
         {q.contentIsHtml && <span className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>HTML</span>}
@@ -81,8 +259,78 @@ export function QuestionEditor({ q, idx, onChange, onRemove }) {
 
       {renderContentArea()}
 
+      {/* ── IMAGE ATTACHMENT SECTION ── */}
+      <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+        {q.imageUrl ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--clr-primary-400)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                🖼️ Hình ảnh đính kèm câu hỏi
+              </span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {ocrSourceImages && ocrSourceImages.length > 0 && (
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setShowCropper(true)}>
+                    ✂️ Cắt lại hình từ đề thi
+                  </button>
+                )}
+                <button type="button" className="btn btn-danger btn-sm" onClick={() => update('imageUrl', '')}>
+                  ✕ Xóa hình
+                </button>
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', background: '#000', padding: '10px', borderRadius: '4px' }}>
+              <img
+                src={q.imageUrl}
+                alt={`Minh họa câu ${idx + 1}`}
+                style={{ maxHeight: 220, maxWidth: '100%', objectFit: 'contain' }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>🖼️</span> Có hình ảnh minh họa (biển báo, sơ đồ, hình học...)?
+            </span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleFileUpload}
+              />
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                📁 Tải ảnh lên / Dán Ctrl+V
+              </button>
+              {ocrSourceImages && ocrSourceImages.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}
+                  onClick={() => setShowCropper(true)}
+                >
+                  ✂️ Cắt hình từ ảnh đề thi OCR
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {showCropper && (
+        <OCRImageCropperModal
+          ocrImages={ocrSourceImages}
+          onCrop={(croppedDataUrl) => update('imageUrl', croppedDataUrl)}
+          onClose={() => setShowCropper(false)}
+        />
+      )}
+
       {q.type !== 'ESSAY' ? (
-        <div className="options-grid">
+        <div className="options-grid" style={{ marginTop: '12px' }}>
           {q.options.map((opt, i) => (
             <div key={i} className={`option-row ${q.correctAnswer === String(i) ? 'correct' : ''}`}>
               <button type="button"
@@ -106,9 +354,29 @@ export function QuestionEditor({ q, idx, onChange, onRemove }) {
   );
 }
 
-export default function ExamForm({ initialMeta, initialQuestions = [], onBack, onSave, isEditMode = false }) {
+
+const formatDateForInput = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const MM = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const mm = pad(date.getMinutes());
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+};
+
+export default function ExamForm({ initialMeta, initialQuestions = [], onBack, onSave, isEditMode = false, ocrSourceImages = [] }) {
   const [meta, setMeta] = useState(
-    initialMeta || { title: '', subject: 'Toán', grade: 10, timeLimit: 45, description: '' }
+    initialMeta
+      ? {
+          ...initialMeta,
+          startAt: formatDateForInput(initialMeta.startAt),
+          endAt: formatDateForInput(initialMeta.endAt),
+        }
+      : { title: '', subject: 'Toán', grade: 10, timeLimit: 45, description: '', startAt: '', endAt: '' }
   );
   const [questions, setQuestions] = useState(
     initialQuestions.length > 0 ? initialQuestions : [emptyQuestion()]
@@ -223,6 +491,19 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
           <input className="input" placeholder="VD: Kiểm tra chương 2 – Phương trình bậc 2"
             value={meta.description} onChange={e => updateMeta('description', e.target.value)} />
         </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-4)', marginTop: '4px' }}>
+          <div className="input-group">
+            <label className="input-label">Thời gian mở đề (không bắt buộc)</label>
+            <input type="datetime-local" className="input"
+              value={meta.startAt || ''} onChange={e => updateMeta('startAt', e.target.value)} />
+          </div>
+          <div className="input-group">
+            <label className="input-label">Thời gian kết thúc (không bắt buộc)</label>
+            <input type="datetime-local" className="input"
+              value={meta.endAt || ''} onChange={e => updateMeta('endAt', e.target.value)} />
+          </div>
+        </div>
       </div>
 
       <div style={{ marginTop: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -241,7 +522,8 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
         {questions.map((q, idx) => (
           <QuestionEditor key={q.id} q={q} idx={idx}
             onChange={(updated) => updateQ(idx, updated)}
-            onRemove={() => removeQ(idx)} />
+            onRemove={() => removeQ(idx)}
+            ocrSourceImages={ocrSourceImages} />
         ))}
 
         <button className="btn btn-outline" onClick={addQ} style={{ alignSelf: 'center', marginTop: 'var(--space-2)' }}>

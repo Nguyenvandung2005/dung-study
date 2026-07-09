@@ -24,6 +24,8 @@ export default function TeacherEditExam() {
           grade: data.grade,
           timeLimit: data.timeLimit,
           description: data.description || '',
+          startAt: data.startAt || '',
+          endAt: data.endAt || '',
         };
 
         const questions = data.questions.map(q => {
@@ -46,6 +48,7 @@ export default function TeacherEditExam() {
             correctAnswer,
             points: q.points || 1,
             explanation: q.explanation || '',
+            imageUrl: q.imageUrl || '',
           };
         });
 
@@ -80,6 +83,7 @@ export default function TeacherEditExam() {
         correctAnswer: q.type !== 'ESSAY' ? q.correctAnswer : null,
         points: q.points,
         explanation: q.explanation,
+        imageUrl: q.imageUrl || null,
       }))
     };
     await api.post(`/exams/${examId}/questions`, payloadQuestions);

@@ -2,7 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
-import api from '../../api/client';
+import api, { getFullUploadUrl } from '../../api/client';
+
+
+const parseEssayAnswer = (answerText) => {
+  if (!answerText) return { imageUrl: null, text: '' };
+  const imgMatch = answerText.match(/\[Ảnh bài làm:\s*(.*?)\]/);
+  if (imgMatch) {
+    const imageUrl = imgMatch[1];
+    const text = answerText.replace(/\[Ảnh bài làm:\s*.*?\]/, '').trim();
+    return { imageUrl, text };
+  }
+  return { imageUrl: null, text: answerText };
+};
 
 export default function TeacherGrading() {
   const [tasks, setTasks] = useState([]);
@@ -116,7 +128,24 @@ export default function TeacherGrading() {
                   
                   <div style={{ padding: 'var(--space-4)', background: 'rgba(244,63,94,0.1)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)' }}>
                     <p style={{ color: 'var(--clr-primary-400)', marginBottom: '8px', fontWeight: 'bold' }}>✍️ Bài làm của học sinh:</p>
-                    <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{answer.answer || <i style={{ color: 'var(--text-muted)' }}>(Bỏ trống)</i>}</p>
+                    {(() => {
+                      const { imageUrl, text } = parseEssayAnswer(answer.answer);
+                      return (
+                        <>
+                          {imageUrl && (
+                            <div style={{ marginBottom: 'var(--space-4)' }}>
+                              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '6px' }}>📷 Ảnh đính kèm (nhấp để phóng to):</p>
+                              <a href={getFullUploadUrl(imageUrl)} target="_blank" rel="noreferrer">
+                                <img src={getFullUploadUrl(imageUrl)} alt="Ảnh bài làm" style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-strong)', cursor: 'zoom-in' }} />
+                              </a>
+                            </div>
+                          )}
+                          <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                            {text || (!imageUrl && <i style={{ color: 'var(--text-muted)' }}>(Bỏ trống)</i>)}
+                          </p>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-6)' }}>

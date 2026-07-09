@@ -53,7 +53,7 @@ router.post('/start', authMiddleware, requireRole('STUDENT', 'ADMIN'), async (re
 // POST /api/submissions/:id/submit — submit answers
 router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), async (req, res) => {
   try {
-    const { answers, timeSpentPerQuestion } = req.body;
+    const { answers, timeSpentPerQuestion, cheatCount, cheatLogs } = req.body;
     // answers: { [questionId]: string | string[] }
     // timeSpentPerQuestion: { [questionId]: number } (seconds)
 
@@ -114,6 +114,13 @@ router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), asyn
     const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
     const hasEssay = essayAnswers.length > 0;
 
+    // Penalty for cheating
+    const finalCheatCount = parseInt(cheatCount) || 0;
+    if (!hasEssay && finalCheatCount >= 3 && percentage >= 50) {
+      totalScore = totalScore / 2;
+      percentage = percentage / 2;
+    }
+
     await prisma.submission.update({
       where: { id: submission.id },
       data: {
@@ -121,6 +128,8 @@ router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), asyn
         totalScore,
         maxScore,
         percentage,
+        cheatCount: finalCheatCount,
+        cheatLogs: Array.isArray(cheatLogs) ? cheatLogs : [],
         status: hasEssay ? 'SUBMITTED' : 'GRADED',
       }
     });

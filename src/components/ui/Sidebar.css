@@ -79,7 +79,7 @@
 }
 
 .sidebar-nav-item.active {
-  background: rgba(99,102,241,0.15);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), transparent);
   color: var(--clr-primary-400);
   border-left: 3px solid var(--clr-primary-400);
 }

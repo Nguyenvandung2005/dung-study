@@ -18,7 +18,10 @@ const ANIMATIONS = [
   { id: 'wave', name: 'Sóng lượn (Waves)', icon: '🌊' },
   { id: 'matrix', name: 'Mưa ma trận (Matrix)', icon: '🔢' },
   { id: 'geometric', name: 'Hình học 3D (Shapes)', icon: '💠' },
-  { id: 'pulse', name: 'Vòng sóng siêu âm (Pulse)', icon: '💨' }
+  { id: 'pulse', name: 'Vòng sóng siêu âm (Pulse)', icon: '💨' },
+  { id: 'study-symbols', name: 'Ký tự tri thức (Study Symbols)', icon: '📐' },
+  { id: 'cosmos', name: 'Vũ trụ học tập (Cosmos Stars)', icon: '🌌' },
+  { id: 'bubbles', name: 'Bong bóng sắc màu (Bubbles)', icon: '🎈' }
 ];
 
 export default function AdminThemeSettings() {

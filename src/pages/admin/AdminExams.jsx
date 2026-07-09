@@ -3,6 +3,14 @@ import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
 import api from '../../api/client';
 
+const getExamStatus = (exam) => {
+  if (!exam.isPublished) return { text: 'Chưa phát hành', class: 'badge-danger' };
+  const now = new Date();
+  if (exam.startAt && new Date(exam.startAt) > now) return { text: 'Sắp mở', class: 'badge-warning' };
+  if (exam.endAt && new Date(exam.endAt) < now) return { text: 'Đã đóng', class: 'badge-danger' };
+  return { text: 'Đang mở', class: 'badge-success' };
+};
+
 export default function AdminExams() {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,8 +29,8 @@ export default function AdminExams() {
 
   const handleTogglePublish = async (id, isPublished) => {
     try {
-      await api.patch(`/exams/${id}/publish`, { isPublished: !isPublished });
-      setExams(exams.map(e => e.id === id ? { ...e, isPublished: !isPublished } : e));
+      const { data } = await api.patch(`/exams/${id}/publish`, { isPublished: !isPublished });
+      setExams(exams.map(e => e.id === id ? data : e));
     } catch (e) {
       alert('Không thể cập nhật trạng thái bài thi');
     }
@@ -85,10 +93,10 @@ export default function AdminExams() {
                       <td>{e._count?.questions || 0} câu</td>
                       <td>{e.createdBy?.name || 'Admin'}</td>
                       <td>
-                        <button className={`badge ${e.isPublished ? 'badge-success' : 'badge-danger'}`}
+                        <button className={`badge ${getExamStatus(e).class}`}
                           onClick={() => handleTogglePublish(e.id, e.isPublished)}
                           style={{ border: 'none', cursor: 'pointer' }}>
-                          {e.isPublished ? 'Đang mở' : 'Đang đóng'}
+                          {getExamStatus(e).text}
                         </button>
                       </td>
                       <td>

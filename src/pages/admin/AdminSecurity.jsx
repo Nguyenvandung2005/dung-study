@@ -7,6 +7,22 @@ export default function AdminSecurity() {
   const [logs, setLogs] = useState([]);
   const [anomalies, setAnomalies] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [filterSeverity, setFilterSeverity] = useState('ALL');
+  const [filterAction, setFilterAction] = useState('ALL');
+  const [searchIp, setSearchIp] = useState('');
+
+  // Derived unique actions for filter dropdown
+  const uniqueActions = [...new Set(logs.map(log => log.action))];
+
+  // Filtered logs
+  const filteredLogs = logs.filter(log => {
+    if (filterSeverity !== 'ALL' && log.severity !== filterSeverity) return false;
+    if (filterAction !== 'ALL' && log.action !== filterAction) return false;
+    if (searchIp && !log.ip.includes(searchIp)) return false;
+    return true;
+  });
 
   useEffect(() => {
     Promise.all([
@@ -66,7 +82,32 @@ export default function AdminSecurity() {
 
             {/* Detailed Security Logs Table */}
             <section>
-              <h2 className="section-heading" style={{ marginBottom: 'var(--space-3)' }}>📋 Chi tiết Security Logs</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+                <h2 className="section-heading" style={{ margin: 0 }}>📋 Chi tiết Security Logs</h2>
+                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    placeholder="🔍 Tìm kiếm IP..." 
+                    value={searchIp}
+                    onChange={e => setSearchIp(e.target.value)}
+                    style={{ width: '200px' }}
+                  />
+                  <select className="input" value={filterAction} onChange={e => setFilterAction(e.target.value)}>
+                    <option value="ALL">Tất cả hành động</option>
+                    {uniqueActions.map(action => (
+                      <option key={action} value={action}>{action}</option>
+                    ))}
+                  </select>
+                  <select className="input" value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}>
+                    <option value="ALL">Tất cả mức độ</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                </div>
+              </div>
               <div className="glass-card" style={{ overflowX: 'auto' }}>
                 <table className="data-table">
                   <thead>
@@ -79,12 +120,12 @@ export default function AdminSecurity() {
                     </tr>
                   </thead>
                   <tbody>
-                    {logs.length === 0 ? (
+                    {filteredLogs.length === 0 ? (
                       <tr>
-                        <td colSpan="5" style={{ textAlign: 'center', padding: 'var(--space-6)' }}>Chưa ghi nhận log bảo mật nào.</td>
+                        <td colSpan="5" style={{ textAlign: 'center', padding: 'var(--space-6)' }}>Chưa ghi nhận log bảo mật nào phù hợp.</td>
                       </tr>
                     ) : (
-                      logs.map(log => (
+                      filteredLogs.map(log => (
                         <tr key={log.id}>
                           <td>{new Date(log.createdAt).toLocaleString('vi-VN')}</td>
                           <td><strong>{log.ip}</strong></td>

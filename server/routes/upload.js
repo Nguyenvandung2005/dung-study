@@ -5,8 +5,24 @@ const pdfParse = require('pdf-parse'); // v1.1.1
 const path = require('path');
 const fs = require('fs');
 const { authMiddleware, requireRole } = require('../middleware/auth');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const router = express.Router();
+
+// ── Cấu hình Cloudinary (chỉ khởi tạo nếu có đầy đủ keys) ──────────────────
+const cloudinaryEnabled =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET;
+
+if (cloudinaryEnabled) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -36,7 +52,7 @@ const parseQuestionsFromHtml = (html) => {
   // Add unique markers before every Câu X or just X. (e.g. "Câu 1.", "1.", "1)")
   const markedHtml = html.replace(/(^|>)([\s\xA0]*)(?:C\u00e2u\s+)?(\d+[:.)](?:\s|&nbsp;|<|\n|$))/gi, '$1$2|||SPLIT|||$3');
   const blocks = markedHtml.split('|||SPLIT|||').filter(b => b.trim());
-  
+
   const questions = [];
 
   for (const block of blocks) {
@@ -103,7 +119,7 @@ const parseQuestionsFromText = (text) => {
   const questions = [];
   // Normalize line endings
   const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  
+
   // Robust split using marker, making "Câu " optional
   const markedText = normalized.replace(/(^|\n)([\s\xA0]*)(?:C\u00e2u\s+)?(\d+[:.)](?:\s|\n|$))/gi, '$1$2|||SPLIT|||$3');
   const questionBlocks = markedText.split('|||SPLIT|||').filter(b => b.trim());
@@ -229,4 +245,54 @@ router.post('/pdf', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sing
   }
 });
 
+// ── Storage cho ảnh bài làm: Cloudinary hoặc Local Disk ─────────────────────
+const imageStorage = cloudinaryEnabled
+  ? new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: 'dung-study/answers',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+      },
+    })
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../uploads/answers');
+        fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+      },
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+      }
+    });
+
+const uploadImage = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Chỉ hỗ trợ file hình ảnh (.jpg, .jpeg, .png, .webp, .gif)'));
+  }
+});
+
+// POST /api/upload/image — upload student essay photo answers
+// Nếu Cloudinary được cấu hình → trả về URL đám mây HTTPS
+// Nếu chưa cấu hình → trả về path local như cũ
+router.post('/image', authMiddleware, uploadImage.single('image'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn file ảnh để tải lên' });
+    // Cloudinary: req.file.path là URL đám mây; Local: tạo path local
+    const fileUrl = cloudinaryEnabled
+      ? req.file.path  // Cloudinary trả về URL đầy đủ trong req.file.path
+      : `/uploads/answers/${req.file.filename}`;
+    res.json({ url: fileUrl, isCloud: !!cloudinaryEnabled });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi tải ảnh lên: ' + error.message });
+  }
+});
+
 module.exports = router;
+

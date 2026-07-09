@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import LogoWaveBounce from './LogoWaveBounce';
 import './Sidebar.css';
+
 
 const navItems = {
   STUDENT: [
     { to: '/student', icon: '🏠', label: 'Trang chủ' },
     { to: '/student/exams', icon: '📝', label: 'Bài kiểm tra' },
     { to: '/student/history', icon: '📊', label: 'Lịch sử' },
+    { to: '/student/leaderboard', icon: '🏆', label: 'Bảng xếp hạng' },
   ],
   TEACHER: [
     { to: '/teacher', icon: '🏠', label: 'Tổng quan' },
@@ -39,7 +42,7 @@ export default function Sidebar() {
   const handleLogout = () => {
     localStorage.removeItem('simulatedRole');
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleSimulateRole = (role) => {
@@ -57,9 +60,10 @@ export default function Sidebar() {
   const content = (
     <>
       <div className="sidebar-brand">
-        <img src="/logo.png" alt="Dung Study Logo" className="sidebar-logo" style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)' }} />
+        <LogoWaveBounce size="sm" />
         <span className="sidebar-brand-text">Dung-<span className="gradient-text">Study</span></span>
       </div>
+
 
       <div className="divider" />
 
@@ -83,9 +87,15 @@ export default function Sidebar() {
       )}
 
       <div className="sidebar-user">
-        <div className="sidebar-avatar">{user?.name?.[0]?.toUpperCase()}</div>
+        <div className="sidebar-avatar" style={{ 
+          background: user?.avatar ? `url(http://localhost:5000${user.avatar}) center/cover` : 'var(--clr-primary-500)'
+        }}>
+          {!user?.avatar && user?.name?.[0]?.toUpperCase()}
+        </div>
         <div className="sidebar-user-info">
-          <span className="sidebar-user-name">{user?.name}</span>
+          <Link to="/profile" className="sidebar-user-name" style={{ textDecoration: 'none', color: 'inherit' }}>
+            {user?.name}
+          </Link>
           <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
             {user?.role === 'ADMIN' ? `Admin (${activeRole})` : user?.role === 'TEACHER' ? 'Giáo viên' : `Lớp ${user?.grade}`}
           </span>

@@ -15,7 +15,7 @@ export default function PrivateRoute({ children, roles }) {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   // Admin is allowed to bypass all route guards for testing purposes
   if (user.role === 'ADMIN') {

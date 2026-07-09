@@ -1,7 +1,51 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AnimatedBackground from '../components/ui/AnimatedBackground';
+import LogoWaveBounce from '../components/ui/LogoWaveBounce';
 import './LandingPage.css';
+
+
+const HeroPuzzle = () => {
+  const cols = 12;
+  const rows = 1;
+  const pieces = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const xPos = cols > 1 ? (c / (cols - 1)) * 100 : 0;
+      const yPos = 0;
+      
+      const randY = (Math.random() - 0.5) * 8;
+      // Trượt từ trái sang phải như ánh bình minh
+      const delay = c * 0.1;
+
+      pieces.push(
+        <div
+          key={`${r}-${c}`}
+          className="puzzle-piece"
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: `url('/bg-asian-bamboo.png')`,
+            backgroundSize: `cover`,
+            backgroundPosition: `center`,
+            clipPath: `inset(0% ${100 - (c + 1) * (100 / cols)}% 0% ${c * (100 / cols)}%)`,
+            '--rx': 0,
+            '--ry': randY,
+            '--rr': 0,
+            animationDelay: `${delay}s`
+          }}
+        />
+      );
+    }
+  }
+
+  return (
+    <div className="hero-puzzle-container">
+      {pieces}
+      <div className="hero-overlay"></div>
+    </div>
+  );
+};
 
 const FEATURES = [
   { icon: '📝', title: 'Đa dạng hình thức kiểm tra', desc: 'Trắc nghiệm đơn, trắc nghiệm nhiều đáp án, tự luận (AI chấm tự động)' },
@@ -28,14 +72,15 @@ export default function LandingPage() {
 
   return (
     <div className="landing">
-      <AnimatedBackground />
+      <HeroPuzzle />
       
       {/* Header */}
       <header className="landing-header glass-card">
         <div className="header-brand">
-          <img src="/logo.png" alt="Dung-Study" className="header-logo" style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)' }} />
+          <LogoWaveBounce size="sm" />
           <span className="header-name">Dung-<span className="gradient-text">Study</span></span>
         </div>
+
         <div className="header-actions">
           <Link to="/login" className="btn btn-outline">Đăng nhập</Link>
           <Link to="/register" className="btn btn-primary">Bắt đầu miễn phí</Link>

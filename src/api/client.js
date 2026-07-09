@@ -37,5 +37,12 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+export const getFullUploadUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const serverBase = apiUrl.replace(/\/api$/, '');
+  return `${serverBase}${path}`;
+};
 
 export default api;

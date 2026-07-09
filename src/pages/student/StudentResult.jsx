@@ -1,22 +1,67 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../api/client';
+import api, { getFullUploadUrl } from '../../api/client';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
 import Sidebar from '../../components/ui/Sidebar';
 import '../Dashboard.css';
+
+
+const parseEssayAnswer = (answerText) => {
+  if (!answerText) return { imageUrl: null, text: '' };
+  const imgMatch = answerText.match(/\[Ảnh bài làm:\s*(.*?)\]/);
+  if (imgMatch) {
+    const imageUrl = imgMatch[1];
+    const text = answerText.replace(/\[Ảnh bài làm:\s*.*?\]/, '').trim();
+    return { imageUrl, text };
+  }
+  return { imageUrl: null, text: answerText };
+};
 
 export default function StudentResult() {
   const { submissionId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [studyPath, setStudyPath] = useState('');
+  const [studyPathLoading, setStudyPathLoading] = useState(false);
 
   useEffect(() => {
     api.get(`/submissions/${submissionId}`)
-      .then(res => setData(res.data))
+      .then(res => {
+        setData(res.data);
+        fetchStudyPath(res.data);
+      })
       .catch(err => setError(err.response?.data?.message || 'Lỗi tải kết quả'))
       .finally(() => setLoading(false));
   }, [submissionId]);
+
+  const fetchStudyPath = async (resultData) => {
+    if (!resultData?.exam) return;
+    setStudyPathLoading(true);
+    try {
+      const wrongQuestions = (resultData.answers || [])
+        .filter(a => a.isCorrect === false)
+        .map(a => {
+          const q = resultData.exam.questions?.find(q => q.id === a.questionId);
+          return q ? q.content.replace(/<[^>]*>/g, '').trim().slice(0, 100) : null;
+        })
+        .filter(Boolean);
+
+      const { data: aiData } = await api.post('/ai/analyze-student-result', {
+        subject: resultData.exam.subject,
+        grade: resultData.exam.grade,
+        score: resultData.totalScore,
+        maxScore: resultData.maxScore,
+        wrongQuestions,
+      });
+      setStudyPath(aiData.analysis || '');
+    } catch {
+      // silence if AI unavailable
+    } finally {
+      setStudyPathLoading(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -75,6 +120,32 @@ export default function StudentResult() {
           </div>
         </div>
 
+        {/* AI Study Path */}
+        {(studyPathLoading || studyPath) && (
+          <div className="glass-card fade-in" style={{
+            padding: 'var(--space-6)', marginBottom: 'var(--space-6)',
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.08))',
+            border: '1px solid rgba(139,92,246,0.3)'
+          }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>💡</span>
+              <span style={{ background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Lộ trình Ôn tập Cá nhân hóa bởi AI
+              </span>
+            </h3>
+            {studyPathLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)' }}>
+                <div className="spinner" style={{ width: 18, height: 18 }} />
+                <span style={{ fontSize: '0.88rem' }}>AI đang phân tích kết quả và chuẩn bị gợi ý cho bạn...</span>
+              </div>
+            ) : (
+              <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.75, fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
+                {studyPath}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Detailed Questions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           {exam.questions.map((q, index) => {
@@ -103,11 +174,27 @@ export default function StudentResult() {
                 {/* Content */}
                 <div 
                   className="question-content" 
-                  style={{ fontSize: '1.1rem', marginBottom: 'var(--space-6)' }}
+                  style={{ fontSize: '1.1rem', marginBottom: 'var(--space-4)' }}
                   dangerouslySetInnerHTML={/<[a-z][\s\S]*>/i.test(q.content) ? { __html: q.content } : undefined}
                 >
                   {!(/<[a-z][\s\S]*>/i.test(q.content)) ? q.content : undefined}
                 </div>
+
+                {q.imageUrl && (
+                  <div style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)' }}>
+                    <img
+                      src={q.imageUrl}
+                      alt={`Minh họa câu ${index + 1}`}
+                      style={{
+                        maxHeight: 380,
+                        maxWidth: '100%',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-subtle)',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* MCQ Options */}
                 {q.type === 'SINGLE_CHOICE' && q.options && (
@@ -146,7 +233,14 @@ export default function StudentResult() {
                           display: 'flex', gap: '1rem', alignItems: 'center'
                         }}>
                           <span style={{ fontWeight: 'bold', minWidth: '24px' }}>{opt.id}.</span>
-                          <span style={{ flex: 1 }}>{opt.text}</span>
+                          <span style={{ flex: 1 }}>
+                            {opt.text}
+                            {isSelected && (
+                              <span style={{ marginLeft: '10px', fontSize: '0.85rem', color: isActuallyCorrect ? 'var(--clr-emerald-500)' : 'var(--clr-rose-500)', fontWeight: 600 }}>
+                                (Lựa chọn của bạn)
+                              </span>
+                            )}
+                          </span>
                           {icon && <span>{icon}</span>}
                         </div>
                       );
@@ -158,8 +252,25 @@ export default function StudentResult() {
                 {q.type === 'ESSAY' && (
                   <div style={{ marginTop: 'var(--space-4)' }}>
                     <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Bài làm của bạn:</h4>
-                    <div style={{ padding: 'var(--space-4)', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', whiteSpace: 'pre-wrap' }}>
-                      {stuAnswer?.answer || <span style={{ color: 'var(--text-muted)' }}>(Không có câu trả lời)</span>}
+                    <div style={{ padding: 'var(--space-4)', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)' }}>
+                      {(() => {
+                        const { imageUrl, text } = parseEssayAnswer(stuAnswer?.answer);
+                        return (
+                          <>
+                            {imageUrl && (
+                              <div style={{ marginBottom: 'var(--space-4)' }}>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '6px' }}>📷 Ảnh đính kèm:</p>
+                                <a href={getFullUploadUrl(imageUrl)} target="_blank" rel="noreferrer">
+                                  <img src={getFullUploadUrl(imageUrl)} alt="Ảnh bài làm" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-strong)', cursor: 'zoom-in' }} />
+                                </a>
+                              </div>
+                            )}
+                            <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                              {text || (!imageUrl && <span style={{ color: 'var(--text-muted)' }}>(Không có câu trả lời)</span>)}
+                            </p>
+                          </>
+                        );
+                      })()}
                     </div>
 
                     {/* AI / Teacher Remark */}
@@ -186,6 +297,45 @@ export default function StudentResult() {
             );
           })}
         </div>
+
+        {/* AI Study Path Card */}
+        <div className="glass-card fade-in" style={{
+          padding: 'var(--space-6)',
+          marginTop: 'var(--space-8)',
+          background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.08))',
+          border: '1px solid rgba(16,185,129,0.3)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+            <span style={{ fontSize: '1.8rem' }}>💡</span>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', color: '#34d399', margin: 0 }}>Lộ trình Ôn tập Cá nhân hóa bởi AI</h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Gemini AI phân tích kết quả và đề xuất hướng ôn tập dành riêng cho bạn</p>
+            </div>
+          </div>
+
+          {studyPathLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-muted)' }}>
+              <div className="spinner" style={{ width: 22, height: 22 }} />
+              <span style={{ fontSize: '0.9rem' }}>AI đang phân tích kết quả của bạn...</span>
+            </div>
+          ) : studyPath ? (
+            <div style={{
+              background: 'rgba(0,0,0,0.2)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-5)',
+              borderLeft: '3px solid #34d399',
+            }}>
+              <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+                {studyPath}
+              </p>
+            </div>
+          ) : (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              ⚠️ Không thể tải phân tích AI lúc này. Tính năng này yêu cầu cấu hình Gemini API Key.
+            </p>
+          )}
+        </div>
+
       </main>
     </div>
   );

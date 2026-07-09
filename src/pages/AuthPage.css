@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap');
+
 /* AuthPage Styles */
 .auth-page {
   min-height: 100vh;
@@ -7,6 +9,203 @@
   padding: var(--space-6);
   position: relative;
 }
+
+.auth-page-asian {
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background-color: #050b14;
+}
+
+.auth-split-image {
+  flex: 1;
+  position: relative;
+  background-color: #050b14;
+  overflow: hidden;
+}
+
+/* Trang Đăng ký: Form ở bên trái -> Bên trái làm mờ tối tiếp giáp form, bên phải hoàn toàn rõ nét */
+.auth-split-image.fade-left::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to right, #050b14 0%, rgba(5,11,20,0.88) 10%, rgba(5,11,20,0.3) 24%, transparent 42%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Trang Đăng nhập: Form ở bên phải -> Bên phải làm mờ tối tiếp giáp form, bên trái hoàn toàn rõ nét */
+.auth-split-image.fade-right::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to left, #050b14 0%, rgba(5,11,20,0.88) 10%, rgba(5,11,20,0.3) 24%, transparent 42%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+
+
+
+.art-typography {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 5;
+  opacity: 0;
+  animation: artTextFade 2.5s ease-in-out 1.2s forwards;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.art-welcome {
+  font-family: 'Dancing Script', cursive;
+  font-size: 2.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 2px 8px rgba(0,0,0,0.8);
+  font-weight: 500;
+}
+
+.art-brand {
+  font-family: 'Dancing Script', cursive;
+  font-weight: 700;
+  font-size: 6.5rem;
+  background: linear-gradient(180deg, #fff3cd 0%, #d4af37 60%, #aa771c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 30px rgba(212, 175, 55, 0.4));
+  white-space: nowrap;
+}
+
+@keyframes artTextFade {
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.95); filter: blur(10px); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+}
+
+.auth-split-form {
+  width: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: #050b14;
+  z-index: 10;
+  position: relative;
+  box-shadow: 0 0 60px 30px #050b14;
+}
+
+
+@media (max-width: 900px) {
+  .auth-split-image {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+  }
+  .auth-split-image::after {
+    background: rgba(5,11,20,0.7);
+  }
+  .auth-split-form {
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+/* Animations cho giao diện Split-screen */
+@keyframes splitSlideLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.anim-slide-left {
+  animation: splitSlideLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes splitSlideRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.anim-slide-right {
+  animation: splitSlideRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.puzzle-container {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: 1fr;
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 0;
+}
+
+/* Lớp phủ ảnh hoàn chỉnh hiện lên sau khi ghép xong để che lấp mọi khe hở subpixel của grid */
+.puzzle-container::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('/bg-asian-art.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 1.2s forwards;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.puzzle-piece {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background-repeat: no-repeat;
+  /* Use CSS variables for random scattering */
+  animation: puzzleAssemble 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes puzzleAssemble {
+  0% {
+    opacity: 0;
+    transform: translate(calc(var(--rx) * 150px), calc(var(--ry) * 150px)) scale(0.3) rotate(calc(var(--rr) * 90deg));
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes splitSlideRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes splitSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim-slide-left {
+  animation: splitSlideLeft 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-slide-right {
+  animation: splitSlideRight 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-stagger-1 { opacity: 0; animation: splitSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.3s; }
+.anim-stagger-2 { opacity: 0; animation: splitSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.5s; }
+.anim-stagger-3 { opacity: 0; animation: splitSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.7s; }
+
 
 .auth-container {
   width: 100%;

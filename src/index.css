@@ -25,31 +25,32 @@
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;
   --transition-slow: 400ms ease;
+  --glass-blur: blur(12px);
 }
 
-/* 1. Ruby Red (Default) */
+/* 1. Premium Asian Art (Default) */
 :root, [data-theme="ruby-red"] {
-  --clr-primary-400: #fb7185;
-  --clr-primary-500: #f43f5e;
-  --clr-primary-600: #e11d48;
+  --clr-primary-400: #f59e0b;
+  --clr-primary-500: #ea580c;
+  --clr-primary-600: #c2410c;
   --clr-emerald-500: #10b981;
   --clr-rose-500: #f43f5e;
-  --bg-base: #0f0305;
-  --bg-deep: #140407;
-  --bg-surface: #24070d;
+  --bg-base: #050b14;
+  --bg-deep: #03070d;
+  --bg-surface: #0a1426;
   --bg-card: rgba(255, 255, 255, 0.03);
   --bg-card-hover: rgba(255, 255, 255, 0.06);
-  --glass-bg: rgba(36, 7, 13, 0.45);
-  --glass-border: rgba(244, 63, 94, 0.15);
+  --glass-bg: rgba(5, 11, 20, 0.45);
+  --glass-border: rgba(245, 158, 11, 0.2);
   --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-  --text-primary: #fff0f2;
-  --text-secondary: #e5b3bb;
-  --text-muted: #a36d75;
-  --border-subtle: rgba(244, 63, 94, 0.15);
-  --border-strong: rgba(244, 63, 94, 0.35);
-  --gradient-primary: linear-gradient(135deg, #e11d48, #f59e0b);
-  --gradient-hero: linear-gradient(135deg, #0f0305 0%, #24070d 50%, #300912 100%);
-  --shadow-glow-primary: 0 0 20px rgba(244, 63, 94, 0.3);
+  --text-primary: #fdf6e3;
+  --text-secondary: #ebdcb2;
+  --text-muted: #b09e76;
+  --border-subtle: rgba(245, 158, 11, 0.15);
+  --border-strong: rgba(245, 158, 11, 0.35);
+  --gradient-primary: linear-gradient(135deg, #f59e0b, #ea580c);
+  --gradient-hero: linear-gradient(135deg, #050b14 0%, #0a1426 50%, #03070d 100%);
+  --shadow-glow-primary: 0 0 20px rgba(245, 158, 11, 0.3);
 }
 
 /* 2. Cyberpunk */
@@ -177,7 +178,61 @@
   --shadow-glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
+/* =============================================
+   GLOBAL LIGHT THEME MODE OVERRIDES
+   ============================================= */
+html.light-theme,
+:root.light-theme,
+html.light-theme [data-theme],
+body.light-theme {
+  --bg-base: #f1f5f9 !important;
+  --bg-deep: #e2e8f0 !important;
+  --bg-surface: #ffffff !important;
+  --bg-card: rgba(255, 255, 255, 0.85) !important;
+  --bg-card-hover: #ffffff !important;
+  --glass-bg: rgba(255, 255, 255, 0.85) !important;
+  --glass-border: rgba(15, 23, 42, 0.12) !important;
+  --glass-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+  --text-primary: #0f172a !important;
+  --text-secondary: #334155 !important;
+  --text-muted: #64748b !important;
+  --border-subtle: rgba(15, 23, 42, 0.1) !important;
+  --border-strong: rgba(15, 23, 42, 0.22) !important;
+  --gradient-hero: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%) !important;
+}
+
+html.light-theme body {
+  background: var(--bg-base) !important;
+  color: var(--text-primary) !important;
+}
+
+html.light-theme .glass-card {
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+html.light-theme .sidebar {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-right-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+html.light-theme .input,
+html.light-theme select.input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+}
+
+html.light-theme .input:focus,
+html.light-theme select.input:focus {
+  background: #ffffff !important;
+  border-color: var(--clr-primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
 :root {
+
   /* Shadows base */
 
   /* Spacing */
@@ -413,8 +468,10 @@ select.input option {
 .sidebar {
   width: 260px;
   flex-shrink: 0;
-  background: var(--bg-deep);
-  border-right: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   position: fixed;
   left: 0; top: 0; bottom: 0;
   z-index: 100;
@@ -432,6 +489,26 @@ select.input option {
   min-height: 100vh;
   position: relative;
   z-index: 1;
+}
+
+/* Thêm họa tiết chìm mờ ảo (Watermark) phong cách Cổ trang vào nền Dashboard */
+.main-content::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  right: -10%;
+  width: 1000px;
+  height: 1000px;
+  background-image: url('/bg-asian-art.png');
+  background-size: cover;
+  background-position: center 60%; /* Đẩy xuống một chút để lấy trọn đàn hạc */
+  opacity: 0.25; /* Tăng độ hiển thị lên 25% để thấy rất rõ hạc */
+  pointer-events: none;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, black 40%, transparent 70%);
+  mask-image: radial-gradient(circle, black 40%, transparent 70%);
+  transform: translateY(-50%);
+  z-index: 0; /* Đưa lên trên lớp nền sâu nhưng dưới các thẻ kính mờ */
 }
 
 /* ---- CANVAS ANIMATION ---- */
@@ -519,4 +596,56 @@ select.input option {
   }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; padding: var(--space-4); }
+}
+
+/* ---- SCROLL TO TOP BUTTON ---- */
+.scroll-to-top {
+  position: fixed;
+  bottom: var(--space-8);
+  right: var(--space-8);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--clr-primary-400);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 990;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.9);
+  transition: opacity var(--transition-base), transform var(--transition-base), background var(--transition-base), border-color var(--transition-base);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.scroll-to-top:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--clr-primary-500);
+  color: var(--text-primary);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.scroll-to-top:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .scroll-to-top {
+    bottom: var(--space-4);
+    right: var(--space-4);
+    width: 40px;
+    height: 40px;
+  }
 }

@@ -3,13 +3,20 @@
 /* Mode Selection */
 
 .mode-selector {
-  max-width: 900px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .mode-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .mode-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mode-card {
