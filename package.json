@@ -15,9 +15,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
-    "react-tsparticles": "^2.12.2",
-    "recharts": "^3.9.2",
-    "tsparticles": "^4.3.1"
+    "recharts": "^3.9.2"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
