@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
+  validate: { trustProxy: false },
   message: { message: 'Quá nhiều yêu cầu, vui lòng thử lại sau 15 phút' },
 });
 
