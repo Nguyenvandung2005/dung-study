@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getFullUploadUrl } from '../../api/client';
 import LogoWaveBounce from './LogoWaveBounce';
 import './Sidebar.css';
 
@@ -88,7 +89,7 @@ export default function Sidebar() {
 
       <div className="sidebar-user">
         <div className="sidebar-avatar" style={{ 
-          background: user?.avatar ? `url(http://localhost:5000${user.avatar}) center/cover` : 'var(--clr-primary-500)'
+          background: user?.avatar ? `url(${getFullUploadUrl(user.avatar)}) center/cover` : 'var(--clr-primary-500)'
         }}>
           {!user?.avatar && user?.name?.[0]?.toUpperCase()}
         </div>

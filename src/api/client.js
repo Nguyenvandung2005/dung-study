@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const getDefaultApiUrl = () => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return 'https://dung-study.onrender.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || getDefaultApiUrl(),
   withCredentials: false,
 });
 
@@ -39,8 +46,8 @@ api.interceptors.response.use(
 );
 export const getFullUploadUrl = (path) => {
   if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+  const apiUrl = import.meta.env.VITE_API_URL || getDefaultApiUrl();
   const serverBase = apiUrl.replace(/\/api$/, '');
   return `${serverBase}${path}`;
 };
