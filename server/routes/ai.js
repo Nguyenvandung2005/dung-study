@@ -351,5 +351,175 @@ Chỉ trả về JSON hợp lệ.`;
   }
 });
 
+// POST /api/ai/parse-document — AI đọc thông minh nội dung file Word/PDF
+router.post('/parse-document', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+  try {
+    const { text, htmlContent, imagesBase64 = [], fileType = 'unknown' } = req.body;
+
+    if (!text && !htmlContent) {
+      return res.status(400).json({ message: 'Vui lòng cung cấp nội dung văn bản từ file.' });
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ message: 'Chưa cấu hình GEMINI_API_KEY.' });
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Dọn HTML → plain text để giảm token, nhưng vẫn giữ cấu trúc dòng
+    const cleanText = (htmlContent || text)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+      .substring(0, 18000);
+
+    const prompt = `Bạn là một chuyên gia giáo dục Việt Nam, am hiểu sâu về mọi định dạng đề thi phổ thông.
+Hãy đọc kỹ nội dung văn bản sau đây được trích xuất từ một file đề thi (${fileType === 'word' ? 'Word .docx' : 'PDF'}).
+${imagesBase64.length > 0 ? 'Các hình ảnh đính kèm là hình vẽ/sơ đồ được nhúng trong tài liệu.' : ''}
+
+NỘI DUNG FILE:
+---
+${cleanText}
+---
+
+YÊU CẦU PHÂN TÍCH (QUAN TRỌNG):
+1. Nhận diện TẤT CẢ câu hỏi, kể cả: không có "Câu X.", đề có nhiều phần (Phần I, Phần II...), đề có đáp án cuối trang.
+2. Câu trắc nghiệm: trích xuất đủ nội dung, 4 lựa chọn A/B/C/D, đáp án đúng (chỉ số 0=A, 1=B, 2=C, 3=D), giải thích ngắn.
+3. Câu tự luận: toàn bộ yêu cầu đề bài, gợi ý chấm bài nếu có.
+4. Nếu đáp án nằm cuối trang (dạng "1.A  2.C  3.B"...) → ghép vào câu tương ứng.
+5. Nếu câu có đề cập đến hình vẽ và có ảnh đính kèm, đặt "hasFigure": true và ghi "figureImageIndex": chỉ số ảnh tương ứng (0, 1, 2...) hoặc -1 nếu không rõ.
+6. TUYỆT ĐỐI không bịa thêm câu hỏi hay đáp án không có trong tài liệu.
+
+Trả về JSON mảng hợp lệ (không kèm văn bản nào khác):
+[
+  {
+    "type": "MULTIPLE_CHOICE",
+    "content": "Nội dung câu hỏi đầy đủ",
+    "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+    "correctAnswer": "0",
+    "points": 1,
+    "explanation": "Giải thích đáp án nếu có",
+    "hasFigure": false,
+    "figureImageIndex": -1
+  },
+  {
+    "type": "ESSAY",
+    "content": "Nội dung câu tự luận",
+    "options": [],
+    "correctAnswer": null,
+    "points": 2,
+    "explanation": "Gợi ý chấm bài",
+    "hasFigure": false,
+    "figureImageIndex": -1
+  }
+]`;
+
+    const parts = [prompt];
+    // Đính kèm ảnh nhúng từ file Word (tối đa 5 ảnh)
+    for (const img of imagesBase64.slice(0, 5)) {
+      const cleanData = (img.data || '').replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+      if (cleanData.length > 100) {
+        parts.push({ inlineData: { data: cleanData, mimeType: img.mimeType || 'image/png' } });
+      }
+    }
+
+    const result = await model.generateContent(parts);
+    const responseText = result.response.text().trim();
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return res.status(500).json({ message: 'AI không phân tích được cấu trúc file. Vui lòng thử lại hoặc dùng chế độ thường.' });
+    }
+
+    const rawQuestions = JSON.parse(jsonMatch[0]);
+
+    const questions = rawQuestions.map((q, idx) => ({
+      id: `ai-doc-${Date.now()}-${idx}`,
+      type: q.type === 'ESSAY' ? 'ESSAY' : 'MULTIPLE_CHOICE',
+      content: q.content || '',
+      contentIsHtml: false,
+      options: Array.isArray(q.options) && q.options.length >= 2
+        ? q.options.map(o => (typeof o === 'string' ? o : String(o)))
+        : ['', '', '', ''],
+      correctAnswer: q.correctAnswer != null ? String(q.correctAnswer) : '',
+      points: Number(q.points) || (q.type === 'ESSAY' ? 2 : 1),
+      explanation: q.explanation || '',
+      hasFigure: !!q.hasFigure,
+      figureImageIndex: Number(q.figureImageIndex ?? -1),
+    }));
+
+    res.json({ questions, total: questions.length });
+  } catch (error) {
+    console.error('[AI Parse Document] Error:', error);
+    res.status(500).json({ message: 'Lỗi khi AI phân tích tài liệu: ' + error.message });
+  }
+});
+
+// POST /api/ai/figure-to-svg — AI tái hiện hình vẽ toán học thành SVG từ ảnh gốc
+router.post('/figure-to-svg', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+  try {
+    const { imageBase64, mimeType = 'image/png', questionContent = '' } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ message: 'Vui lòng cung cấp hình ảnh hình vẽ cần chuyển đổi.' });
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ message: 'Chưa cấu hình GEMINI_API_KEY.' });
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `Bạn là một chuyên gia đồ họa toán học và SVG. Phân tích hình vẽ trong ảnh và tái hiện CHÍNH XÁC hình vẽ đó dưới dạng SVG vector sạch.
+
+${questionContent ? `Ngữ cảnh câu hỏi: "${questionContent.substring(0, 300)}"` : ''}
+
+YÊU CẦU BẮT BUỘC:
+1. Tái hiện CHÍNH XÁC những gì có trong ảnh — KHÔNG sáng tạo, KHÔNG thêm bớt.
+2. Giữ nguyên tất cả nhãn, ký hiệu, chữ số, chữ cái (A, B, C, O, x, y, α, β...) đúng vị trí như trong ảnh gốc.
+3. Giữ nguyên tỷ lệ hình học (góc, kích thước tương đối, hướng mũi tên...).
+4. SVG phải: viewBox="0 0 400 300", background trong suốt, màu đường nét #2d3748 (tối), font-family="serif" cho ký hiệu toán.
+5. Nếu có hệ trục tọa độ: vẽ trục x, y với mũi tên và nhãn, các điểm/đường cong đúng theo ảnh.
+6. Nếu hình học phẳng: vẽ đường thẳng, góc, cung tròn đúng như ảnh.
+7. Thêm title SVG mô tả ngắn gọn hình vẽ.
+
+Chỉ trả về mã SVG hợp lệ, bắt đầu bằng <svg và kết thúc bằng </svg>. KHÔNG thêm markdown hay văn bản nào khác.`;
+
+    const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+    const cleanMime = mimeType.replace(/^data:/, '').split(';')[0] || 'image/png';
+
+    const parts = [
+      prompt,
+      { inlineData: { data: cleanBase64, mimeType: cleanMime } }
+    ];
+
+    const result = await model.generateContent(parts);
+    const responseText = result.response.text().trim();
+
+    // Trích xuất SVG từ response
+    let svgMatch = responseText.match(/<svg[\s\S]*?<\/svg>/i);
+    // Fallback: tìm trong code block markdown
+    if (!svgMatch) {
+      const codeBlock = responseText.match(/```(?:svg|xml)?\s*([\s\S]*?)```/i);
+      if (codeBlock) svgMatch = codeBlock[1].match(/<svg[\s\S]*?<\/svg>/i);
+    }
+
+    if (!svgMatch) {
+      return res.status(500).json({ message: 'AI không thể tạo SVG từ hình vẽ này. Ảnh có thể quá mờ hoặc không phải hình toán học.' });
+    }
+
+    res.json({ svgCode: svgMatch[0] });
+  } catch (error) {
+    console.error('[AI Figure to SVG] Error:', error);
+    res.status(500).json({ message: 'Lỗi khi AI vẽ hình SVG: ' + error.message });
+  }
+});
+
 module.exports = router;
+
 

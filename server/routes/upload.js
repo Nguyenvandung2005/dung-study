@@ -184,20 +184,32 @@ router.post('/word', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sin
   try {
     if (!req.file) return res.status(400).json({ message: 'Vui lòng chọn file .docx' });
 
-    // Use convertToHtml to preserve tables, bold, italic, etc.
-    const result = await mammoth.convertToHtml({ path: req.file.path });
+    // Trích xuất ảnh nhúng trong file Word
+    const embeddedImages = [];
+    const htmlResult = await mammoth.convertToHtml(
+      { path: req.file.path },
+      {
+        convertImage: mammoth.images.imgElement(function (image) {
+          return image.read('base64').then(function (imageBuffer) {
+            embeddedImages.push({ data: imageBuffer, mimeType: image.contentType || 'image/png' });
+            return { src: `data:${image.contentType || 'image/png'};base64,${imageBuffer}` };
+          });
+        }),
+      }
+    );
+
+    // Trích xuất plain text để AI có thể đọc
+    const textResult = await mammoth.extractRawText({ path: req.file.path }).catch(() => ({ value: '' }));
     fs.unlinkSync(req.file.path);
 
-    const questions = parseQuestionsFromHtml(result.value);
+    const questions = parseQuestionsFromHtml(htmlResult.value);
     if (questions.length === 0) {
-      // Fallback: try plain text
-      const textResult = await mammoth.extractRawText({ path: req.file.path }).catch(() => ({ value: '' }));
       const fallback = parseQuestionsFromText(textResult.value);
       if (fallback.length === 0) {
-        // Fallback 2: Treat entire document as 1 Essay question
+        // Fallback: Treat entire document as 1 Essay question
         const singleEssay = [{
-          content: result.value || textResult.value,
-          contentIsHtml: !!result.value,
+          content: htmlResult.value || textResult.value,
+          contentIsHtml: !!htmlResult.value,
           type: 'ESSAY',
           options: null,
           correctAnswer: null,
@@ -205,11 +217,27 @@ router.post('/word', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sin
           points: 10,
           order: 1
         }];
-        return res.json({ questions: singleEssay, total: 1 });
+        return res.json({
+          questions: singleEssay, total: 1,
+          rawText: textResult.value,
+          rawHtml: htmlResult.value,
+          embeddedImages,
+        });
       }
-      return res.json({ questions: fallback, total: fallback.length });
+      return res.json({
+        questions: fallback, total: fallback.length,
+        rawText: textResult.value,
+        rawHtml: htmlResult.value,
+        embeddedImages,
+      });
     }
-    res.json({ questions, total: questions.length });
+    res.json({
+      questions,
+      total: questions.length,
+      rawText: textResult.value,
+      rawHtml: htmlResult.value,
+      embeddedImages,
+    });
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: 'Lỗi khi đọc file Word: ' + error.message });
@@ -223,11 +251,12 @@ router.post('/pdf', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sing
     const dataBuffer = fs.readFileSync(req.file.path);
     const data = await pdfParse(dataBuffer);
     fs.unlinkSync(req.file.path);
-    const questions = parseQuestionsFromText(data.text);
+    const rawText = data.text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    const questions = parseQuestionsFromText(rawText);
     if (questions.length === 0) {
       // Fallback: Treat entire document as 1 Essay question
       const singleEssay = [{
-        content: data.text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim(),
+        content: rawText,
         contentIsHtml: false,
         type: 'ESSAY',
         options: null,
@@ -236,9 +265,9 @@ router.post('/pdf', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sing
         points: 10,
         order: 1
       }];
-      return res.json({ questions: singleEssay, total: 1 });
+      return res.json({ questions: singleEssay, total: 1, rawText });
     }
-    res.json({ questions, total: questions.length });
+    res.json({ questions, total: questions.length, rawText });
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: 'Lỗi khi đọc file PDF: ' + error.message });

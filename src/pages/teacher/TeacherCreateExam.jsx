@@ -200,13 +200,36 @@ function ModeSelector({ onSelect, onAI }) {
   );
 }
 
-// ─── File Upload Component ────────────────────────────────────────────────────
+// ─── File Upload Component ──────────────────────────────────────────
 function FileUploadStep({ fileType, onParsed, onBack }) {
   const fileRef = useRef();
   const [uploading, setUploading] = useState(false);
+  const [useAI, setUseAI] = useState(false);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
   const accept = fileType === 'word' ? '.docx' : '.pdf';
+
+  const normalizeQuestions = (rawQuestions) =>
+    (rawQuestions || []).map(q => ({
+      id: crypto.randomUUID(),
+      type: q.type === 'SINGLE_CHOICE' ? 'MULTIPLE_CHOICE' : (q.type || 'MULTIPLE_CHOICE'),
+      content: q.content || '',
+      contentIsHtml: q.contentIsHtml || false,
+      options: (q.type === 'ESSAY')
+        ? ['', '', '', '']
+        : Array.isArray(q.options)
+          ? q.options.map(o => (typeof o === 'string' ? o : o.text || ''))
+          : ['', '', '', ''],
+      correctAnswer: (q.type !== 'ESSAY' && (Array.isArray(q.correctAnswer) ? q.correctAnswer.length > 0 : q.correctAnswer != null && q.correctAnswer !== ''))
+        ? (Array.isArray(q.correctAnswer)
+            ? String('ABCDE'.indexOf(q.correctAnswer[0].toUpperCase()))
+            : String(q.correctAnswer))
+        : '',
+      points: q.points || (q.type === 'ESSAY' ? 2 : 1),
+      explanation: q.explanation || '',
+      svgFigure: '',
+      imageUrl: '',
+    }));
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -219,23 +242,25 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
       const { data } = await api.post(endpoint, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const normalized = (data.questions || []).map(q => ({
-        id: crypto.randomUUID(),
-        type: q.type === 'SINGLE_CHOICE' ? 'MULTIPLE_CHOICE' : (q.type || 'MULTIPLE_CHOICE'),
-        content: q.content || '',
-        contentIsHtml: q.contentIsHtml || false,
-        options: (q.type === 'ESSAY')
-          ? ['', '', '', '']
-          : Array.isArray(q.options)
-            ? q.options.map(o => (typeof o === 'string' ? o : o.text || ''))
-            : ['', '', '', ''],
-        correctAnswer: (q.type !== 'ESSAY' && Array.isArray(q.correctAnswer) && q.correctAnswer.length)
-          ? String('ABCDE'.indexOf(q.correctAnswer[0].toUpperCase()))
-          : '',
-        points: q.points || (q.type === 'ESSAY' ? 2 : 1),
-        explanation: q.explanation || '',
-      }));
-      onParsed(normalized);
+
+      // Chế độ AI: gọm lại bằng Gemini
+      if (useAI) {
+        try {
+          const aiRes = await api.post('/ai/parse-document', {
+            text: data.rawText || '',
+            htmlContent: data.rawHtml || '',
+            imagesBase64: data.embeddedImages || [],
+            fileType,
+          });
+          onParsed(normalizeQuestions(aiRes.data.questions));
+          return;
+        } catch (aiErr) {
+          // AI thất bại → dùng kết quả regex
+          console.warn('[AI Parse] Failed, falling back to regex result:', aiErr.message);
+        }
+      }
+
+      onParsed(normalizeQuestions(data.questions));
     } catch (e) {
       const msg = e.response?.data?.message || 'Không thể đọc file. Hãy kiểm tra định dạng đúng chuẩn.';
       const raw = e.response?.data?.rawText || e.response?.data?.rawHtml;
@@ -244,6 +269,10 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
       setUploading(false);
     }
   };
+
+  const loadingMsg = uploading
+    ? (useAI ? 'AI đang phân tích cấu trúc đề... (~20 giây)' : 'Đang phân tích file... Chờ một chút nhé!')
+    : null;
 
   return (
     <div className="fade-in">
@@ -255,6 +284,45 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
       </div>
 
       {error && <div className="auth-error" style={{ marginBottom: 'var(--space-4)' }}>⚠️ {error}</div>}
+
+      {/* AI Toggle */}
+      <div className="glass-card" style={{
+        padding: '14px 18px', marginBottom: 'var(--space-4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+        border: useAI ? '1px solid rgba(139,92,246,0.5)' : '1px solid var(--border-subtle)',
+        background: useAI ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.02)',
+        transition: 'all 0.3s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: '1.5rem' }}>🤖</span>
+          <div>
+            <p style={{ fontWeight: 700, fontSize: '0.9rem', color: useAI ? '#a78bfa' : 'var(--text-primary)', margin: 0 }}>
+              AI Hỗ trợ Đọc File (Gemini)
+            </p>
+            <p style={{ fontSize: '0.77rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+              {useAI
+                ? '✅ Bật — AI sẽ đọc và phân tích thông minh mọi cấu trúc đề, kể cả đáp án cuối trang (~20s)'
+                : 'Tắt — Dùng phân tích thông thường (nhanh hơn, đầu tiên chạy Regex)'}
+            </p>
+          </div>
+        </div>
+        {/* Toggle switch */}
+        <div
+          onClick={() => setUseAI(v => !v)}
+          style={{
+            width: 48, height: 26, borderRadius: 999, cursor: 'pointer', position: 'relative',
+            background: useAI ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'rgba(255,255,255,0.15)',
+            transition: 'background 0.3s ease', flexShrink: 0,
+            boxShadow: useAI ? '0 0 12px rgba(139,92,246,0.5)' : 'none',
+          }}
+        >
+          <div style={{
+            position: 'absolute', top: 3, left: useAI ? 25 : 3, width: 20, height: 20,
+            borderRadius: '50%', background: '#fff', transition: 'left 0.3s ease',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          }} />
+        </div>
+      </div>
 
       <div
         className={`upload-zone glass-card ${dragging ? 'dragging' : ''}`}
@@ -268,7 +336,8 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
         {uploading ? (
           <>
             <div className="spinner" style={{ width: 48, height: 48 }} />
-            <p>Đang phân tích file... Chờ một chút nhé!</p>
+            <p style={{ marginTop: 16 }}>{loadingMsg}</p>
+            {useAI && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Gemini đang đọc toàn bộ nội dung và tìm hiểu cấu trúc đề...</p>}
           </>
         ) : (
           <>
@@ -288,12 +357,7 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
           <div>
             <p style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--clr-primary-400)', marginBottom: 4 }}>Câu trắc nghiệm:</p>
             <pre style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
-              {`Câu 1. Nội dung câu hỏi?
-A. Đáp án A
-B. Đáp án B
-C. Đáp án C
-D. Đáp án D
-Đáp án: A`}
+              {`Câu 1. Nội dung câu hỏi?\nA. Đáp án A\nB. Đáp án B\nC. Đáp án C\nD. Đáp án D\nĐáp án: A`}
             </pre>
           </div>
           <div>
@@ -346,7 +410,7 @@ function OCRScanStep({ onParsed, onBack }) {
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
-// Helper: Tự động cắt ảnh minh họa cho câu hỏi dựa trên bounding box từ AI Vision
+// Helper: AI tái hiện hình vẽ chính xác thành SVG cho câu hỏi (thay thế việc cắt ảnh)
 async function autoCropQuestionsWithImageBox(questions, images) {
   return Promise.all(
     questions.map(async (q) => {
@@ -358,6 +422,7 @@ async function autoCropQuestionsWithImageBox(questions, images) {
         if (!sourceImg) return q;
         const srcUrl = sourceImg.base64 || sourceImg.url || sourceImg;
 
+        // Bước 1: Cắt vùng hình vẽ từ ảnh gốc
         const croppedUrl = await new Promise((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
@@ -371,23 +436,32 @@ async function autoCropQuestionsWithImageBox(questions, images) {
             const w = Math.min(img.naturalWidth - x, (xmax - xmin) * img.naturalWidth);
             const h = Math.min(img.naturalHeight - y, (ymax - ymin) * img.naturalHeight);
 
-            if (w < 10 || h < 10) {
-              resolve('');
-              return;
-            }
+            if (w < 10 || h < 10) { resolve(''); return; }
             const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, x, y, w, h, 0, 0, w, h);
             resolve(canvas.toDataURL('image/png'));
           };
           img.onerror = () => resolve('');
           img.src = srcUrl;
         });
 
-        if (croppedUrl) {
-          return { ...q, imageUrl: croppedUrl };
+        if (!croppedUrl) return q;
+
+        // Bước 2: Gọi AI vẽ lại SVG chính xác dựa trên ảnh cắt
+        try {
+          const { data } = await api.post('/ai/figure-to-svg', {
+            imageBase64: croppedUrl,
+            mimeType: 'image/png',
+            questionContent: q.content || '',
+          });
+          if (data.svgCode) {
+            return { ...q, svgFigure: data.svgCode, imageUrl: '' };
+          }
+        } catch (svgErr) {
+          console.warn('[Figure SVG] AI failed for question, using cropped image:', svgErr.message);
+          // Fallback: dùng ảnh cắt nếu AI thất bại
+          return { ...q, imageUrl: croppedUrl, svgFigure: '' };
         }
       } catch (err) {
         console.warn('Auto crop failed for question:', q.id, err);
@@ -621,7 +695,7 @@ export default function TeacherCreateExam() {
         correctAnswer: q.type !== 'ESSAY' ? q.correctAnswer : null,
         points: q.points,
         explanation: q.explanation,
-        imageUrl: q.imageUrl || null,
+        imageUrl: q.svgFigure ? `data:image/svg+xml,${encodeURIComponent(q.svgFigure)}` : (q.imageUrl || null),
       })),
     };
     const { data } = await api.post('/exams', payload);
