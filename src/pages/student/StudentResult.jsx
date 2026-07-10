@@ -152,9 +152,28 @@ export default function StudentResult() {
             const stuAnswer = answers.find(a => a.questionId === q.id);
             const isCorrect = stuAnswer?.isCorrect;
             const earned = stuAnswer?.scoreEarned ?? (stuAnswer?.teacherScore || stuAnswer?.aiScore || 0);
+            
+            const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1].section);
 
             return (
-              <div key={q.id} className="glass-card" style={{ padding: 'var(--space-6)', borderLeft: `4px solid ${q.type === 'ESSAY' ? 'var(--clr-amber-500)' : isCorrect ? 'var(--clr-emerald-500)' : 'var(--clr-rose-500)'}` }}>
+              <React.Fragment key={`wrap-${q.id}`}>
+                {showSection && (
+                  <div style={{ 
+                    marginTop: '1rem', 
+                    padding: '12px 20px', 
+                    background: 'var(--gradient-primary)', 
+                    borderRadius: 'var(--radius-md)', 
+                    color: '#fff', 
+                    fontWeight: 700, 
+                    fontSize: '1.2rem', 
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                    {q.section}
+                  </div>
+                )}
+                <div id={`q-${q.id}`} className="glass-card" style={{ padding: 'var(--space-6)', borderLeft: `4px solid ${q.type === 'ESSAY' ? 'var(--clr-amber-500)' : isCorrect ? 'var(--clr-emerald-500)' : 'var(--clr-rose-500)'}` }}>
                 
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
@@ -301,6 +320,7 @@ export default function StudentResult() {
                 )}
 
               </div>
+              </React.Fragment>
             );
           })}
         </div>

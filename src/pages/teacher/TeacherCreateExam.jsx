@@ -204,7 +204,7 @@ function ModeSelector({ onSelect, onAI }) {
 function FileUploadStep({ fileType, onParsed, onBack }) {
   const fileRef = useRef();
   const [uploading, setUploading] = useState(false);
-  const [useAI, setUseAI] = useState(false);
+  const [useAI, setUseAI] = useState(true);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
   const accept = fileType === 'word' ? '.docx' : '.pdf';
@@ -233,6 +233,7 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
           : '',
         points: q.points || (q.type === 'ESSAY' ? 2 : 1),
         explanation: q.explanation || '',
+        section: q.section || null,
         svgFigure: '',
         imageUrl: imgBase64 || '',
       };
@@ -259,7 +260,7 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
             imagesBase64: data.embeddedImages || [],
             fileType,
           });
-          onParsed(normalizeQuestions(aiRes.data.questions, data.embeddedImages));
+          onParsed(normalizeQuestions(aiRes.data.questions, data.embeddedImages), [], aiRes.data.metadata || {});
           return;
         } catch (aiErr) {
           // AI thất bại → dùng kết quả regex
@@ -494,7 +495,7 @@ async function autoCropQuestionsWithImageBox(questions, images) {
       const { data } = await api.post('/ai/scan-exam-image', { images: payload });
       const rawQs = data.questions || [];
       const autoCroppedQs = await autoCropQuestionsWithImageBox(rawQs, images);
-      onParsed(autoCroppedQs, images);
+      onParsed(autoCroppedQs, images, data.metadata || {});
     } catch (e) {
       setError(e.response?.data?.message || 'Lỗi khi AI nhận diện ảnh đề thi. Vui lòng thử lại ảnh sáng và rõ hơn.');
     } finally {
@@ -676,10 +677,35 @@ export default function TeacherCreateExam() {
   const [ocrSourceImages, setOcrSourceImages] = useState([]);
   const navigate = useNavigate();
 
-  const handleParsed = (questions, sourceImgs = []) => {
+  const handleParsed = (questions, images = [], metadata = {}) => {
     setParsedQs(questions);
-    setInitialAIMeta(null);
-    setOcrSourceImages(sourceImgs);
+    
+    // Normalize subject
+    let normalizedSubject = 'Khác';
+    const sLow = (metadata.subject || '').toLowerCase();
+    if (sLow.includes('toán')) normalizedSubject = 'Toán';
+    else if (sLow.includes('văn')) normalizedSubject = 'Văn';
+    else if (sLow.includes('anh')) normalizedSubject = 'Anh';
+    else if (sLow.includes('lý') || sLow.includes('vật lí')) normalizedSubject = 'Lý';
+    else if (sLow.includes('hóa')) normalizedSubject = 'Hóa';
+    else if (sLow.includes('sinh')) normalizedSubject = 'Sinh';
+    else if (sLow.includes('sử')) normalizedSubject = 'Sử';
+    else if (sLow.includes('địa')) normalizedSubject = 'Địa';
+    else if (sLow.includes('gdcd') || sLow.includes('công dân')) normalizedSubject = 'GDCD';
+    else if (sLow.includes('tin')) normalizedSubject = 'Tin học';
+
+    const normalizedMeta = {
+      title: metadata.title || '',
+      subject: metadata.subject ? normalizedSubject : 'Toán',
+      grade: metadata.grade ? (Number(String(metadata.grade).replace(/\D/g, '')) || 10) : 10,
+      timeLimit: metadata.timeLimit ? (Number(String(metadata.timeLimit).replace(/\D/g, '')) || 45) : 45,
+      description: '',
+      startAt: '',
+      endAt: ''
+    };
+
+    setInitialAIMeta(normalizedMeta);
+    if (images.length > 0) setOcrSourceImages(images);
     setMode('form');
   };
 

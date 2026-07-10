@@ -119,16 +119,17 @@ router.post('/', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, re
               else if (typeof correctAnswer === 'string' && correctAnswer.length === 1) correctAnswer = [correctAnswer.toUpperCase()];
             }
 
-            return {
-              content: q.content,
-              type,
-              options: type === 'ESSAY' ? null : options,
-              correctAnswer: type === 'ESSAY' ? null : correctAnswer,
-              explanation: q.explanation || null,
-              points: parseFloat(q.points) || 1,
-              order: q.order ?? idx + 1,
-              imageUrl: q.imageUrl || null,
-            };
+              return {
+                content: q.content,
+                section: q.section || null,
+                type,
+                options: type === 'ESSAY' ? null : options,
+                correctAnswer: type === 'ESSAY' ? null : correctAnswer,
+                explanation: q.explanation || null,
+                points: parseFloat(q.points) || 1,
+                order: q.order ?? idx + 1,
+                imageUrl: q.imageUrl || null,
+              };
           })
         } : undefined
       },
@@ -243,6 +244,7 @@ router.post('/:id/questions', authMiddleware, requireRole('TEACHER', 'ADMIN'), a
       return {
         examId: req.params.id,
         content: q.content,
+        section: q.section || null,
         type,
         options: type === 'ESSAY' ? null : options,
         correctAnswer: type === 'ESSAY' ? null : correctAnswer,

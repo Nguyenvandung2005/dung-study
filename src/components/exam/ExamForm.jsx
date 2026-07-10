@@ -316,6 +316,17 @@ export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [
         <button className="btn btn-danger btn-sm" onClick={onRemove}>✕ Xóa</button>
       </div>
 
+      <div style={{ marginBottom: 12 }}>
+        <input 
+          type="text" 
+          className="input" 
+          placeholder="Tên phần/dạng (VD: PHẦN I: TRẮC NGHIỆM) - Bỏ trống nếu không chia phần"
+          value={q.section || ''} 
+          onChange={e => update('section', e.target.value)}
+          style={{ width: '100%', fontSize: '0.85rem', background: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)', fontWeight: q.section ? 600 : 400, color: q.section ? 'var(--clr-primary-400)' : 'var(--text-primary)' }}
+        />
+      </div>
+
       {renderContentArea()}
 
       {/* ── FIGURE SECTION ── */}

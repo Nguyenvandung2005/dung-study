@@ -191,40 +191,55 @@ ${mcqInstruction}
 ${essayInstruction}
 ${languageInstruction}
 - Điểm mỗi câu trắc nghiệm: 1 điểm. Điểm mỗi câu tự luận: ${totalMcq > 0 ? Math.floor(10 / Math.max(totalEssay, 1)) : 10} điểm.
+5. THÔNG TIN CHUNG: Trích xuất tên đề bài, môn, khối lớp, thời gian làm bài (nếu có).
+6. TRẢ VỀ DUY NHẤT một Object JSON hợp lệ.
 
-Hãy trả về một mảng JSON theo đúng cấu trúc sau (không kèm văn bản nào khác):
-[
-  {
-    "type": "MULTIPLE_CHOICE",
-    "content": "Nội dung câu hỏi trắc nghiệm",
-    "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-    "correctAnswer": "0",
-    "points": 1,
-    "explanation": "Giải thích ngắn gọn tại sao đáp án đúng"
+Format trả về:
+{
+  "metadata": {
+    "title": "Tên bài thi",
+    "subject": "Tên môn học",
+    "grade": "Khối",
+    "timeLimit": 90
   },
-  {
-    "type": "ESSAY",
-    "content": "Nội dung câu hỏi tự luận",
-    "options": [],
-    "correctAnswer": null,
-    "points": 5,
-    "explanation": "Gợi ý chấm bài và đáp án tham khảo"
-  }
-]
+  "questions": [
+    {
+      "section": "Dạng (nếu có, ví dụ: 'Phần 1: Trắc nghiệm', 'Dạng 1: ...'). Nếu không chia phần thì để null.",
+      "type": "MULTIPLE_CHOICE",
+      "content": "Nội dung câu hỏi trắc nghiệm",
+      "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+      "correctAnswer": "0",
+      "points": 1,
+      "explanation": "Giải thích ngắn gọn tại sao đáp án đúng"
+    },
+    {
+      "section": "Tên Phần/Dạng tương tự hoặc null",
+      "type": "ESSAY",
+      "content": "Nội dung câu hỏi tự luận",
+      "options": [],
+      "correctAnswer": null,
+      "points": 5,
+      "explanation": "Gợi ý chấm bài và đáp án tham khảo"
+    }
+  ]
+}
 Chỉ trả về chuỗi JSON hợp lệ.`;
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
     const text = result.response.text().trim();
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      return res.status(500).json({ message: 'AI không trả về định dạng JSON hợp lệ. Thử lại nhé!' });
-    }
-
-    const rawQuestions = JSON.parse(jsonMatch[0]);
+    
+    // Gemini with responseMimeType="application/json" returns the exact JSON string
+    const parsed = JSON.parse(text);
+    const rawQuestions = parsed.questions || parsed || [];
+    const metadata = parsed.metadata || {};
 
     // Chuẩn hóa câu hỏi để khớp với ExamForm
     const questions = rawQuestions.map((q, idx) => ({
       id: `ai-${Date.now()}-${idx}`,
+      section: q.section || '',
       type: q.type === 'ESSAY' ? 'ESSAY' : 'MULTIPLE_CHOICE',
       content: q.content || '',
       contentIsHtml: false,
@@ -236,7 +251,7 @@ Chỉ trả về chuỗi JSON hợp lệ.`;
       explanation: q.explanation || '',
     }));
 
-    res.json({ questions, total: questions.length });
+    console.log('AI RES METADATA:', metadata); res.json({ questions, metadata, total: questions.length });
   } catch (error) {
     console.error('[AI Generate Exam] Error:', error);
     const isRateLimit = error.message?.includes('429') || error.message?.includes('quota');
@@ -274,44 +289,32 @@ YÊU CẦU QUAN TRỌNG:
 2. Với câu hỏi Trắc nghiệm:
    - Trích xuất trọn vẹn nội dung câu hỏi.
    - Trích xuất đủ các lựa chọn A, B, C, D vào mảng options.
-   - Nếu trong ảnh có khoanh tròn, gạch chân hoặc ghi đáp án đúng, hãy ghi nhận vào trường correctAnswer (chỉ số 0=A, 1=B, 2=C, 3=D). Nếu không rõ đáp án đúng, hãy tự xác định đáp án chính xác nhất.
+   - Nếu trong ảnh có khoanh tròn, gạch chân hoặc ghi đáp án đúng, hãy ghi nhận vào trường correctAnswer (chỉ số 0=A, 1=B, 2=C, 3=D).
    - Cung cấp lời giải thích ngắn gọn vào trường explanation.
 3. Với câu hỏi Tự luận:
    - Trích xuất toàn bộ yêu cầu đề bài.
    - Đưa ra lời giải hoặc gợi ý chấm bài chi tiết vào trường explanation.
-4. Giữ nguyên công thức toán học hoặc ký hiệu một cách chính xác, rõ ràng.
-5. QUAN TRỌNG NHẤT VỀ HÌNH ẢNH MINH HỌA (AUTO CROP):
-   - Nếu câu hỏi có hình vẽ, sơ đồ, bảng biểu hoặc hình ảnh minh họa (ví dụ 4 biển báo giao thông ở Câu 12):
-   - Hãy xác định vị trí hộp tọa độ (bounding box) của hình ảnh đó trên trang đề thi theo tỷ lệ từ 0.0 đến 1.0 (ví dụ ymin: 0.60, xmin: 0.05, ymax: 0.82, xmax: 0.95).
-   - Trả về trường "imageBox": [ymin, xmin, ymax, xmax] và "pageIndex": 0 (số trang ảnh 0, 1, ...). Nếu câu hỏi không có hình minh họa thì đặt "imageBox": null.
+4. "imageBox": Nếu câu hỏi có hình minh họa, hãy xác định [ymin, xmin, ymax, xmax] (0.0-1.0), nếu không thì null.
 
-Hãy trả về một chuỗi JSON mảng chuẩn xác (không kèm văn bản nào khác ngoài JSON):
-[
-  {
-    "type": "MULTIPLE_CHOICE",
-    "content": "Nội dung câu hỏi...",
-    "options": ["Đáp án A...", "Đáp án B...", "Đáp án C...", "Đáp án D..."],
-    "correctAnswer": "0",
-    "points": 1,
-    "explanation": "Giải thích đáp án...",
-    "imageBox": [0.60, 0.05, 0.85, 0.95],
-    "pageIndex": 0
-  },
-  {
-    "type": "ESSAY",
-    "content": "Nội dung câu tự luận...",
-    "options": [],
-    "correctAnswer": null,
-    "points": 2,
-    "explanation": "Gợi ý chấm bài / Lời giải...",
-    "imageBox": null,
-    "pageIndex": 0
-  }
-]
-Chỉ trả về JSON hợp lệ.`;
+Hãy trả về một Object JSON gồm metadata và questions:
+{
+  "metadata": { "title": "...", "subject": "...", "grade": "...", "timeLimit": 90 },
+  "questions": [
+    {
+      "type": "MULTIPLE_CHOICE",
+      "content": "Nội dung câu hỏi...",
+      "options": ["Đáp án A...", "Đáp án B...", "Đáp án C...", "Đáp án D..."],
+      "correctAnswer": "0",
+      "points": 1,
+      "explanation": "Giải thích đáp...",
+      "imageBox": null,
+      "pageIndex": 0
+    }
+  ]
+}`;
 
     const parts = [
-      prompt,
+      { text: prompt },
       ...imgList.map(img => ({
         inlineData: {
           data: (img.data || img.base64 || '').replace(/^data:image\/[a-zA-Z0-9.-]+;base64,/, ''),
@@ -320,16 +323,19 @@ Chỉ trả về JSON hợp lệ.`;
       }))
     ];
 
-    const result = await model.generateContent(parts);
-    const text = result.response.text().trim();
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      return res.status(500).json({ message: 'AI không nhận diện được danh sách câu hỏi. Hãy đảm bảo ảnh chụp rõ nét và đủ ánh sáng.' });
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
+    
+    let rawData = { questions: [], metadata: {} };
+    try {
+      rawData = JSON.parse(result.response.text().trim());
+    } catch (e) {
+      return res.status(500).json({ message: 'Lỗi parse JSON từ AI Vision' });
     }
 
-    const rawQuestions = JSON.parse(jsonMatch[0]);
-
-    const questions = rawQuestions.map((q, idx) => ({
+    const questions = (rawData.questions || []).map((q, idx) => ({
       id: `ocr-${Date.now()}-${idx}`,
       type: q.type === 'ESSAY' ? 'ESSAY' : 'MULTIPLE_CHOICE',
       content: q.content || '',
@@ -394,11 +400,21 @@ YÊU CẦU PHÂN TÍCH (CỰC KỲ QUAN TRỌNG):
 2. Câu trắc nghiệm (MULTIPLE_CHOICE): NẾU CÓ CÁC LỰA CHỌN A, B, C, D (hoặc tương tự) THÌ BẮT BUỘC PHẢI CHỌN LOẠI MULTIPLE_CHOICE. BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC GỘP CÁC LỰA CHỌN NÀY VÀO TRONG PHẦN "content". Phải tách rời thành mảng "options" với độ dài chính xác 4.
 3. Câu tự luận (ESSAY): Chỉ dùng khi hoàn toàn không có lựa chọn A/B/C/D. Hãy trích xuất toàn bộ yêu cầu đề bài.
 4. "hasFigure" và "figureImageIndex": Nếu câu hỏi có đề cập đến hình vẽ, đồ thị, sơ đồ (ví dụ: "hình bên", "sơ đồ sau"), BẮT BUỘC gán "hasFigure": true. Nếu mảng ảnh đính kèm > 0, hãy chỉ định "figureImageIndex" tương ứng (0, 1, 2...). Nếu không có ảnh, để -1.
-5. Trả về DUY NHẤT một mảng JSON hợp lệ, không kèm văn bản nào khác.
+5. "section": TRÍCH XUẤT TIÊU ĐỀ PHẦN. Nếu trước câu hỏi có các tiêu đề nhóm/phần (ví dụ: "PHẦN I: TRẮC NGHIỆM", "DẠNG 1: PHÁT ÂM...", "II. Tự luận"), hãy gán vào trường "section". Tiêu đề này sẽ áp dụng cho tất cả các câu hỏi thuộc phần đó cho đến khi gặp phần mới.
+6. THÔNG TIN ĐỀ THI (METADATA): Trích xuất tên đề bài, môn học, khối lớp, thời gian làm bài (nếu có) từ phần đầu trang.
+7. Trả về DUY NHẤT một Object JSON hợp lệ.
 
 Format trả về:
-[
-  {
+{
+  "metadata": {
+    "title": "Tên bài kiểm tra (ví dụ: Đề thi THPT Quốc gia môn Toán)",
+    "subject": "Tên môn học (ví dụ: Toán, Ngữ văn, Tiếng Anh...)",
+    "grade": "Khối lớp (số từ 1-12, ví dụ: 12)",
+    "timeLimit": 90
+  },
+  "questions": [
+    {
+      "section": "DẠNG 1: PHÁT ÂM... (hoặc null nếu không có)",
     "type": "MULTIPLE_CHOICE",
     "content": "Nội dung câu hỏi đầy đủ (KHÔNG BAO GỒM A,B,C,D)",
     "options": ["Nội dung A", "Nội dung B", "Nội dung C", "Nội dung D"],
@@ -409,6 +425,7 @@ Format trả về:
     "figureImageIndex": 0
   },
   {
+    "section": "PHẦN II: TỰ LUẬN",
     "type": "ESSAY",
     "content": "Nội dung câu tự luận",
     "options": [],
@@ -418,9 +435,10 @@ Format trả về:
     "hasFigure": false,
     "figureImageIndex": -1
   }
-]`;
+  ]
+}`;
 
-    const parts = [prompt];
+    const parts = [{ text: prompt }];
     // Đính kèm ảnh nhúng từ file Word (tối đa 5 ảnh)
     for (let i = 0; i < imagesBase64.length && i < 5; i++) {
       const img = imagesBase64[i];
@@ -430,17 +448,29 @@ Format trả về:
       }
     }
 
-    const result = await model.generateContent(parts);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
     const responseText = result.response.text().trim();
-    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
+    
+    let rawQuestions = [];
+    let metadata = {};
+    try {
+      const parsed = JSON.parse(responseText);
+      if (Array.isArray(parsed)) {
+        rawQuestions = parsed;
+      } else {
+        rawQuestions = parsed.questions || [];
+        metadata = parsed.metadata || {};
+      }
+    } catch (e) {
       return res.status(500).json({ message: 'AI không phân tích được cấu trúc file. Vui lòng thử lại hoặc dùng chế độ thường.' });
     }
 
-    const rawQuestions = JSON.parse(jsonMatch[0]);
-
     const questions = rawQuestions.map((q, idx) => ({
       id: `ai-doc-${Date.now()}-${idx}`,
+      section: q.section || '',
       type: q.type === 'ESSAY' ? 'ESSAY' : 'MULTIPLE_CHOICE',
       content: q.content || '',
       contentIsHtml: false,
@@ -454,7 +484,7 @@ Format trả về:
       figureImageIndex: Number(q.figureImageIndex ?? -1),
     }));
 
-    res.json({ questions, total: questions.length });
+    res.json({ questions, metadata, total: questions.length });
   } catch (error) {
     console.error('[AI Parse Document] Error:', error);
     res.status(500).json({ message: 'Lỗi khi AI phân tích tài liệu: ' + error.message });

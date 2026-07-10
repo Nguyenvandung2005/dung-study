@@ -631,14 +631,32 @@ export default function StudentTakeExam() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          {exam.questions.map((q, index) => (
-            <div 
-              key={q.id} 
-              id={`q-${q.id}`}
-              className="glass-card" 
-              style={{ padding: 'var(--space-6)', borderLeft: activeQuestionId === q.id ? '4px solid var(--clr-primary-400)' : '' }}
-              onMouseEnter={() => setActiveQuestionId(q.id)}
-            >
+          {exam.questions.map((q, index) => {
+            const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1].section);
+            return (
+              <React.Fragment key={`wrap-${q.id}`}>
+                {showSection && (
+                  <div style={{ 
+                    marginTop: '1rem', 
+                    padding: '12px 20px', 
+                    background: 'var(--gradient-primary)', 
+                    borderRadius: 'var(--radius-md)', 
+                    color: '#fff', 
+                    fontWeight: 700, 
+                    fontSize: '1.2rem', 
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                    {q.section}
+                  </div>
+                )}
+                <div 
+                  id={`q-${q.id}`}
+                  className="glass-card" 
+                  style={{ padding: 'var(--space-6)', borderLeft: activeQuestionId === q.id ? '4px solid var(--clr-primary-400)' : '' }}
+                  onMouseEnter={() => setActiveQuestionId(q.id)}
+                >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
                 <h3 style={{ color: 'var(--clr-primary-400)' }}>Câu {index + 1} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({q.points} điểm)</span></h3>
                 {q.type === 'ESSAY' && <span className="badge badge-warning">Tự luận</span>}
@@ -791,7 +809,9 @@ export default function StudentTakeExam() {
                 </div>
               )}
             </div>
-          ))}
+            </React.Fragment>
+          );
+        })}
         </div>
 
         {showCameraModalForQ && (

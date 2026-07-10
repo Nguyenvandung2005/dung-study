@@ -87,6 +87,7 @@ model Question {
   options       Json?        // [{id, text}] for MCQ
   correctAnswer Json?        // string[] of option ids (or correct text for ESSAY reference)
   explanation   String?      @db.Text
+  section       String?      @db.Text // Tên Phần/Dạng của câu hỏi (VD: "PHẦN I: TRẮC NGHIỆM", "DẠNG 1: ...")
   points        Float        @default(1)
   order         Int
   imageUrl      String?      @db.LongText
