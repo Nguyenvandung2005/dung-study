@@ -209,27 +209,34 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
   const [dragging, setDragging] = useState(false);
   const accept = fileType === 'word' ? '.docx' : '.pdf';
 
-  const normalizeQuestions = (rawQuestions) =>
-    (rawQuestions || []).map(q => ({
-      id: crypto.randomUUID(),
-      type: q.type === 'SINGLE_CHOICE' ? 'MULTIPLE_CHOICE' : (q.type || 'MULTIPLE_CHOICE'),
-      content: q.content || '',
-      contentIsHtml: q.contentIsHtml || false,
-      options: (q.type === 'ESSAY')
-        ? ['', '', '', '']
-        : Array.isArray(q.options)
-          ? q.options.map(o => (typeof o === 'string' ? o : o.text || ''))
-          : ['', '', '', ''],
-      correctAnswer: (q.type !== 'ESSAY' && (Array.isArray(q.correctAnswer) ? q.correctAnswer.length > 0 : q.correctAnswer != null && q.correctAnswer !== ''))
-        ? (Array.isArray(q.correctAnswer)
-            ? String('ABCDE'.indexOf(q.correctAnswer[0].toUpperCase()))
-            : String(q.correctAnswer))
-        : '',
-      points: q.points || (q.type === 'ESSAY' ? 2 : 1),
-      explanation: q.explanation || '',
-      svgFigure: '',
-      imageUrl: '',
-    }));
+  const normalizeQuestions = (rawQuestions, embeddedImages = []) =>
+    (rawQuestions || []).map(q => {
+      let imgBase64 = '';
+      if (q.hasFigure && q.figureImageIndex >= 0 && embeddedImages[q.figureImageIndex]) {
+        const img = embeddedImages[q.figureImageIndex];
+        imgBase64 = `data:${img.mimeType || 'image/png'};base64,${img.data}`;
+      }
+      return {
+        id: crypto.randomUUID(),
+        type: q.type === 'SINGLE_CHOICE' ? 'MULTIPLE_CHOICE' : (q.type || 'MULTIPLE_CHOICE'),
+        content: q.content || '',
+        contentIsHtml: q.contentIsHtml || false,
+        options: (q.type === 'ESSAY')
+          ? ['', '', '', '']
+          : Array.isArray(q.options)
+            ? q.options.map(o => (typeof o === 'string' ? o : o.text || ''))
+            : ['', '', '', ''],
+        correctAnswer: (q.type !== 'ESSAY' && (Array.isArray(q.correctAnswer) ? q.correctAnswer.length > 0 : q.correctAnswer != null && q.correctAnswer !== ''))
+          ? (Array.isArray(q.correctAnswer)
+              ? String('ABCDE'.indexOf(q.correctAnswer[0].toUpperCase()))
+              : String(q.correctAnswer))
+          : '',
+        points: q.points || (q.type === 'ESSAY' ? 2 : 1),
+        explanation: q.explanation || '',
+        svgFigure: '',
+        imageUrl: imgBase64 || '',
+      };
+    });
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -252,7 +259,7 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
             imagesBase64: data.embeddedImages || [],
             fileType,
           });
-          onParsed(normalizeQuestions(aiRes.data.questions));
+          onParsed(normalizeQuestions(aiRes.data.questions, data.embeddedImages));
           return;
         } catch (aiErr) {
           // AI thất bại → dùng kết quả regex
@@ -260,7 +267,7 @@ function FileUploadStep({ fileType, onParsed, onBack }) {
         }
       }
 
-      onParsed(normalizeQuestions(data.questions));
+      onParsed(normalizeQuestions(data.questions, data.embeddedImages));
     } catch (e) {
       const msg = e.response?.data?.message || 'Không thể đọc file. Hãy kiểm tra định dạng đúng chuẩn.';
       const raw = e.response?.data?.rawText || e.response?.data?.rawHtml;

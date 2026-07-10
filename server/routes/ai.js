@@ -380,42 +380,31 @@ router.post('/parse-document', authMiddleware, requireRole('TEACHER', 'ADMIN'), 
       .trim()
       .substring(0, 18000);
 
-    const prompt = `Bạn là một chuyên gia giáo dục Việt Nam, am hiểu sâu về mọi định dạng đề thi phổ thông.
-Hãy đọc kỹ nội dung văn bản sau đây được trích xuất từ một file đề thi (${fileType === 'word' ? 'Word .docx' : 'PDF'}).
-${imagesBase64.length > 0 ? 'Các hình ảnh đính kèm là hình vẽ/sơ đồ được nhúng trong tài liệu.' : ''}
+    const prompt = `Bạn là một chuyên gia giáo dục Việt Nam, am hiểu sâu về mọi định dạng đề thi.
+Hãy đọc kỹ nội dung sau được trích xuất từ file đề thi (${fileType === 'word' ? 'Word .docx' : 'PDF'}).
+${imagesBase64.length > 0 ? 'Các hình đính kèm là hình vẽ/sơ đồ được nhúng trong tài liệu (lần lượt index 0, 1, 2...).' : ''}
 
 NỘI DUNG FILE:
 ---
 ${cleanText}
 ---
 
-YÊU CẦU PHÂN TÍCH (QUAN TRỌNG):
-1. Nhận diện TẤT CẢ câu hỏi, kể cả: không có "Câu X.", đề có nhiều phần (Phần I, Phần II...), đề có đáp án cuối trang.
-2. Câu trắc nghiệm: trích xuất đủ nội dung, 4 lựa chọn A/B/C/D, đáp án đúng (chỉ số 0=A, 1=B, 2=C, 3=D), giải thích ngắn.
-3. Câu tự luận: toàn bộ yêu cầu đề bài, gợi ý chấm bài nếu có.
-4. Nếu đáp án nằm cuối trang (dạng "1.A  2.C  3.B"...) → ghép vào câu tương ứng.
-5. Nếu câu có đề cập đến hình vẽ và có ảnh đính kèm, đặt "hasFigure": true và ghi "figureImageIndex": chỉ số ảnh tương ứng (0, 1, 2...) hoặc -1 nếu không rõ.
-6. TUYỆT ĐỐI không bịa thêm câu hỏi hay đáp án không có trong tài liệu.
+YÊU CẦU PHÂN TÍCH (CỰC KỲ QUAN TRỌNG):
+1. Nhận diện TẤT CẢ câu hỏi.
+2. Câu trắc nghiệm (MULTIPLE_CHOICE): NẾU CÓ CÁC LỰA CHỌN A, B, C, D (hoặc tương tự) THÌ BẮT BUỘC PHẢI CHỌN LOẠI MULTIPLE_CHOICE. BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC GỘP CÁC LỰA CHỌN NÀY VÀO TRONG PHẦN "content" DƯỚI DẠNG ESSAY. Phải tách rời thành mảng "options" với độ dài chính xác 4.
+3. Câu tự luận (ESSAY): Chỉ dùng khi hoàn toàn không có lựa chọn A/B/C/D.
+4. "hasFigure": Nếu câu hỏi đề cập đến hình (ví dụ "hình bên", "hình sau"), hãy đặt true. Nếu file có ảnh đính kèm (có index 0, 1...), hãy dự đoán và gán "figureImageIndex" = chỉ số của ảnh đó (thường ảnh xuất hiện sau câu hỏi), hoặc -1 nếu không chắc chắn.
+5. "correctAnswer": Là vị trí của đáp án đúng (0, 1, 2, 3 tương ứng A, B, C, D). Trích xuất từ đáp án cuối đề nếu có.
 
-Trả về JSON mảng hợp lệ (không kèm văn bản nào khác):
+Trả về mảng JSON hợp lệ theo format:
 [
   {
     "type": "MULTIPLE_CHOICE",
-    "content": "Nội dung câu hỏi đầy đủ",
-    "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+    "content": "Nội dung câu hỏi đầy đủ (KHÔNG BAO GỒM A,B,C,D)",
+    "options": ["Nội dung A", "Nội dung B", "Nội dung C", "Nội dung D"],
     "correctAnswer": "0",
     "points": 1,
-    "explanation": "Giải thích đáp án nếu có",
-    "hasFigure": false,
-    "figureImageIndex": -1
-  },
-  {
-    "type": "ESSAY",
-    "content": "Nội dung câu tự luận",
-    "options": [],
-    "correctAnswer": null,
-    "points": 2,
-    "explanation": "Gợi ý chấm bài",
+    "explanation": "Giải thích",
     "hasFigure": false,
     "figureImageIndex": -1
   }
