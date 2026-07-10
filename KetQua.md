@@ -1,6 +1,6 @@
 # TỔNG HỢP KẾT QUẢ ĐẠT ĐƯỢC VÀ CÁC TÍNH NĂNG ĐÃ NÂNG CẤP
 **Dự án:** Hệ thống Học tập & Thi trực tuyến thông minh (Dung Study)  
-**Ngày cập nhật:** 09/07/2026
+**Ngày cập nhật:** 10/07/2026
 
 ---
 
@@ -49,4 +49,24 @@ Tại trang làm bài thi của học sinh ([StudentTakeExam.jsx](file:///d:/IUH
    - Trong 90 giây này, hệ thống tạm ngưng cảnh báo thoát màn hình để học sinh thoải mái sử dụng ứng dụng Camera của điện thoại hoặc duyệt file ảnh trên máy tính mà không bị oan sai vi phạm quy chế.
 
 ---
-*Mọi tính năng đã được kiểm tra biên dịch (`npm run build`) thành công 100% và sẵn sàng hoạt động.*
+
+## V. CẬP NHẬT TRẢI NGHIỆM VÀ XỬ LÝ LỖI (MỚI)
+1. **Kéo Thả Sắp Xếp Trang Bài Làm Tự Luận (Drag & Drop)**
+   - Tích hợp thư viện `dnd-kit` và `Framer Motion` vào trang làm bài học sinh.
+   - Học sinh có thể tự do kéo thả, thay đổi thứ tự các trang giấy làm bài tự luận một cách mượt mà và trực quan bằng chuột hoặc cảm ứng.
+
+2. **Cải Thiện Giao Diện In / Xuất PDF (Hỗ Trợ Chế Độ Sáng/Tối)**
+   - Khắc phục lỗi in PDF bị nền đen chữ đen (bất khả thi để đọc) khi thiết bị đang ở chế độ Tối (Dark Mode).
+   - Thiết lập CSS Media Print giúp tự động chuyển đổi bảng màu nền thành trắng, chữ đen sắc nét khi thực hiện lệnh In/Xuất PDF, đảm bảo chất lượng tài liệu.
+
+3. **AI Tự Động Nhận Diện Thông Tin Đề Thi (Metadata)**
+   - Khi tải lên file đề Word/PDF, AI không chỉ trích xuất câu hỏi mà còn tự động phân tích toàn bộ trang đầu để nhận diện và điền sẵn thông tin form: **Tên bài kiểm tra**, **Môn học**, **Khối lớp**, và **Thời gian làm bài**.
+   - Tự động nhận diện cấu trúc, phân loại rõ ràng các tiêu đề Phần/Dạng câu hỏi (ví dụ: "PHẦN I: TRẮC NGHIỆM") và gán chính xác nhóm vào từng câu hỏi.
+
+4. **Vá Lỗi & Cải Thiện Hiệu Suất Hệ Thống**
+   - **Lỗi tràn bộ nhớ Camera:** Sửa triệt để lỗi cảnh báo rò rỉ bộ nhớ React khi bật/tắt camera chụp ảnh bài làm tự luận.
+   - **Lỗi 400 Bad Request Gemini API:** Cấu trúc lại mảng dữ liệu (parts array) gửi lên Google Gemini đảm bảo sự tương thích hoàn toàn khi truyền xen kẽ văn bản và hình ảnh.
+   - **Lỗi Sai Lệch Múi Giờ (Timezone):** Khắc phục tình trạng hệ thống tự động lưu sai lệch 7 tiếng thời gian mở đề thi bằng cách đồng bộ chuẩn múi giờ quốc tế ISO (UTC+7) ngay từ phía Frontend.
+
+---
+*Mọi tính năng đã được kiểm tra biên dịch (`npm run build`) thành công 100% và sẵn sàng hoạt động trên môi trường production.*
