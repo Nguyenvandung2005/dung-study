@@ -363,7 +363,7 @@ router.post('/parse-document', authMiddleware, requireRole('TEACHER', 'ADMIN'), 
       return res.status(503).json({ message: 'Chưa cấu hình GEMINI_API_KEY.' });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
 
     // Dọn HTML → plain text để giảm token, nhưng vẫn giữ cấu trúc dòng
     const cleanText = (htmlContent || text)
@@ -382,7 +382,7 @@ router.post('/parse-document', authMiddleware, requireRole('TEACHER', 'ADMIN'), 
 
     const prompt = `Bạn là một chuyên gia giáo dục Việt Nam, am hiểu sâu về mọi định dạng đề thi.
 Hãy đọc kỹ nội dung sau được trích xuất từ file đề thi (${fileType === 'word' ? 'Word .docx' : 'PDF'}).
-${imagesBase64.length > 0 ? 'Các hình đính kèm là hình vẽ/sơ đồ được nhúng trong tài liệu (lần lượt index 0, 1, 2...).' : ''}
+${imagesBase64.length > 0 ? `Các hình đính kèm là hình vẽ/sơ đồ được nhúng trong tài liệu (có tổng cộng ${imagesBase64.length} hình, lần lượt có index 0, 1, 2...).` : 'Không có hình ảnh đính kèm.'}
 
 NỘI DUNG FILE:
 ---
@@ -390,13 +390,13 @@ ${cleanText}
 ---
 
 YÊU CẦU PHÂN TÍCH (CỰC KỲ QUAN TRỌNG):
-1. Nhận diện TẤT CẢ câu hỏi.
-2. Câu trắc nghiệm (MULTIPLE_CHOICE): NẾU CÓ CÁC LỰA CHỌN A, B, C, D (hoặc tương tự) THÌ BẮT BUỘC PHẢI CHỌN LOẠI MULTIPLE_CHOICE. BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC GỘP CÁC LỰA CHỌN NÀY VÀO TRONG PHẦN "content" DƯỚI DẠNG ESSAY. Phải tách rời thành mảng "options" với độ dài chính xác 4.
-3. Câu tự luận (ESSAY): Chỉ dùng khi hoàn toàn không có lựa chọn A/B/C/D.
-4. "hasFigure": Nếu câu hỏi đề cập đến hình (ví dụ "hình bên", "hình sau"), hãy đặt true. Nếu file có ảnh đính kèm (có index 0, 1...), hãy dự đoán và gán "figureImageIndex" = chỉ số của ảnh đó (thường ảnh xuất hiện sau câu hỏi), hoặc -1 nếu không chắc chắn.
-5. "correctAnswer": Là vị trí của đáp án đúng (0, 1, 2, 3 tương ứng A, B, C, D). Trích xuất từ đáp án cuối đề nếu có.
+1. Bắt buộc nhận diện TẤT CẢ câu hỏi có trong file, CẢ PHẦN TRẮC NGHIỆM VÀ PHẦN TỰ LUẬN (ESSAY). Không được bỏ sót bất kỳ câu nào.
+2. Câu trắc nghiệm (MULTIPLE_CHOICE): NẾU CÓ CÁC LỰA CHỌN A, B, C, D (hoặc tương tự) THÌ BẮT BUỘC PHẢI CHỌN LOẠI MULTIPLE_CHOICE. BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC GỘP CÁC LỰA CHỌN NÀY VÀO TRONG PHẦN "content". Phải tách rời thành mảng "options" với độ dài chính xác 4.
+3. Câu tự luận (ESSAY): Chỉ dùng khi hoàn toàn không có lựa chọn A/B/C/D. Hãy trích xuất toàn bộ yêu cầu đề bài.
+4. "hasFigure" và "figureImageIndex": Nếu câu hỏi có đề cập đến hình vẽ, đồ thị, sơ đồ (ví dụ: "hình bên", "sơ đồ sau"), BẮT BUỘC gán "hasFigure": true. Nếu mảng ảnh đính kèm > 0, hãy chỉ định "figureImageIndex" tương ứng (0, 1, 2...). Nếu không có ảnh, để -1.
+5. Trả về DUY NHẤT một mảng JSON hợp lệ, không kèm văn bản nào khác.
 
-Trả về mảng JSON hợp lệ theo format:
+Format trả về:
 [
   {
     "type": "MULTIPLE_CHOICE",
@@ -405,6 +405,16 @@ Trả về mảng JSON hợp lệ theo format:
     "correctAnswer": "0",
     "points": 1,
     "explanation": "Giải thích",
+    "hasFigure": true,
+    "figureImageIndex": 0
+  },
+  {
+    "type": "ESSAY",
+    "content": "Nội dung câu tự luận",
+    "options": [],
+    "correctAnswer": "",
+    "points": 2,
+    "explanation": "Gợi ý chấm bài",
     "hasFigure": false,
     "figureImageIndex": -1
   }
@@ -412,7 +422,8 @@ Trả về mảng JSON hợp lệ theo format:
 
     const parts = [prompt];
     // Đính kèm ảnh nhúng từ file Word (tối đa 5 ảnh)
-    for (const img of imagesBase64.slice(0, 5)) {
+    for (let i = 0; i < imagesBase64.length && i < 5; i++) {
+      const img = imagesBase64[i];
       const cleanData = (img.data || '').replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
       if (cleanData.length > 100) {
         parts.push({ inlineData: { data: cleanData, mimeType: img.mimeType || 'image/png' } });
@@ -462,7 +473,7 @@ router.post('/figure-to-svg', authMiddleware, requireRole('TEACHER', 'ADMIN'), a
       return res.status(503).json({ message: 'Chưa cấu hình GEMINI_API_KEY.' });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
 
     const prompt = `Bạn là một chuyên gia đồ họa toán học và SVG. Phân tích hình vẽ trong ảnh và tái hiện CHÍNH XÁC hình vẽ đó dưới dạng SVG vector sạch.
 

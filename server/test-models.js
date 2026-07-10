@@ -1,21 +1,20 @@
-require('dotenv').config({ path: 'd:/IUH/00.CaNhan/dung-study/server/.env' });
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function list() {
+async function testModel(modelName) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const res = await model.generateContent("hello");
-    console.log(res.response.text());
-  } catch (e) {
-    console.error("1.5-flash error:", e.message);
-    try {
-      const model2 = genAI.getGenerativeModel({ model: 'gemini-pro' });
-      const res2 = await model2.generateContent("hello");
-      console.log("gemini-pro success:", res2.response.text());
-    } catch (e2) {
-      console.error("gemini-pro error:", e2.message);
-    }
+    const model = genAI.getGenerativeModel({ model: modelName });
+    const res = await model.generateContent('Hi');
+    console.log(`Model ${modelName} SUCCESS:`, res.response.text());
+  } catch(e) {
+    console.log(`Model ${modelName} FAILED:`, e.message);
   }
 }
-list();
+
+async function run() {
+  await testModel('gemini-1.5-flash');
+  await testModel('gemini-1.5-flash-latest');
+  await testModel('gemini-flash-lite-latest');
+}
+run();

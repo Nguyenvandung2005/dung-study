@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../api/client';
 
 export const SUBJECTS = ['Toán', 'Văn', 'Anh', 'Lý', 'Hóa', 'Sinh', 'Sử', 'Địa', 'GDCD', 'Tin học', 'Khác'];
@@ -362,12 +363,13 @@ export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [
         )}
       </div>
 
-      {showFigureModal && (
+      {showFigureModal && createPortal(
         <AIFigureModal
           ocrImages={ocrSourceImages}
           onApply={(svgCode) => onChange({ ...q, svgFigure: svgCode, imageUrl: '' })}
           onClose={() => setShowFigureModal(false)}
-        />
+        />,
+        document.body
       )}
 
       {q.type !== 'ESSAY' ? (
