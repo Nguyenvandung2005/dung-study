@@ -390,6 +390,7 @@ function OCRScanStep({ onParsed, onBack }) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState(null);
 
   const processFiles = (files) => {
     if (!files || files.length === 0) return;
@@ -566,13 +567,37 @@ async function autoCropQuestionsWithImageBox(questions, images) {
             {images.map((img, index) => (
               <div
                 key={img.id}
+                draggable
+                onDragStart={(e) => {
+                  setDraggedIndex(index);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedIndex === null || draggedIndex === index) return;
+                  const newImages = [...images];
+                  const draggedImg = newImages[draggedIndex];
+                  newImages.splice(draggedIndex, 1);
+                  newImages.splice(index, 0, draggedImg);
+                  setImages(newImages);
+                  setDraggedIndex(null);
+                }}
+                onDragEnd={() => setDraggedIndex(null)}
                 className="glass-card"
                 style={{
                   position: 'relative',
                   padding: '8px',
                   borderRadius: 'var(--radius-md)',
                   overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.1)'
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  cursor: 'grab',
+                  opacity: draggedIndex === index ? 0.4 : 1,
+                  transform: draggedIndex === index ? 'scale(0.98)' : 'none',
+                  transition: 'transform 0.2s, opacity 0.2s'
                 }}
               >
                 <button

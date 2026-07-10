@@ -181,18 +181,25 @@ export default function StudentResult() {
                 </div>
 
                 {q.imageUrl && (
-                  <div style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)' }}>
-                    <img
-                      src={q.imageUrl}
-                      alt={`Minh họa câu ${index + 1}`}
-                      style={{
-                        maxHeight: 380,
-                        maxWidth: '100%',
-                        borderRadius: '4px',
-                        border: '1px solid var(--border-subtle)',
-                        objectFit: 'contain'
-                      }}
-                    />
+                  <div className="svg-wrapper-render" style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: q.imageUrl.startsWith('data:image/svg+xml,') ? '#fff' : 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)' }}>
+                    {q.imageUrl.startsWith('data:image/svg+xml,') ? (
+                      <div
+                        dangerouslySetInnerHTML={{ __html: decodeURIComponent(q.imageUrl.replace('data:image/svg+xml,', '')) }}
+                        style={{ display: 'inline-block', maxWidth: '100%', width: '100%' }}
+                      />
+                    ) : (
+                      <img
+                        src={q.imageUrl}
+                        alt={`Minh họa câu ${index + 1}`}
+                        style={{
+                          maxHeight: 380,
+                          maxWidth: '100%',
+                          borderRadius: '4px',
+                          border: '1px solid var(--border-subtle)',
+                          objectFit: 'contain'
+                        }}
+                      />
+                    )}
                   </div>
                 )}
 

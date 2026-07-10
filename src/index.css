@@ -649,3 +649,12 @@ select.input option {
     height: 40px;
   }
 }
+
+/* ---- SVG RENDER FIX ---- */
+.svg-wrapper-render svg {
+  width: 100%;
+  height: auto;
+  max-height: 350px;
+  display: block;
+  margin: 0 auto;
+}

@@ -653,11 +653,11 @@ export default function StudentTakeExam() {
               </div>
 
               {q.imageUrl && (
-                <div style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: q.imageUrl.startsWith('data:image/svg+xml,') ? '#fff' : 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)' }}>
+                <div className="svg-wrapper-render" style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: q.imageUrl.startsWith('data:image/svg+xml,') ? '#fff' : 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)' }}>
                   {q.imageUrl.startsWith('data:image/svg+xml,') ? (
                     <div
                       dangerouslySetInnerHTML={{ __html: decodeURIComponent(q.imageUrl.replace('data:image/svg+xml,', '')) }}
-                      style={{ display: 'inline-block', maxWidth: '100%' }}
+                      style={{ display: 'inline-block', maxWidth: '100%', width: '100%' }}
                     />
                   ) : (
                     <img

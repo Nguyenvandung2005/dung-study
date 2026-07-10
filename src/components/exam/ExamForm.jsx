@@ -177,6 +177,20 @@ function AIFigureModal({ ocrImages = [], onApply, onClose }) {
             <button type="button" className="btn btn-outline" onClick={onClose}>Hủy</button>
             <button
               type="button" disabled={!box || generating}
+              className="btn btn-outline"
+              style={{ borderColor: 'var(--clr-emerald-500)', color: 'var(--clr-emerald-500)' }}
+              onClick={() => {
+                const cropped = cropToBase64();
+                if (cropped) {
+                  onApply({ type: 'image', content: cropped });
+                  onClose();
+                }
+              }}
+            >
+              📸 Chỉ Cắt & Dùng Ảnh Gốc
+            </button>
+            <button
+              type="button" disabled={!box || generating}
               className="btn btn-primary"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', minWidth: 160 }}
               onClick={handleGenerateSVG}
@@ -186,9 +200,9 @@ function AIFigureModal({ ocrImages = [], onApply, onClose }) {
             {previewSvg && (
               <button type="button" className="btn btn-primary"
                 style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}
-                onClick={() => { onApply(previewSvg); onClose(); }}
+                onClick={() => { onApply({ type: 'svg', content: previewSvg }); onClose(); }}
               >
-                ✅ Dùng hình này
+                ✅ Dùng SVG này
               </button>
             )}
           </div>
@@ -326,10 +340,10 @@ export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [
             </div>
 
             {/* Render SVG hoặc ảnh */}
-            <div style={{ background: q.svgFigure ? '#fff' : '#000', padding: '12px', borderRadius: '6px', textAlign: 'center', maxHeight: 280, overflow: 'auto' }}>
+            <div className="svg-wrapper-render" style={{ background: q.svgFigure ? '#fff' : '#000', padding: '12px', borderRadius: '6px', textAlign: 'center', maxHeight: 280, overflow: 'auto' }}>
               {q.svgFigure ? (
                 <div dangerouslySetInnerHTML={{ __html: q.svgFigure }}
-                  style={{ display: 'inline-block', maxWidth: '100%' }} />
+                  style={{ display: 'inline-block', maxWidth: '100%', width: '100%' }} />
               ) : (
                 <img src={q.imageUrl} alt={`Minh họa câu ${idx + 1}`}
                   style={{ maxHeight: 240, maxWidth: '100%', objectFit: 'contain' }} />
@@ -366,7 +380,13 @@ export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [
       {showFigureModal && createPortal(
         <AIFigureModal
           ocrImages={ocrSourceImages}
-          onApply={(svgCode) => onChange({ ...q, svgFigure: svgCode, imageUrl: '' })}
+          onApply={(data) => {
+            if (data.type === 'svg') {
+              onChange({ ...q, svgFigure: data.content, imageUrl: '' });
+            } else if (data.type === 'image') {
+              onChange({ ...q, svgFigure: '', imageUrl: data.content });
+            }
+          }}
           onClose={() => setShowFigureModal(false)}
         />,
         document.body
