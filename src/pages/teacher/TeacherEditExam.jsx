@@ -63,9 +63,11 @@ export default function TeacherEditExam() {
   }, [examId]);
 
   const handleSave = async (meta, questions, publish) => {
-    // 1. Cập nhật meta
+    const processDate = (d) => d ? new Date(d).toISOString() : null;
     const payloadMeta = {
       ...meta,
+      startAt: processDate(meta.startAt),
+      endAt: processDate(meta.endAt),
       grade: Number(meta.grade),
       timeLimit: Number(meta.timeLimit),
       isPublished: publish,
