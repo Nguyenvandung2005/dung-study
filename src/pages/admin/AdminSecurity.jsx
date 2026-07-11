@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
 import api from '../../api/client';
+import SecurityLogModal from '../../components/admin/SecurityLogModal';
 
 export default function AdminSecurity() {
   const [logs, setLogs] = useState([]);
   const [anomalies, setAnomalies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLog, setSelectedLog] = useState(null);
   
   // Filter states
   const [filterSeverity, setFilterSeverity] = useState('ALL');
@@ -117,16 +119,17 @@ export default function AdminSecurity() {
                       <th>Tài khoản tác động</th>
                       <th>Hành động</th>
                       <th>Mức độ</th>
+                      <th>Chi tiết</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredLogs.length === 0 ? (
                       <tr>
-                        <td colSpan="5" style={{ textAlign: 'center', padding: 'var(--space-6)' }}>Chưa ghi nhận log bảo mật nào phù hợp.</td>
+                        <td colSpan="6" style={{ textAlign: 'center', padding: 'var(--space-6)' }}>Chưa ghi nhận log bảo mật nào phù hợp.</td>
                       </tr>
                     ) : (
                       filteredLogs.map(log => (
-                        <tr key={log.id}>
+                        <tr key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
                           <td>{new Date(log.createdAt).toLocaleString('vi-VN')}</td>
                           <td><strong>{log.ip}</strong></td>
                           <td>{log.user?.name || 'Khách (Chưa đăng nhập)'}</td>
@@ -135,6 +138,15 @@ export default function AdminSecurity() {
                             <span className={`badge ${log.severity === 'CRITICAL' || log.severity === 'HIGH' ? 'badge-danger' : log.severity === 'MEDIUM' ? 'badge-warning' : 'badge-success'}`}>
                               {log.severity}
                             </span>
+                          </td>
+                          <td>
+                            <button 
+                              className="btn btn-outline" 
+                              style={{ padding: '4px 10px', fontSize: '0.8rem' }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedLog(log); }}
+                            >
+                              🔍 Xem
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -145,6 +157,9 @@ export default function AdminSecurity() {
             </section>
           </div>
         )}
+
+        {/* Modal chi tiết log */}
+        <SecurityLogModal log={selectedLog} onClose={() => setSelectedLog(null)} />
       </main>
     </div>
   );

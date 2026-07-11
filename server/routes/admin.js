@@ -80,7 +80,7 @@ router.get('/security-logs', authMiddleware, requireRole('ADMIN'), async (req, r
     const logs = await prisma.securityLog.findMany({
       where, skip: (page - 1) * limit, take: parseInt(limit),
       orderBy: { createdAt: 'desc' },
-      include: { user: { select: { name: true, email: true } } }
+      include: { user: { select: { id: true, name: true, email: true, role: true, grade: true } } }
     });
     const total = await prisma.securityLog.count({ where });
     res.json({ logs, total });
