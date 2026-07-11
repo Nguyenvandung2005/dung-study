@@ -834,7 +834,13 @@ export default function StudentTakeExam() {
                 <div 
                   id={`q-${q.id}`}
                   className="glass-card" 
-                  style={{ padding: 'var(--space-6)', borderLeft: activeQuestionId === q.id ? '4px solid var(--clr-primary-400)' : '' }}
+                  style={{
+                    padding: isMobileMode ? '14px' : 'var(--space-6)',
+                    borderLeft: activeQuestionId === q.id ? '4px solid var(--clr-primary-400)' : '',
+                    overflowX: 'auto',
+                    WebkitOverflowScrolling: 'touch',
+                    maxWidth: '100%'
+                  }}
                   onMouseEnter={() => setActiveQuestionId(q.id)}
                 >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
@@ -844,14 +850,21 @@ export default function StudentTakeExam() {
               
               <div 
                 className="question-content" 
-                style={{ fontSize: '1.1rem', marginBottom: 'var(--space-4)' }}
+                style={{
+                  fontSize: '1.1rem',
+                  marginBottom: 'var(--space-4)',
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  maxWidth: '100%',
+                  wordBreak: 'break-word'
+                }}
                 dangerouslySetInnerHTML={q.content && /<[a-z][\s\S]*>/i.test(q.content) ? { __html: q.content } : undefined}
               >
                 {!(q.content && /<[a-z][\s\S]*>/i.test(q.content)) ? q.content : undefined}
               </div>
 
               {q.imageUrl && (
-                <div className="svg-wrapper-render" style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: q.imageUrl.startsWith('data:image/svg+xml,') ? '#fff' : 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)' }}>
+                <div className="svg-wrapper-render" style={{ marginBottom: 'var(--space-6)', textAlign: 'center', background: q.imageUrl.startsWith('data:image/svg+xml,') ? '#fff' : 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 'var(--radius-md)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   {q.imageUrl.startsWith('data:image/svg+xml,') ? (
                     <div
                       dangerouslySetInnerHTML={{ __html: decodeURIComponent(q.imageUrl.replace('data:image/svg+xml,', '')) }}

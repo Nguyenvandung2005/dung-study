@@ -253,15 +253,20 @@ router.get('/recent-events', authMiddleware, requireRole('ADMIN'), async (req, r
       };
     });
 
-    // Merge memory events and db events, deduplicating
-    const seen = new Set();
-    const combined = [...memoryEvents, ...dbEvents].filter(ev => {
-      const key = ev.id || `${ev.type}-${ev.timestamp}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
+    // Deduplicate memory events against database logs so actions (e.g. USER_LOGIN) appear only once
+    const uniqueMemoryEvents = memoryEvents.filter(mEv => {
+      const mTime = new Date(mEv.timestamp).getTime();
+      return !dbEvents.some(dEv => {
+        if (dEv.id === mEv.id) return true;
+        if (dEv.type === mEv.type) {
+          const dTime = new Date(dEv.timestamp).getTime();
+          if (Math.abs(mTime - dTime) < 60000) return true;
+        }
+        return false;
+      });
     });
 
+    const combined = [...dbEvents, ...uniqueMemoryEvents];
     combined.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     res.json({ events: combined.slice(0, 30) });
