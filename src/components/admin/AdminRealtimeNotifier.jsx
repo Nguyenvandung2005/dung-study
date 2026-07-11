@@ -118,11 +118,11 @@ export default function AdminRealtimeNotifier() {
 
   return (
     <>
-      {/* Floating Bell Button for Admin (Bottom Right) */}
+      {/* Floating Bell Button for Admin (Top Right) */}
       <div 
         style={{
           position: 'fixed',
-          bottom: '24px',
+          top: '20px',
           right: '24px',
           zIndex: 9998
         }}
@@ -134,16 +134,16 @@ export default function AdminRealtimeNotifier() {
             color: '#fff',
             border: 'none',
             borderRadius: '50%',
-            width: '54px',
-            height: '54px',
+            width: '48px',
+            height: '48px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.4rem',
+            fontSize: '1.3rem',
             cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(99, 102, 241, 0.45)',
+            boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
             position: 'relative',
-            transition: 'transform 0.2s'
+            transition: 'all 0.2s'
           }}
           title="Hoạt động thời gian thực (Admin Realtime Notification Hub)"
         >
@@ -167,15 +167,15 @@ export default function AdminRealtimeNotifier() {
         </button>
       </div>
 
-      {/* Floating Real-time Toast Notifications (Bottom Right stacked above button) */}
+      {/* Floating Real-time Toast Notifications (Top Right stacked below button) */}
       <div 
         style={{
           position: 'fixed',
-          bottom: '90px',
+          top: '78px',
           right: '24px',
           zIndex: 9999,
           display: 'flex',
-          flexDirection: 'column-reverse',
+          flexDirection: 'column',
           gap: '12px',
           maxWidth: '390px',
           width: 'calc(100vw - 48px)'
