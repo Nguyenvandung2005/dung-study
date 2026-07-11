@@ -2,6 +2,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const { gradeEssayWithAI } = require('../utils/aiGrader');
+const adminEventHub = require('../utils/adminEventHub');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -145,6 +146,18 @@ router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), asyn
     const finalSubmission = await prisma.submission.findUnique({
       where: { id: submission.id },
       include: { answers: true }
+    });
+
+    adminEventHub.broadcastEvent({
+      type: 'EXAM_SUBMITTED',
+      title: 'Học sinh vừa nộp bài thi! ✍️',
+      message: `Học sinh ${req.user.name} vừa hoàn thành đề thi "${exam.title}" (Đạt ${Math.round((finalSubmission.percentage || 0) * 10) / 10}%).`,
+      data: { submissionId: finalSubmission.id, examId: exam.id, examTitle: exam.title, score: finalSubmission.percentage },
+      actionSuggestion: {
+        label: '📄 Xem kết quả bài thi',
+        actionType: 'NAVIGATE',
+        target: `/admin/exams`
+      }
     });
 
     // Build result response

@@ -1,6 +1,8 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole } = require('../middleware/auth');
+const adminEventHub = require('../utils/adminEventHub');
+const { blockIP } = require('../utils/threatDetector');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -171,6 +173,38 @@ router.get('/anomalies', authMiddleware, requireRole('ADMIN'), async (req, res) 
     res.json({ anomalies, totalCritical: criticalLogs.length });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi phân tích bất thường' });
+  }
+});
+
+// GET /api/admin/events/stream — Real-time SSE event stream for Admin
+router.get('/events/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  adminEventHub.addClient(res);
+
+  req.on('close', () => {
+    adminEventHub.removeClient(res);
+  });
+});
+
+// GET /api/admin/recent-events — Get recent activity events
+router.get('/recent-events', authMiddleware, requireRole('ADMIN'), (req, res) => {
+  res.json({ events: adminEventHub.getRecentEvents() });
+});
+
+// POST /api/admin/block-ip — Block suspicious IP for durationMinutes
+router.post('/block-ip', authMiddleware, requireRole('ADMIN'), async (req, res) => {
+  try {
+    const { ip, durationMinutes = 30, reason = 'Chặn nhanh từ thông báo Admin' } = req.body;
+    if (!ip) return res.status(400).json({ message: 'Thiếu địa chỉ IP' });
+
+    const result = await blockIP(ip, durationMinutes, reason, req.user.id);
+    res.json({ message: `Đã chặn IP ${ip} trong ${durationMinutes} phút`, result });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi chặn IP' });
   }
 });
 

@@ -5,6 +5,7 @@ const { PrismaClient } = require('@prisma/client');
 const rateLimit = require('express-rate-limit');
 const { detectThreat, recordFailedAttempt, recordSuccessEvent } = require('../utils/threatDetector');
 const { formatErrorMessage } = require('../utils/errorHandler');
+const adminEventHub = require('../utils/adminEventHub');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -54,6 +55,17 @@ router.post('/register', authLimiter, async (req, res) => {
     });
 
     await recordSuccessEvent(req, 'REGISTER', user.id);
+    adminEventHub.broadcastEvent({
+      type: 'USER_REGISTER',
+      title: 'Thành viên mới đăng ký! 🎉',
+      message: `${user.name} (${user.email}) vừa tạo tài khoản với vai trò ${user.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh'}.`,
+      data: { email: user.email, role: user.role },
+      actionSuggestion: {
+        label: '📋 Xem chi tiết log bảo mật',
+        actionType: 'VIEW_LOG',
+        target: '/admin/security'
+      }
+    });
     const { accessToken, refreshToken } = generateTokens(user.id);
     res.status(201).json({ message: 'Đăng ký thành công', user, accessToken, refreshToken });
   } catch (error) {
@@ -90,6 +102,17 @@ router.post('/login', authLimiter, async (req, res) => {
     }
 
     await recordSuccessEvent(req, 'LOGIN_SUCCESS', user.id);
+    adminEventHub.broadcastEvent({
+      type: 'USER_LOGIN',
+      title: 'Người dùng vừa đăng nhập 🔑',
+      message: `${user.name} (${user.email}) vừa đăng nhập vào hệ thống.`,
+      data: { email: user.email, role: user.role },
+      actionSuggestion: {
+        label: '📋 Xem chi tiết log bảo mật',
+        actionType: 'VIEW_LOG',
+        target: '/admin/security'
+      }
+    });
     const { accessToken, refreshToken } = generateTokens(user.id);
     const userData = { id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, avatar: user.avatar, settings: user.settings };
     res.json({ message: 'Đăng nhập thành công', user: userData, accessToken, refreshToken });

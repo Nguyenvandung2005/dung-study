@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { authMiddleware, requireRole } = require('../middleware/auth');
+const { authMiddleware, requireRole, optionalAuth } = require('../middleware/auth');
+const adminEventHub = require('../utils/adminEventHub');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -135,6 +136,19 @@ router.post('/', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, re
       },
       include: { questions: true }
     });
+
+    adminEventHub.broadcastEvent({
+      type: 'EXAM_CREATED',
+      title: 'Đề kiểm tra mới được tạo! 📝',
+      message: `${req.user.name} vừa tạo đề kiểm tra mới: "${exam.title}" (${exam.subject} - Lớp ${exam.grade}).`,
+      data: { examId: exam.id, title: exam.title },
+      actionSuggestion: {
+        label: '📝 Xem đề kiểm tra vừa tạo',
+        actionType: 'NAVIGATE',
+        target: '/admin/exams'
+      }
+    });
+
     res.status(201).json(exam);
   } catch (error) {
     console.error(error);

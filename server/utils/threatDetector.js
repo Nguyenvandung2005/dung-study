@@ -43,6 +43,8 @@ const detectThreat = async (req, action, userId = null) => {
   return { blocked: false };
 };
 
+const adminEventHub = require('./adminEventHub');
+
 const recordFailedAttempt = async (req, action, userId = null) => {
   const ip = getClientIP(req);
   const userAgent = req.headers['user-agent'] || '';
@@ -58,8 +60,32 @@ const recordFailedAttempt = async (req, action, userId = null) => {
     severity = 'HIGH';
     console.warn(`[ThreatDetector] IP ${ip} BLOCKED for ${action} (${record.count} attempts)`);
     await logSecurityEvent({ ip, userAgent, action: 'BRUTE_FORCE_DETECTED', severity: 'CRITICAL', userId, details: { attempts: record.count } });
+    adminEventHub.broadcastEvent({
+      type: 'SECURITY_THREAT',
+      title: '🚨 Cảnh báo xâm nhập / Brute Force!',
+      message: `Phát hiện IP ${ip} thử sai liên tiếp ${record.count} lần (${action}).`,
+      severity: 'CRITICAL',
+      data: { ip, action, count: record.count },
+      actionSuggestion: {
+        label: '🚫 Chặn IP này trong 30 phút',
+        actionType: 'BLOCK_IP',
+        target: ip
+      }
+    });
   } else if (record.count >= 3) {
     severity = 'MEDIUM';
+    adminEventHub.broadcastEvent({
+      type: 'SECURITY_THREAT',
+      title: '⚠️ Phát hiện hoạt động đáng ngờ',
+      message: `IP ${ip} có ${record.count} lần thao tác thất bại liên tiếp (${action}).`,
+      severity: 'MEDIUM',
+      data: { ip, action, count: record.count },
+      actionSuggestion: {
+        label: '🚫 Chặn IP này trong 30 phút',
+        actionType: 'BLOCK_IP',
+        target: ip
+      }
+    });
   }
 
   failedAttempts.set(key, record);
@@ -76,4 +102,24 @@ const recordSuccessEvent = async (req, action, userId = null) => {
   await logSecurityEvent({ ip, userAgent, action, severity: 'LOW', userId, details: null });
 };
 
-module.exports = { detectThreat, recordFailedAttempt, recordSuccessEvent, getClientIP, logSecurityEvent };
+const blockIP = async (ip, durationMinutes = 30, reason = 'Admin manual block', adminId = null) => {
+  const now = Date.now();
+  const blockedUntil = now + durationMinutes * 60 * 1000;
+  
+  ['LOGIN', 'REGISTER', 'EXAM_SUBMIT', 'API'].forEach(action => {
+    failedAttempts.set(`${ip}:${action}`, { count: 99, firstAttempt: now, blockedUntil });
+  });
+
+  await logSecurityEvent({
+    ip,
+    userAgent: 'Admin Action',
+    action: 'ADMIN_BLOCK_IP',
+    severity: 'HIGH',
+    userId: adminId,
+    details: { durationMinutes, reason, blockedUntil }
+  });
+
+  return { ip, blockedUntil, durationMinutes };
+};
+
+module.exports = { detectThreat, recordFailedAttempt, recordSuccessEvent, getClientIP, logSecurityEvent, blockIP };

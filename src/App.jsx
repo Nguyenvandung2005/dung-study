@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PrivateRoute from './components/ui/PrivateRoute';
+import AdminRealtimeNotifier from './components/admin/AdminRealtimeNotifier';
 
 // Dashboards
 import StudentDashboard from './pages/StudentDashboard';
@@ -57,6 +58,7 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
+      <AdminRealtimeNotifier />
       <Routes>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
