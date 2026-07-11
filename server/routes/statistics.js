@@ -21,7 +21,7 @@ router.get('/global', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (re
     }
 
     const submissions = await prisma.submission.findMany({
-      where: { examId: { in: examIds }, status: 'GRADED' },
+      where: { examId: { in: examIds }, status: { in: ['SUBMITTED', 'GRADED'] } },
       include: { 
         exam: { select: { subject: true, title: true } },
         user: { select: { name: true } }
@@ -242,7 +242,7 @@ router.get('/teacher', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (r
     const teacherId = req.user.id;
     const exams = await prisma.exam.findMany({ where: { createdById: teacherId } });
     const examIds = exams.map(e => e.id);
-    const totalSubmissions = await prisma.submission.count({ where: { examId: { in: examIds } } });
+    const totalSubmissions = await prisma.submission.count({ where: { examId: { in: examIds }, status: { in: ['SUBMITTED', 'GRADED'] } } });
     const pendingGrading = await prisma.gradingTask.count({ where: { submissionId: { in: (await prisma.submission.findMany({ where: { examId: { in: examIds } } })).map(s => s.id) }, status: { in: ['PENDING', 'AI_GRADED'] } } });
 
     res.json({

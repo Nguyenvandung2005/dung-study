@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Sidebar from '../components/ui/Sidebar';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
 import api from '../api/client';
+import ExportExamModal from '../components/exam/ExportExamModal';
 import './Dashboard.css';
 
 const getExamStatus = (exam) => {
@@ -22,6 +23,21 @@ export default function TeacherDashboard() {
   const [filterSubject, setFilterSubject] = useState('');
   const [filterGrade, setFilterGrade] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+
+  const [exportExam, setExportExam] = useState(null);
+  const [exportingId, setExportingId] = useState(null);
+
+  const handleOpenExportModal = async (examId) => {
+    try {
+      setExportingId(examId);
+      const { data } = await api.get(`/exams/${examId}`);
+      setExportExam(data);
+    } catch (e) {
+      alert('Không thể tải chi tiết đề thi để xuất');
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -161,7 +177,16 @@ export default function TeacherDashboard() {
                             </button>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', gap: 8 }}>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                              <button 
+                                type="button"
+                                className="btn btn-outline btn-sm"
+                                style={{ borderColor: '#38bdf8', color: '#38bdf8' }}
+                                disabled={exportingId === exam.id}
+                                onClick={() => handleOpenExportModal(exam.id)}
+                              >
+                                {exportingId === exam.id ? '⌛' : '📥 Xuất đề'}
+                              </button>
                               <Link to={`/teacher/statistics/${exam.id}`} className="btn btn-outline btn-sm">📊 Thống kê</Link>
                               <Link to={`/teacher/edit/${exam.id}`} className="btn btn-ghost btn-sm">Sửa</Link>
                             </div>
@@ -176,6 +201,12 @@ export default function TeacherDashboard() {
           </>
         )}
       </main>
+
+      <ExportExamModal
+        isOpen={!!exportExam}
+        exam={exportExam}
+        onClose={() => setExportExam(null)}
+      />
     </div>
   );
 }

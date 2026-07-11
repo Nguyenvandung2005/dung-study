@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
 import api from '../../api/client';
+import ExportExamModal from '../../components/exam/ExportExamModal';
 
 const getExamStatus = (exam) => {
   if (!exam.isPublished) return { text: 'Chưa phát hành', class: 'badge-danger' };
@@ -14,6 +15,20 @@ const getExamStatus = (exam) => {
 export default function AdminExams() {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exportExam, setExportExam] = useState(null);
+  const [exportingId, setExportingId] = useState(null);
+
+  const handleOpenExportModal = async (examId) => {
+    try {
+      setExportingId(examId);
+      const { data } = await api.get(`/exams/${examId}`);
+      setExportExam(data);
+    } catch (e) {
+      alert('Không thể tải chi tiết bài thi để xuất');
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   const fetchExams = () => {
     setLoading(true);
@@ -100,9 +115,20 @@ export default function AdminExams() {
                         </button>
                       </td>
                       <td>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDeleteExam(e.id)}>
-                          🗑️ Xóa
-                        </button>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button 
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            style={{ borderColor: '#38bdf8', color: '#38bdf8' }}
+                            disabled={exportingId === e.id}
+                            onClick={() => handleOpenExportModal(e.id)}
+                          >
+                            {exportingId === e.id ? '⌛' : '📥 Xuất'}
+                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteExam(e.id)}>
+                            🗑️ Xóa
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -112,6 +138,12 @@ export default function AdminExams() {
           </div>
         )}
       </main>
+
+      <ExportExamModal
+        isOpen={!!exportExam}
+        exam={exportExam}
+        onClose={() => setExportExam(null)}
+      />
     </div>
   );
 }

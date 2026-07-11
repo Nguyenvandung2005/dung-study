@@ -34,6 +34,7 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   
   // Set simulated role for Admin (defaults to ADMIN, can be simulated as TEACHER or STUDENT)
   const [simulatedRole, setSimulatedRole] = useState(() => {
@@ -88,10 +89,17 @@ export default function Sidebar() {
       )}
 
       <div className="sidebar-user">
-        <div className="sidebar-avatar" style={{ 
-          background: user?.avatar ? `url(${getFullUploadUrl(user.avatar)}) center/cover` : 'var(--clr-primary-500)'
-        }}>
-          {!user?.avatar && user?.name?.[0]?.toUpperCase()}
+        <div className="sidebar-avatar" style={{ overflow: 'hidden', position: 'relative', background: 'var(--clr-primary-500)' }}>
+          {user?.avatar && !avatarError ? (
+            <img 
+              src={getFullUploadUrl(user.avatar)} 
+              alt={user.name} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={() => setAvatarError(true)}
+            />
+          ) : (
+            user?.name?.[0]?.toUpperCase()
+          )}
         </div>
         <div className="sidebar-user-info">
           <Link to="/profile" className="sidebar-user-name" style={{ textDecoration: 'none', color: 'inherit' }}>

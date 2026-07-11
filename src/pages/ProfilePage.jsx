@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('account');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [avatarError, setAvatarError] = useState(false);
   const fileInputRef = useRef(null);
 
   // Form states
@@ -98,6 +99,7 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       updateUser(data.user);
+      setAvatarError(false);
       showMessage('success', 'Đã cập nhật ảnh đại diện');
     } catch (err) {
       showMessage('error', err.response?.data?.message || 'Lỗi khi tải ảnh lên');
@@ -179,7 +181,7 @@ export default function ProfilePage() {
             <div 
               style={{ 
                 width: 120, height: 120, borderRadius: '50%', margin: '0 auto var(--space-4)', 
-                background: user?.avatar ? `url(${getFullUploadUrl(user.avatar)}) center/cover` : 'var(--clr-primary-500)',
+                background: 'var(--clr-primary-500)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '3rem', color: '#fff', cursor: 'pointer', border: '3px solid var(--border-subtle)',
                 position: 'relative', overflow: 'hidden'
@@ -187,7 +189,16 @@ export default function ProfilePage() {
               onClick={handleAvatarClick}
               title="Nhấn để đổi ảnh"
             >
-              {!user?.avatar && user?.name?.[0]?.toUpperCase()}
+              {user?.avatar && !avatarError ? (
+                <img 
+                  src={getFullUploadUrl(user.avatar)} 
+                  alt={user.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                user?.name?.[0]?.toUpperCase()
+              )}
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.5)', fontSize: '0.8rem', padding: '4px 0', opacity: 0, transition: 'opacity 0.2s' }} 
                    onMouseEnter={e => e.currentTarget.style.opacity = 1} 
                    onMouseLeave={e => e.currentTarget.style.opacity = 0}>

@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { formatErrorMessage } = require('./utils/errorHandler');
 
 const authRoutes = require('./routes/auth');
 const examRoutes = require('./routes/exams');
@@ -43,7 +44,7 @@ app.get('/api/health', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err.stack || err);
-  res.status(500).json({ message: err.message || 'Lỗi máy chủ nội bộ', detail: err.toString() });
+  res.status(500).json({ message: formatErrorMessage(err) });
 });
 
 app.listen(PORT, () => {

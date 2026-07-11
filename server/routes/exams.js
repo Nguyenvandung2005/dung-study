@@ -27,7 +27,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
     const exams = await prisma.exam.findMany({
       where,
-      include: { createdBy: { select: { name: true } }, _count: { select: { questions: true, submissions: true } } },
+      include: { createdBy: { select: { name: true } }, _count: { select: { questions: true, submissions: { where: { status: { in: ['SUBMITTED', 'GRADED'] } } } } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(exams);

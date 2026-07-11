@@ -11,7 +11,7 @@ router.get('/dashboard', authMiddleware, requireRole('ADMIN'), async (req, res) 
     const [totalUsers, totalExams, totalSubmissions, pendingGrading, recentLogs] = await Promise.all([
       prisma.user.count(),
       prisma.exam.count(),
-      prisma.submission.count(),
+      prisma.submission.count({ where: { status: { in: ['SUBMITTED', 'GRADED'] } } }),
       prisma.gradingTask.count({ where: { status: 'PENDING' } }),
       prisma.securityLog.findMany({
         orderBy: { createdAt: 'desc' }, take: 20,

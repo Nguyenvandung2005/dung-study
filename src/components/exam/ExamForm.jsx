@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../api/client';
+import ExportExamModal from './ExportExamModal';
 
 export const SUBJECTS = ['Toán', 'Văn', 'Anh', 'Lý', 'Hóa', 'Sinh', 'Sử', 'Địa', 'GDCD', 'Tin học', 'Khác'];
 export const GRADES = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -458,6 +459,7 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
   const [saving, setSaving] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [error, setError] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const updateMeta = (k, v) => setMeta(m => ({ ...m, [k]: v }));
   const updateQ = (idx, q) => setQuestions(qs => qs.map((o, i) => i === idx ? q : o));
@@ -523,11 +525,14 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
           <button className="btn btn-ghost btn-sm" onClick={onBack}>← Quay lại</button>
           <h1 className="page-title" style={{ margin: 0 }}>{isEditMode ? 'Chỉnh sửa đề kiểm tra' : 'Soạn đề kiểm tra'}</h1>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button className="btn btn-outline" disabled={saving} onClick={() => handleSaveInternal(false)}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button type="button" className="btn btn-outline" onClick={() => setShowExportModal(true)} style={{ borderColor: '#38bdf8', color: '#38bdf8' }}>
+            📥 Xuất Word / PDF
+          </button>
+          <button type="button" className="btn btn-outline" disabled={saving} onClick={() => handleSaveInternal(false)}>
             💾 {isEditMode ? 'Cập nhật Nháp' : 'Lưu nháp'}
           </button>
-          <button className="btn btn-primary" disabled={saving} onClick={() => handleSaveInternal(true)} id="btn-publish-exam">
+          <button type="button" className="btn btn-primary" disabled={saving} onClick={() => handleSaveInternal(true)} id="btn-publish-exam">
             {saving ? <><span className="spinner" /> Đang lưu...</> : (isEditMode ? '🚀 Cập nhật & Xuất bản' : '🚀 Lưu & Xuất bản')}
           </button>
         </div>
@@ -604,6 +609,12 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
           ➕ Thêm câu hỏi mới
         </button>
       </div>
+
+      <ExportExamModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        exam={{ ...meta, questions }}
+      />
     </div>
   );
 }

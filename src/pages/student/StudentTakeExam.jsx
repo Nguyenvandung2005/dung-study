@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api, { getFullUploadUrl } from '../../api/client';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
@@ -191,21 +191,13 @@ export default function StudentTakeExam() {
     return () => window.removeEventListener('focus', handleWindowFocus);
   }, []);
 
-  // Initialize Exam
+  // Load Exam info on mount (DO NOT create submission until student clicks Start)
   useEffect(() => {
     let isMounted = true;
-    api.post('/submissions/start', { examId })
+    api.get(`/exams/${examId}`)
       .then(({ data }) => {
         if (!isMounted) return;
-        setExam(data.exam);
-        setSubmissionId(data.submission.id);
-        if (data.exam.timeLimit) {
-          setTimeRemaining(data.exam.timeLimit * 60);
-        }
-        if (data.exam.questions?.length > 0) {
-          setActiveQuestionId(data.exam.questions[0].id);
-          activeQuestionRef.current = data.exam.questions[0].id;
-        }
+        setExam(data);
       })
       .catch(err => {
         if (!isMounted) return;
@@ -414,22 +406,39 @@ export default function StudentTakeExam() {
     }
   };
 
-  const startExam = () => {
-    const elem = document.documentElement;
-    const requestFullscreen = elem.requestFullscreen || elem.mozRequestFullScreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen;
-    if (requestFullscreen) {
-      elem.requestFullscreen()
-        .then(() => {
-          setIsFullscreen(true);
-          setExamStarted(true);
-        })
-        .catch(err => {
-          console.log(err);
-          // Fallback if blocked
-          setExamStarted(true);
-        });
-    } else {
-      setExamStarted(true);
+  const startExam = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.post('/submissions/start', { examId });
+      setExam(data.exam);
+      setSubmissionId(data.submission.id);
+      if (data.exam.timeLimit) {
+        setTimeRemaining(data.exam.timeLimit * 60);
+      }
+      if (data.exam.questions?.length > 0) {
+        setActiveQuestionId(data.exam.questions[0].id);
+        activeQuestionRef.current = data.exam.questions[0].id;
+      }
+      setLoading(false);
+
+      const elem = document.documentElement;
+      const requestFullscreen = elem.requestFullscreen || elem.mozRequestFullScreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen;
+      if (requestFullscreen) {
+        elem.requestFullscreen()
+          .then(() => {
+            setIsFullscreen(true);
+            setExamStarted(true);
+          })
+          .catch(err => {
+            console.log(err);
+            setExamStarted(true);
+          });
+      } else {
+        setExamStarted(true);
+      }
+    } catch (err) {
+      setLoading(false);
+      alert(err.response?.data?.message || 'Không thể bắt đầu làm bài');
     }
   };
 
@@ -507,7 +516,7 @@ export default function StudentTakeExam() {
             <button className="btn btn-outline" onClick={() => navigate('/student/exams')}>
               Quay lại
             </button>
-            <button className="btn btn-primary btn-lg" onClick={startExam} id="start-exam-confirm">
+            <button className="btn btn-primary btn-lg" onClick={startExam} disabled={loading} id="start-exam-confirm">
               🚀 Bắt đầu làm bài
             </button>
           </div>
@@ -632,7 +641,7 @@ export default function StudentTakeExam() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           {exam.questions.map((q, index) => {
-            const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1].section);
+            const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1]?.section);
             return (
               <React.Fragment key={`wrap-${q.id}`}>
                 {showSection && (
@@ -665,9 +674,9 @@ export default function StudentTakeExam() {
               <div 
                 className="question-content" 
                 style={{ fontSize: '1.1rem', marginBottom: 'var(--space-4)' }}
-                dangerouslySetInnerHTML={/<[a-z][\s\S]*>/i.test(q.content) ? { __html: q.content } : undefined}
+                dangerouslySetInnerHTML={q.content && /<[a-z][\s\S]*>/i.test(q.content) ? { __html: q.content } : undefined}
               >
-                {!(/<[a-z][\s\S]*>/i.test(q.content)) ? q.content : undefined}
+                {!(q.content && /<[a-z][\s\S]*>/i.test(q.content)) ? q.content : undefined}
               </div>
 
               {q.imageUrl && (

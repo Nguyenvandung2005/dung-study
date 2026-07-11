@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api, { getFullUploadUrl } from '../../api/client';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
@@ -153,7 +153,7 @@ export default function StudentResult() {
             const isCorrect = stuAnswer?.isCorrect;
             const earned = stuAnswer?.scoreEarned ?? (stuAnswer?.teacherScore || stuAnswer?.aiScore || 0);
             
-            const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1].section);
+            const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1]?.section);
 
             return (
               <React.Fragment key={`wrap-${q.id}`}>
@@ -194,9 +194,9 @@ export default function StudentResult() {
                 <div 
                   className="question-content" 
                   style={{ fontSize: '1.1rem', marginBottom: 'var(--space-4)' }}
-                  dangerouslySetInnerHTML={/<[a-z][\s\S]*>/i.test(q.content) ? { __html: q.content } : undefined}
+                  dangerouslySetInnerHTML={q.content && /<[a-z][\s\S]*>/i.test(q.content) ? { __html: q.content } : undefined}
                 >
-                  {!(/<[a-z][\s\S]*>/i.test(q.content)) ? q.content : undefined}
+                  {!(q.content && /<[a-z][\s\S]*>/i.test(q.content)) ? q.content : undefined}
                 </div>
 
                 {q.imageUrl && (

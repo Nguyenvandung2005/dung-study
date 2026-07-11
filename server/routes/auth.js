@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const rateLimit = require('express-rate-limit');
 const { detectThreat, recordFailedAttempt, recordSuccessEvent } = require('../utils/threatDetector');
+const { formatErrorMessage } = require('../utils/errorHandler');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -57,7 +58,7 @@ router.post('/register', authLimiter, async (req, res) => {
     res.status(201).json({ message: 'Đăng ký thành công', user, accessToken, refreshToken });
   } catch (error) {
     console.error('[Register Error]', error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: formatErrorMessage(error) });
   }
 });
 
@@ -90,11 +91,11 @@ router.post('/login', authLimiter, async (req, res) => {
 
     await recordSuccessEvent(req, 'LOGIN_SUCCESS', user.id);
     const { accessToken, refreshToken } = generateTokens(user.id);
-    const userData = { id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, avatar: user.avatar };
+    const userData = { id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, avatar: user.avatar, settings: user.settings };
     res.json({ message: 'Đăng nhập thành công', user: userData, accessToken, refreshToken });
   } catch (error) {
     console.error('[Login Error]', error);
-    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+    res.status(500).json({ message: formatErrorMessage(error) });
   }
 });
 
@@ -105,7 +106,7 @@ router.post('/refresh', async (req, res) => {
     if (!refreshToken) return res.status(401).json({ message: 'Không có refresh token' });
     const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'dung_study_secret_key_123456_secure';
     const decoded = jwt.verify(refreshToken, refreshSecret);
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId }, select: { id: true, name: true, email: true, role: true, grade: true, avatar: true, isLocked: true } });
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId }, select: { id: true, name: true, email: true, role: true, grade: true, avatar: true, settings: true, isLocked: true } });
     if (!user || user.isLocked) return res.status(401).json({ message: 'Token không hợp lệ' });
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user.id);
     res.json({ accessToken, refreshToken: newRefreshToken, user });
@@ -117,7 +118,7 @@ router.post('/refresh', async (req, res) => {
 // GET /api/auth/me
 router.get('/me', require('../middleware/auth').authMiddleware, async (req, res) => {
   const user = req.user;
-  res.json({ id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, avatar: user.avatar });
+  res.json({ id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, avatar: user.avatar, settings: user.settings });
 });
 
 module.exports = router;
