@@ -213,6 +213,129 @@ function AIFigureModal({ ocrImages = [], onApply, onClose }) {
   );
 }
 
+// ─── AI Modify Exam Modal: Chỉnh sửa & Cải tiến toàn bộ đề theo câu lệnh ─────────
+function AIModifyExamModal({ questions = [], subject = '', grade = '', onApply, onClose }) {
+  const [instruction, setInstruction] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const SUGGESTIONS = [
+    'Chuyển tất cả ký hiệu dạng chữ sang ký hiệu Toán học chuẩn (√, x², a/b...)',
+    'Tăng độ khó của các câu hỏi lên mức Vận dụng / Vận dụng cao',
+    'Kiểm tra và sửa lỗi chính tả, ngữ pháp trong toàn bộ đề thi',
+    'Bổ sung lời giải thích chi tiết cho tất cả các câu hỏi',
+  ];
+
+  const handleStartModify = async () => {
+    if (!instruction.trim()) {
+      setError('Vui lòng nhập yêu cầu chỉnh sửa đề thi');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.post('/ai/modify-exam', {
+        instruction: instruction.trim(),
+        questions,
+        subject,
+        grade
+      });
+      if (res.data && Array.isArray(res.data.questions)) {
+        onApply(res.data.questions);
+        onClose();
+      } else {
+        throw new Error('Dữ liệu AI trả về không đúng định dạng');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Lỗi khi AI chỉnh sửa đề thi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 10000 }}>
+      <div className="glass-card" style={{ width: '90%', maxWidth: 580, padding: 24, borderRadius: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.25rem', color: 'var(--text-primary)' }}>
+            ✨ Chỉnh Sửa Đề Thi Bằng AI
+          </h3>
+          <button type="button" className="btn-close-modal" onClick={onClose}>✕</button>
+        </div>
+        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>
+          Nhập yêu cầu của bạn, AI sẽ tự động phân tích và chỉnh sửa toàn bộ bộ <b>{questions.length} câu hỏi</b> hiện tại theo đúng yêu cầu.
+        </p>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+            💡 Gợi ý lệnh nhanh (nhấp để chọn):
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {SUGGESTIONS.map((s, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setInstruction(s)}
+                style={{
+                  background: 'rgba(124, 58, 237, 0.12)',
+                  color: 'var(--clr-primary-300)',
+                  border: '1px solid rgba(124, 58, 237, 0.3)',
+                  borderRadius: 20,
+                  padding: '4px 11px',
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+              >
+                + {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <textarea
+            className="input"
+            rows={4}
+            placeholder="Ví dụ: Đổi toàn bộ các câu hỏi sang mức độ khó hơn và bổ sung lời giải chi tiết..."
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            disabled={loading}
+            style={{ width: '100%', resize: 'vertical' }}
+          />
+        </div>
+
+        {error && (
+          <div style={{ padding: '8px 12px', background: 'rgba(239, 68, 68, 0.15)', borderLeft: '4px solid #ef4444', color: '#f87171', fontSize: '0.85rem', marginBottom: 14 }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+          <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
+            Hủy
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleStartModify}
+            disabled={loading || !instruction.trim()}
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', minWidth: 160 }}
+          >
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> AI đang sửa đề (~8s)...
+              </span>
+            ) : (
+              '🚀 Start (Sửa đề ngay)'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [] }) {
   const [editingContent, setEditingContent] = useState(false);
   const [showFigureModal, setShowFigureModal] = useState(false);
@@ -460,6 +583,7 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [error, setError] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showAIModifyModal, setShowAIModifyModal] = useState(false);
 
   const updateMeta = (k, v) => setMeta(m => ({ ...m, [k]: v }));
   const updateQ = (idx, q) => setQuestions(qs => qs.map((o, i) => i === idx ? q : o));
@@ -526,6 +650,9 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
           <h1 className="page-title" style={{ margin: 0 }}>{isEditMode ? 'Chỉnh sửa đề kiểm tra' : 'Soạn đề kiểm tra'}</h1>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button type="button" className="btn btn-primary" onClick={() => setShowAIModifyModal(true)} style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.35)' }}>
+            ✨ Chỉnh sửa đề bằng AI
+          </button>
           <button type="button" className="btn btn-outline" onClick={() => setShowExportModal(true)} style={{ borderColor: '#38bdf8', color: '#38bdf8' }}>
             📥 Xuất Word / PDF
           </button>
@@ -588,7 +715,10 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
       <div style={{ marginTop: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 className="section-heading">📋 Danh sách câu hỏi ({questions.length} câu)</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowAIModifyModal(true)} style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>
+              ✨ Chỉnh sửa đề bằng AI
+            </button>
             <button className="btn btn-outline btn-sm" disabled={isGeneratingAI} onClick={handleGenerateAnswersAI}>
               {isGeneratingAI ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> : '✨'} Sinh đáp án bằng AI
             </button>
@@ -615,6 +745,17 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
         onClose={() => setShowExportModal(false)}
         exam={{ ...meta, questions }}
       />
+
+      {showAIModifyModal && createPortal(
+        <AIModifyExamModal
+          questions={questions}
+          subject={meta.subject}
+          grade={meta.grade}
+          onApply={(updatedQuestions) => setQuestions(updatedQuestions)}
+          onClose={() => setShowAIModifyModal(false)}
+        />,
+        document.body
+      )}
     </div>
   );
 }

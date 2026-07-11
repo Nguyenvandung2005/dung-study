@@ -103,25 +103,25 @@ export default function ExportExamModal({ isOpen, onClose, exam }) {
 
           if (isLong) {
             optionsHtml = `
-              <table style="width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 10px; font-size: 12pt;">
+              <table class="no-border" border="0" cellSpacing="0" cellPadding="0" style="width: 100%; border-collapse: collapse; border: none !important; margin-top: 4px; margin-bottom: 10px; font-size: 12pt;">
                 ${formattedOptions.map(o => `
-                  <tr>
-                    <td style="padding: 3px 0; vertical-align: top;"><b>${o.letter}.</b> ${o.text}</td>
+                  <tr style="border: none !important;">
+                    <td style="padding: 4px 0; vertical-align: top; border: none !important; mso-border-alt: none !important;"><b>${o.letter}.</b> ${o.text}</td>
                   </tr>
                 `).join('')}
               </table>
             `;
           } else {
-            // 2 columns layout
+            // 2 columns layout without any dotted borders
             optionsHtml = `
-              <table style="width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 10px; font-size: 12pt;">
-                <tr>
-                  <td style="width: 50%; padding: 3px 0; vertical-align: top;"><b>A.</b> ${formattedOptions[0]?.text || ''}</td>
-                  <td style="width: 50%; padding: 3px 0; vertical-align: top;"><b>B.</b> ${formattedOptions[1]?.text || ''}</td>
+              <table class="no-border" border="0" cellSpacing="0" cellPadding="0" style="width: 100%; border-collapse: collapse; border: none !important; margin-top: 4px; margin-bottom: 10px; font-size: 12pt;">
+                <tr style="border: none !important;">
+                  <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; border: none !important; mso-border-alt: none !important;"><b>A.</b> ${formattedOptions[0]?.text || ''}</td>
+                  <td style="width: 50%; padding: 4px 0 4px 10px; vertical-align: top; border: none !important; mso-border-alt: none !important;"><b>B.</b> ${formattedOptions[1]?.text || ''}</td>
                 </tr>
-                <tr>
-                  <td style="width: 50%; padding: 3px 0; vertical-align: top;"><b>C.</b> ${formattedOptions[2]?.text || ''}</td>
-                  <td style="width: 50%; padding: 3px 0; vertical-align: top;"><b>D.</b> ${formattedOptions[3]?.text || ''}</td>
+                <tr style="border: none !important;">
+                  <td style="width: 50%; padding: 4px 10px 4px 0; vertical-align: top; border: none !important; mso-border-alt: none !important;"><b>C.</b> ${formattedOptions[2]?.text || ''}</td>
+                  <td style="width: 50%; padding: 4px 0 4px 10px; vertical-align: top; border: none !important; mso-border-alt: none !important;"><b>D.</b> ${formattedOptions[3]?.text || ''}</td>
                 </tr>
               </table>
             `;
@@ -270,7 +270,17 @@ export default function ExportExamModal({ isOpen, onClose, exam }) {
         <style>
           @page {
             size: A4;
-            margin: 2cm;
+            margin: 2.5cm;
+          }
+          @page WordSection1 {
+            size: 595.3pt 841.9pt;
+            margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+            mso-header-margin: 35.4pt;
+            mso-footer-margin: 35.4pt;
+            mso-paper-source: 0;
+          }
+          div.WordSection1 {
+            page: WordSection1;
           }
           body {
             font-family: 'Times New Roman', serif;
@@ -279,19 +289,25 @@ export default function ExportExamModal({ isOpen, onClose, exam }) {
             background: #fff;
             line-height: 1.35;
             margin: 0;
-            padding: 20px;
+            padding: 20px 28px;
           }
           table { border-collapse: collapse; }
+          table.no-border, table.no-border tr, table.no-border td {
+            border: none !important;
+            mso-border-alt: none !important;
+          }
           @media print {
-            body { padding: 0; }
+            body { padding: 0; margin: 0; }
           }
         </style>
       </head>
       <body>
-        ${headerHtml}
-        ${(exportMode === 'all' || exportMode === 'questions') ? candidateInfoHtml : ''}
-        ${questionsHtml}
-        ${answersHtml}
+        <div class="WordSection1" style="max-width: 780px; margin: 0 auto;">
+          ${headerHtml}
+          ${(exportMode === 'all' || exportMode === 'questions') ? candidateInfoHtml : ''}
+          ${questionsHtml}
+          ${answersHtml}
+        </div>
       </body>
       </html>
     `;

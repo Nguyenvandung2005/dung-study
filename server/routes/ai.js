@@ -272,6 +272,81 @@ Chỉ trả về chuỗi JSON hợp lệ.`;
   }
 });
 
+// POST /api/ai/modify-exam — Chỉnh sửa & cải tiến đề thi theo câu lệnh AI
+router.post('/modify-exam', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
+  try {
+    const { instruction, questions, subject = '', grade = '' } = req.body;
+    if (!instruction || !Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'Vui lòng nhập yêu cầu chỉnh sửa và danh sách câu hỏi hiện tại.' });
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ message: 'Chưa cấu hình GEMINI_API_KEY.' });
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
+
+    const prompt = `Bạn là chuyên gia giáo dục và hội đồng thẩm định đề thi xuất sắc của Việt Nam.
+Dưới đây là danh sách câu hỏi hiện tại của đề thi môn ${subject || 'chuyên môn'} (khối lớp ${grade || 'phổ thông'}):
+${JSON.stringify(questions, null, 2)}
+
+YÊU CẦU CHỈNH SỬA TỪ GIÁO VIÊN:
+"${instruction}"
+
+NHIỆM VỤ CỦA BẠN:
+1. Hãy thực hiện chính xác yêu cầu chỉnh sửa trên đối với toàn bộ đề thi hoặc các câu hỏi liên quan.
+2. Bạn có thể sửa nội dung câu hỏi, sửa phương án trả lời, cập nhật đáp án đúng, sửa giải thích, thêm/bớt độ khó, chuẩn hóa chính tả và ngữ pháp... theo đúng ý giáo viên.
+${SCIENTIFIC_NOTATION_RULE}
+3. TRẢ VỀ DUY NHẤT một mảng JSON chứa danh sách câu hỏi sau khi đã được chỉnh sửa hoàn chỉnh.
+
+Format mỗi câu hỏi trong mảng JSON trả về:
+[
+  {
+    "id": "<id câu hỏi gốc hoặc id mới>",
+    "section": "<tên phần nếu có hoặc rỗng>",
+    "type": "MULTIPLE_CHOICE",
+    "content": "<nội dung câu hỏi sau khi sửa>",
+    "options": ["A...", "B...", "C...", "D..."],
+    "correctAnswer": "0",
+    "points": 1,
+    "explanation": "<lời giải thích sau khi sửa>"
+  }
+]
+Chỉ trả về mảng JSON hợp lệ, không kèm văn bản markdown nào khác.`;
+
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
+    const text = result.response.text().trim();
+    const parsed = JSON.parse(text);
+    const rawQuestions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+
+    const updatedQuestions = rawQuestions.map((q, idx) => {
+      const orig = questions[idx] || {};
+      return {
+        id: q.id || orig.id || `ai-mod-${Date.now()}-${idx}`,
+        section: q.section ?? orig.section ?? '',
+        type: q.type === 'ESSAY' ? 'ESSAY' : 'MULTIPLE_CHOICE',
+        content: q.content || orig.content || '',
+        contentIsHtml: false,
+        options: Array.isArray(q.options) && q.options.length >= 2
+          ? q.options.map(o => (typeof o === 'string' ? o : String(o)))
+          : (orig.options || ['', '', '', '']),
+        correctAnswer: q.correctAnswer != null ? String(q.correctAnswer) : (orig.correctAnswer || '0'),
+        points: Number(q.points) || Number(orig.points) || 1,
+        explanation: q.explanation || orig.explanation || '',
+        imageUrl: orig.imageUrl || '',
+        svgFigure: orig.svgFigure || ''
+      };
+    });
+
+    res.json({ questions: updatedQuestions, total: updatedQuestions.length });
+  } catch (error) {
+    console.error('[AI Modify Exam] Error:', error);
+    res.status(500).json({ message: 'Lỗi khi AI chỉnh sửa đề thi: ' + error.message });
+  }
+});
+
 // POST /api/ai/scan-exam-image — Quét ảnh đề thi OCR bằng AI Vision
 router.post('/scan-exam-image', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
 
