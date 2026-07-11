@@ -5,6 +5,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+const SCIENTIFIC_NOTATION_RULE = `- **QUY CHUẨN KÝ HIỆU KHOA HỌC & TOÁN HỌC (BẮT BUỘC TUÂN THỦ TRUYỆT ĐỐI)**:
+  + TUYỆT ĐỐI KHÔNG viết chữ thay cho ký hiệu toán học, vật lý, hóa học.
+  + Ví dụ về căn bậc hai: Phải viết ký hiệu chuẩn \`√(...)\` (như \`√(x - 2)\` hoặc \`√x\`), TUYỆT ĐỐI KHÔNG ĐƯỢC viết chữ "căn(x - 2)" hay "căn bậc hai".
+  + Phân số, lũy thừa, số mũ, tích phân, đạo hàm, giới hạn, góc, độ... phải dùng đúng ký hiệu chuẩn (\`x²\`, \`x³\`, \`a/b\`, \`∫\`, \`lim\`, \`Σ\`, \`Δ\`, \`α\`, \`β\`, \`π\`, \`≤\`, \`≥\`, \`≠\`, \`±\`, \`∞\`, \`°C\`).
+  + Công thức Hóa học phải viết đúng ký hiệu nguyên tố và chỉ số (ví dụ: \`H₂SO₄\`, \`CO₂\`, \`Fe²⁺\`, \`CH₃COOH\`).
+  + Mọi câu hỏi và phương án đáp án A, B, C, D đều phải hiển thị đúng chuẩn ký hiệu bộ môn để học sinh đọc hiểu rõ ràng, chuẩn xác.`;
+
 // POST /api/ai/generate-answers
 router.post('/generate-answers', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
@@ -39,6 +46,7 @@ router.post('/generate-answers', authMiddleware, requireRole('TEACHER', 'ADMIN')
 Dưới đây là một mảng JSON chứa danh sách các câu hỏi.
 Đối với câu trắc nghiệm (MULTIPLE_CHOICE), hãy xác định chỉ mục (index từ 0 đến 3) của đáp án đúng trong mảng options.
 Đối với câu tự luận (ESSAY), hãy viết một hướng dẫn/gợi ý chấm bài ngắn gọn (tối đa 150 chữ).
+${SCIENTIFIC_NOTATION_RULE}
 
 DANH SÁCH CÂU HỎI:
 ${JSON.stringify(chunk, null, 2)}
@@ -187,6 +195,7 @@ YÊU CẦU CHUYÊN MÔN VÀ CẤU TRÚC ĐỀ THI (CHUẨN SỞ GD&ĐT TỈNH NG
 - **Ngữ liệu & thực tiễn ưu tiên yếu tố địa phương Nghệ An**: Với các bài toán ứng dụng thực tế hoặc môn Ngữ văn, Lịch sử, Địa lý, GDCD..., khuyến khích lồng ghép khéo léo ngữ liệu văn hóa, lịch sử, địa lý thực tiễn của tỉnh Nghệ An (như Sông Lam, Núi Quyết, Quê Bác Kim Liên - Nam Đàn, Thành Vinh, Khu kinh tế Đông Nam Nghệ An...) để đề thi vừa chuẩn mực vừa gần gũi thực tế.
 - Mức độ chung của đề thi: **${overallDifficulty}**.
 - Văn phong ra đề: Nghiêm túc, khúc chiết, chuẩn mực theo phong cách đề thi chính thức của Sở GD&ĐT Nghệ An.${difficultyPrompt}${literatureInstruction}
+${SCIENTIFIC_NOTATION_RULE}
 ${mcqInstruction}
 ${essayInstruction}
 ${languageInstruction}
@@ -295,6 +304,7 @@ YÊU CẦU QUAN TRỌNG:
    - Trích xuất toàn bộ yêu cầu đề bài.
    - Đưa ra lời giải hoặc gợi ý chấm bài chi tiết vào trường explanation.
 4. "imageBox": Nếu câu hỏi có hình minh họa, hãy xác định [ymin, xmin, ymax, xmax] (0.0-1.0), nếu không thì null.
+${SCIENTIFIC_NOTATION_RULE}
 
 Hãy trả về một Object JSON gồm metadata và questions:
 {
@@ -402,6 +412,7 @@ YÊU CẦU PHÂN TÍCH (CỰC KỲ QUAN TRỌNG):
 4. "hasFigure" và "figureImageIndex": Nếu câu hỏi có đề cập đến hình vẽ, đồ thị, sơ đồ (ví dụ: "hình bên", "sơ đồ sau"), BẮT BUỘC gán "hasFigure": true. Nếu mảng ảnh đính kèm > 0, hãy chỉ định "figureImageIndex" tương ứng (0, 1, 2...). Nếu không có ảnh, để -1.
 5. "section": TRÍCH XUẤT TIÊU ĐỀ PHẦN. Nếu trước câu hỏi có các tiêu đề nhóm/phần (ví dụ: "PHẦN I: TRẮC NGHIỆM", "DẠNG 1: PHÁT ÂM...", "II. Tự luận"), hãy gán vào trường "section". Tiêu đề này sẽ áp dụng cho tất cả các câu hỏi thuộc phần đó cho đến khi gặp phần mới.
 6. THÔNG TIN ĐỀ THI (METADATA): Trích xuất tên đề bài, môn học, khối lớp, thời gian làm bài (nếu có) từ phần đầu trang.
+${SCIENTIFIC_NOTATION_RULE}
 7. Trả về DUY NHẤT một Object JSON hợp lệ.
 
 Format trả về:
