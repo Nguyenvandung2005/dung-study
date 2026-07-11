@@ -138,10 +138,12 @@
   </li>
 </ul>
 
-<h3>3. Nâng cấp Trợ lý AI &amp; Chuẩn hóa Ký hiệu Khoa học/Toán học</h3>
+<h3>3. Nâng cấp Trợ lý AI Soạn đề, Sửa đề &amp; Vẽ hình minh họa SVG</h3>
 <ul>
   <li><b>Bắt buộc Quy chuẩn Ký hiệu Toán học &amp; Khoa học (SCIENTIFIC_NOTATION_RULE):</b> Toàn bộ luồng tạo đề AI, quét OCR, đọc file Word/PDF và sinh lời giải tuyệt đối tuân thủ ký hiệu chuẩn: <code>√x</code>, <code>x²</code>, <code>x³</code>, <code>a/b</code>, <code>H₂SO₄</code>, <code>CO₂</code>, <code>Fe²⁺</code>... thay vì viết chữ thô.</li>
-  <li><b>Tính năng mới: ✨ Chỉnh sửa đề thi bằng AI theo câu lệnh:</b> Ngay tại trang soạn thảo đề thi, Giáo viên có thể nhấp nút <i>"✨ Chỉnh sửa đề bằng AI"</i>, nhập câu lệnh mong muốn (VD: "Tăng độ khó lên mức Vận dụng cao", "Sửa lỗi chính tả &amp; bổ sung lời giải chi tiết"). AI sẽ tự động phân tích và chỉnh sửa toàn bộ đề thi theo đúng yêu cầu.</li>
+  <li><b>Đảm bảo Tạo Chính xác Số lượng Câu hỏi &amp; Ô nhập Yêu cầu Chi tiết cho AI:</b> Cấu hình <code>maxOutputTokens: 65536</code> cùng ràng buộc ma trận chặt chẽ đảm bảo tạo đúng đủ số lượng câu hỏi (VD: 50 câu). Thay thế ô "Phân bổ chi tiết" nhỏ bằng khu vực <b>"✨ Yêu cầu chi tiết cho AI"</b> dạng textarea rộng rãi để nhập mọi chỉ lệnh.</li>
+  <li><b>Chuẩn hóa Tách Mã Hình vẽ SVG tự động (normalizeAIQuestionContent):</b> Khi người dùng yêu cầu vẽ hình minh họa bằng SVG (đồ thị hàm số, hình học...), AI tự động sinh hình vector chuẩn vào trường <code>svgFigure</code>, văn bản câu hỏi được giữ sạch đẹp tuyệt đối.</li>
+  <li><b>Tính năng mới: ✨ Chỉnh sửa &amp; Bổ sung đề thi bằng AI theo câu lệnh:</b> Ngay tại trang soạn thảo đề thi, Giáo viên có thể nhấp nút <i>"✨ Chỉnh sửa đề bằng AI"</i>, nhập câu lệnh mong muốn (VD: "Tạo thêm 5 câu hỏi khó", "Vẽ hình minh họa SVG cho các câu đồ thị"). AI sẽ tự động chỉnh sửa và bổ sung hoàn hảo vào đề thi.</li>
 </ul>
 
 <h3>4. Chuẩn hóa Xuất Đề thi &amp; Đáp án ra Word (.doc)</h3>

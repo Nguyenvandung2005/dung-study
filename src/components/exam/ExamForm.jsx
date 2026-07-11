@@ -220,9 +220,10 @@ function AIModifyExamModal({ questions = [], subject = '', grade = '', onApply, 
   const [error, setError] = useState('');
 
   const SUGGESTIONS = [
-    'Chuyển tất cả ký hiệu dạng chữ sang ký hiệu Toán học chuẩn (√, x², a/b...)',
-    'Tăng độ khó của các câu hỏi lên mức Vận dụng / Vận dụng cao',
-    'Kiểm tra và sửa lỗi chính tả, ngữ pháp trong toàn bộ đề thi',
+    'Chuyển tất cả ký hiệu dạng chữ sang ký hiệu chuẩn môn học (√, x², Δ, a/b...)',
+    'Vẽ hình minh họa SVG cho các câu hỏi hình học / đồ thị / sơ đồ',
+    'Tạo thêm 5 câu hỏi trắc nghiệm mới ở mức độ Vận dụng cao',
+    'Kiểm tra và sửa lỗi chính tả, chuẩn hóa toàn bộ đề thi',
     'Bổ sung lời giải thích chi tiết cho tất cả các câu hỏi',
   ];
 

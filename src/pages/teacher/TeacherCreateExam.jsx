@@ -89,24 +89,29 @@ function AIGeneratorModal({ onClose, onGenerated }) {
               />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-            <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Mức độ chung của đề</label>
-              <select name="overallDifficulty" value={form.overallDifficulty} onChange={handleChange}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.9rem' }}
-              >
-                {['Dễ', 'Trung bình', 'Khó', 'Cực khó'].map((lvl) => (
-                  <option key={lvl} value={lvl} style={{ background: '#1e1e2d', color: '#fff' }}>{lvl}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Phân bổ chi tiết (tùy chọn)</label>
-              <input name="difficulty" value={form.difficulty} onChange={handleChange}
-                placeholder="Vd: 3 nhận biết, 2 vận dụng..."
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.9rem', boxSizing: 'border-box' }}
-              />
-            </div>
+          <div>
+            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Mức độ chung của đề</label>
+            <select name="overallDifficulty" value={form.overallDifficulty} onChange={handleChange}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.9rem' }}
+            >
+              {['Dễ', 'Trung bình', 'Khó', 'Cực khó'].map((lvl) => (
+                <option key={lvl} value={lvl} style={{ background: '#1e1e2d', color: '#fff' }}>{lvl}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              ✨ Yêu cầu chi tiết cho AI (nhập mọi yêu cầu mong muốn)
+            </label>
+            <textarea
+              name="difficulty"
+              value={form.difficulty}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Vd: Tạo đúng 50 câu hỏi, vẽ hình minh họa bằng SVG cho các câu đồ thị, lồng ghép ngữ liệu thực tế Nghệ An..."
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(167, 139, 250, 0.4)', background: 'rgba(167, 139, 250, 0.06)', color: 'var(--text-primary)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+            />
           </div>
         </div>
 

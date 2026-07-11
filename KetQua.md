@@ -42,8 +42,13 @@ Hệ thống đã trải qua quá trình phát triển và hoàn thiện triệt
   - Bắt buộc toàn bộ luồng tạo đề tự động, phân tích tài liệu Word/PDF, quét ảnh OCR và giải thích đề thi tuyệt đối không viết chữ thay cho ký hiệu (không viết *"căn(x - 2)"*). Bắt buộc hiển thị chuẩn ký hiệu toán học, vật lý, hóa học: `√x`, `x²`, `x³`, `a/b`, `∫`, `lim`, `Σ`, `Δ`, `α`, `β`, `π`, `≤`, `≥`, `≠`, `±`, `∞`, `°C`, `H₂SO₄`, `CO₂`, `Fe²⁺`...
 - **Bám sát Cấu trúc & Định hướng Sở GD&ĐT tỉnh Nghệ An**:
   - Ra đề theo ma trận 4 mức độ tư duy (Nhận biết – Thông hiểu – Vận dụng – Vận dụng cao) theo Chương trình GDPT 2018, lồng ghép yếu tố thực tiễn địa phương tỉnh Nghệ An.
-- **Tính năng mới: ✨ Chỉnh sửa đề thi bằng AI theo câu lệnh ([ExamForm.jsx](file:///d:/IUH/00.CaNhan/dung-study/src/components/exam/ExamForm.jsx))**:
-  - Cho phép giáo viên nhấp nút **`✨ Chỉnh sửa đề bằng AI`** ngay tại trang soạn thảo đề thi, nhập yêu cầu (ví dụ: *"Chuyển các câu hỏi sang mức vận dụng cao hơn"*, *"Chuẩn hóa ký hiệu toán học"*, *"Thêm lời giải chi tiết"*). AI sẽ tự động chỉnh sửa toàn bộ danh sách câu hỏi hiện tại theo đúng yêu cầu.
+- **Đảm bảo Tạo Chính xác Số lượng Câu hỏi & Ô nhập Yêu cầu Chi tiết cho AI ([TeacherCreateExam.jsx](file:///d:/IUH/00.CaNhan/dung-study/src/pages/teacher/TeacherCreateExam.jsx))**:
+  - Cấu hình `maxOutputTokens: 65536` và chỉ lệnh ràng buộc chặt chẽ giúp AI tạo **đúng và đủ số lượng câu hỏi** (ví dụ yêu cầu 50 câu sẽ trả về đúng 50 câu, tuyệt đối không bị ngắt quãng hay cắt bớt).
+  - Thay thế ô nhập "Phân bổ chi tiết" nhỏ hẹp bằng khu vực nhập **`✨ Yêu cầu chi tiết cho AI`** dạng `textarea` rộng rãi, cho phép giáo viên nhập thoải mái mọi yêu cầu (vẽ hình minh họa SVG, yêu cầu chủ đề địa phương, ma trận câu hỏi...).
+- **Chuẩn hóa Tách Mã Hình vẽ SVG tự động (`normalizeAIQuestionContent`)**:
+  - Khi người dùng yêu cầu AI vẽ hình minh họa bằng SVG (đồ thị hàm số, hình học, sơ đồ...), hệ thống tự động nhận dạng và tách riêng mã `<svg>...</svg>` vào trường `svgFigure`, giữ cho văn bản câu hỏi (`content`) luôn sạch đẹp, không bị lẫn mã code.
+- **Tính năng mới: ✨ Chỉnh sửa & Bổ sung đề thi bằng AI theo câu lệnh ([ExamForm.jsx](file:///d:/IUH/00.CaNhan/dung-study/src/components/exam/ExamForm.jsx))**:
+  - Cho phép giáo viên nhấp nút **`✨ Chỉnh sửa đề bằng AI`**, nhập yêu cầu chỉnh sửa hoặc **yêu cầu tạo thêm câu hỏi mới** (ví dụ: *"Tạo thêm 5 câu hỏi khó"*, *"Vẽ hình minh họa SVG"*). AI tự động bổ sung và cập nhật hoàn hảo bộ câu hỏi.
 
 ### 5. Chuẩn hóa Tải về File Word (`.doc`) & In PDF Đẹp mắt
 - **Căn lề cân đối chuẩn A4 (`2.5cm` đều 4 bên)**: Cấu hình chuẩn thẻ `@page WordSection1` và container khi xuất ra Word, giúp văn bản cách đều 2 bên, không bị dính sát lề trang.
