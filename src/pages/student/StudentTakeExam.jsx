@@ -132,6 +132,7 @@ export default function StudentTakeExam() {
   const [examStarted, setExamStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileMode, setIsMobileMode] = useState(false);
+  const [showMobilePalette, setShowMobilePalette] = useState(false);
   const [cheatCount, setCheatCount] = useState(0);
 
   const checkIsMobileOrTouch = () => {
@@ -609,67 +610,201 @@ export default function StudentTakeExam() {
         </div>
       )}
       
-      {/* Sidebar for Navigation */}
-      <aside className="sidebar" style={{ width: 300, position: 'fixed', right: 0, left: 'auto', zIndex: 10 }}>
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-3)' }}>
-          <h2 style={{ fontSize: '2rem', color: timeRemaining < 60 ? 'var(--clr-rose-500)' : 'var(--text-primary)' }}>
-            ⏱️ {formatTime(timeRemaining)}
-          </h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Thời gian còn lại</p>
-        </div>
-
-        {/* Progress Bar */}
-        <div style={{ marginBottom: 'var(--space-4)', padding: '0 4px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-            <span>Tiến độ: {answeredQuestions}/{totalQuestions} câu</span>
-            <span style={{ fontWeight: 600, color: 'var(--clr-primary-400)' }}>{progressPct}%</span>
+      {/* Floating Sticky Mobile Bar for Navigation */}
+      {isMobileMode && (
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 90,
+          background: 'rgba(10, 14, 35, 0.95)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.12)',
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', color: timeRemaining < 60 ? 'var(--clr-rose-500)' : '#fff' }}>
+            <span>⏱️ {formatTime(timeRemaining)}</span>
           </div>
-          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ width: `${progressPct}%`, height: '100%', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-full)', transition: 'width 0.4s ease' }} />
-          </div>
+          <button
+            onClick={() => setShowMobilePalette(true)}
+            className="btn btn-outline btn-sm"
+            style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '0.82rem' }}
+          >
+            📋 Bảng câu hỏi ({answeredQuestions}/{totalQuestions})
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="btn btn-primary btn-sm"
+            style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '0.82rem' }}
+          >
+            ✅ Nộp bài
+          </button>
         </div>
-        
-        <div className="divider" style={{ margin: 'var(--space-2) 0 var(--space-4)' }} />
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, overflowY: 'auto' }}>
-          {exam.questions.map((q, i) => {
-            const isAnswered = !!answers[q.id];
-            const isActive = activeQuestionId === q.id;
-            return (
-              <a 
-                href={`#q-${q.id}`}
-                key={q.id}
-                onClick={() => setActiveQuestionId(q.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  height: 36, borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer',
-                  background: isActive ? 'var(--clr-primary-500)' : isAnswered ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${isActive ? 'var(--clr-primary-400)' : isAnswered ? 'var(--clr-emerald-500)' : 'var(--border-subtle)'}`,
-                  color: isActive ? '#fff' : 'var(--text-primary)',
-                  textDecoration: 'none'
-                }}
-              >
-                {i + 1}
-              </a>
-            );
-          })}
-        </div>
+      )}
 
-        <div className="divider" />
-        
-        <button 
-          className="btn btn-primary" 
-          style={{ width: '100%', padding: '1rem', background: 'var(--gradient-cyan)' }}
-          onClick={handleSubmit}
-          disabled={submitting}
+      {/* Mobile Question Palette Modal Drawer */}
+      {isMobileMode && showMobilePalette && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center'
+          }}
+          onClick={() => setShowMobilePalette(false)}
         >
-          {submitting ? 'Đang chấm điểm...' : '✅ Nộp bài ngay'}
-        </button>
-      </aside>
+          <div 
+            style={{
+              width: '100%',
+              maxHeight: '80vh',
+              background: '#0a0e23',
+              borderTopLeftRadius: '24px',
+              borderTopRightRadius: '24px',
+              padding: '20px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              borderTop: '1px solid rgba(255,255,255,0.15)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>📋 Danh sách câu hỏi ({totalQuestions} câu)</h3>
+              <button onClick={() => setShowMobilePalette(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.4rem' }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              <span>Đã làm: {answeredQuestions}/{totalQuestions}</span>
+              <span>Tiến độ: {progressPct}%</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+              {exam.questions.map((q, i) => {
+                const isAnswered = !!answers[q.id];
+                const isActive = activeQuestionId === q.id;
+                return (
+                  <a
+                    href={`#q-${q.id}`}
+                    key={q.id}
+                    onClick={() => { setActiveQuestionId(q.id); setShowMobilePalette(false); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      height: 42, borderRadius: '8px',
+                      fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer',
+                      background: isActive ? 'var(--clr-primary-500)' : isAnswered ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)',
+                      border: `1px solid ${isActive ? 'var(--clr-primary-400)' : isAnswered ? 'var(--clr-emerald-500)' : 'var(--border-subtle)'}`,
+                      color: isActive ? '#fff' : 'var(--text-primary)',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    {i + 1}
+                  </a>
+                );
+              })}
+            </div>
+
+            <button 
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '12px', marginTop: '10px' }}
+              onClick={() => { setShowMobilePalette(false); handleSubmit(); }}
+              disabled={submitting}
+            >
+              ✅ Nộp bài thi ngay
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar for Navigation */}
+      {!isMobileMode && (
+        <aside style={{
+          width: 300,
+          position: 'fixed',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 10,
+          background: 'var(--glass-bg)',
+          borderLeft: '1px solid var(--glass-border)',
+          backdropFilter: 'var(--glass-blur)',
+          padding: 'var(--space-6)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-3)' }}>
+            <h2 style={{ fontSize: '2rem', color: timeRemaining < 60 ? 'var(--clr-rose-500)' : 'var(--text-primary)' }}>
+              ⏱️ {formatTime(timeRemaining)}
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Thời gian còn lại</p>
+          </div>
+
+          <div style={{ marginBottom: 'var(--space-4)', padding: '0 4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              <span>Tiến độ: {answeredQuestions}/{totalQuestions} câu</span>
+              <span style={{ fontWeight: 600, color: 'var(--clr-primary-400)' }}>{progressPct}%</span>
+            </div>
+            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-full)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ width: `${progressPct}%`, height: '100%', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-full)', transition: 'width 0.4s ease' }} />
+            </div>
+          </div>
+          
+          <div className="divider" style={{ margin: 'var(--space-2) 0 var(--space-4)' }} />
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, overflowY: 'auto' }}>
+            {exam.questions.map((q, i) => {
+              const isAnswered = !!answers[q.id];
+              const isActive = activeQuestionId === q.id;
+              return (
+                <a 
+                  href={`#q-${q.id}`}
+                  key={q.id}
+                  onClick={() => setActiveQuestionId(q.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    height: 36, borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer',
+                    background: isActive ? 'var(--clr-primary-500)' : isAnswered ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${isActive ? 'var(--clr-primary-400)' : isAnswered ? 'var(--clr-emerald-500)' : 'var(--border-subtle)'}`,
+                    color: isActive ? '#fff' : 'var(--text-primary)',
+                    textDecoration: 'none'
+                  }}
+                >
+                  {i + 1}
+                </a>
+              );
+            })}
+          </div>
+
+          <div className="divider" />
+          
+          <button 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '1rem', background: 'var(--gradient-cyan)' }}
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? 'Đang chấm điểm...' : '✅ Nộp bài ngay'}
+          </button>
+        </aside>
+      )}
 
       {/* Main Exam Content */}
-      <main className="main-content fade-in" style={{ marginRight: 300, marginLeft: 0, padding: 'var(--space-6)' }}>
+      <main className="main-content fade-in" style={{
+        marginRight: isMobileMode ? 0 : 300,
+        marginLeft: 0,
+        width: isMobileMode ? '100%' : 'auto',
+        padding: isMobileMode ? '14px' : 'var(--space-6)'
+      }}>
         <div className="glass-card" style={{ padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
           <h1 className="page-title">{exam.title}</h1>
           <p style={{ color: 'var(--text-secondary)' }}>{exam.subject} • Lớp {exam.grade}</p>

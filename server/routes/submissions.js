@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const { gradeEssayWithAI } = require('../utils/aiGrader');
 const adminEventHub = require('../utils/adminEventHub');
+const { recordSuccessEvent } = require('../utils/threatDetector');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -159,6 +160,8 @@ router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), asyn
         target: `/admin/exams`
       }
     });
+
+    await recordSuccessEvent(req, 'EXAM_SUBMITTED', req.user.id).catch(() => {});
 
     // Build result response
     const result = {
