@@ -131,7 +131,14 @@ export default function StudentTakeExam() {
 
   const [examStarted, setExamStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMobileMode, setIsMobileMode] = useState(false);
   const [cheatCount, setCheatCount] = useState(0);
+
+  const checkIsMobileOrTouch = () => {
+    return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      ('ontouchstart' in window) ||
+      (window.innerWidth <= 820);
+  };
 
   const [essayImages, setEssayImages] = useState({});
   const [uploadingImage, setUploadingImage] = useState({});
@@ -269,9 +276,10 @@ export default function StudentTakeExam() {
   // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isFull = !!document.fullscreenElement;
+      if (isMobileMode) return;
+      const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
       setIsFullscreen(isFull);
-      if (!isFull && examStarted && !submitting) {
+      if (!isFull && examStarted && !submitting && !isMobileMode) {
         if (isSelectingFileRef.current || gracePeriodSecRef.current > 0) return; // Skip warnings when uploading files or during grace period
         handleCheatAttempt('Thoát chế độ toàn màn hình');
       }
@@ -421,6 +429,14 @@ export default function StudentTakeExam() {
       }
       setLoading(false);
 
+      const isMobile = checkIsMobileOrTouch();
+      if (isMobile) {
+        setIsMobileMode(true);
+        setIsFullscreen(true);
+        setExamStarted(true);
+        return;
+      }
+
       const elem = document.documentElement;
       const requestFullscreen = elem.requestFullscreen || elem.mozRequestFullScreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen;
       if (requestFullscreen) {
@@ -430,10 +446,14 @@ export default function StudentTakeExam() {
             setExamStarted(true);
           })
           .catch(err => {
-            console.log(err);
+            console.log('Fullscreen failed or unsupported on device, allowing safe mode:', err);
+            setIsMobileMode(true);
+            setIsFullscreen(true);
             setExamStarted(true);
           });
       } else {
+        setIsMobileMode(true);
+        setIsFullscreen(true);
         setExamStarted(true);
       }
     } catch (err) {
@@ -443,9 +463,25 @@ export default function StudentTakeExam() {
   };
 
   const forceFullscreen = () => {
+    const isMobile = checkIsMobileOrTouch();
+    if (isMobile) {
+      setIsMobileMode(true);
+      setIsFullscreen(true);
+      return;
+    }
     const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen().catch(err => console.log(err));
+    const reqFs = elem.requestFullscreen || elem.webkitRequestFullscreen || elem.mozRequestFullScreen || elem.msRequestFullscreen;
+    if (reqFs) {
+      reqFs.call(elem)
+        .then(() => setIsFullscreen(true))
+        .catch(err => {
+          console.log('Fullscreen failed, switching to safe mobile mode:', err);
+          setIsMobileMode(true);
+          setIsFullscreen(true);
+        });
+    } else {
+      setIsMobileMode(true);
+      setIsFullscreen(true);
     }
   };
 
@@ -551,7 +587,7 @@ export default function StudentTakeExam() {
         </div>
       )}
       
-      {examStarted && !isFullscreen && !isSelectingFile && gracePeriodSec <= 0 && (
+      {examStarted && !isFullscreen && !isSelectingFile && gracePeriodSec <= 0 && !isMobileMode && (
         <div className="fullscreen-blocker fade-in" style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(15, 3, 5, 0.96)', zIndex: 99999,

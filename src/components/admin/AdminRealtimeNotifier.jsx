@@ -65,11 +65,12 @@ export default function AdminRealtimeNotifier() {
       })
       .catch(() => {});
 
-    // Setup polling fallback every 6 seconds to catch new events
+    // Setup polling fallback every 3 seconds to catch new events & keep drawer updated
     const pollInterval = setInterval(() => {
       api.get('/admin/recent-events')
         .then(res => {
           const events = res.data?.events || [];
+          setHistoryEvents(events);
           events.forEach(e => {
             if (e.id && !seenEventIds.current.has(e.id)) {
               handleNewEvent(e);
@@ -77,7 +78,7 @@ export default function AdminRealtimeNotifier() {
           });
         })
         .catch(() => {});
-    }, 6000);
+    }, 3000);
 
     return () => clearInterval(pollInterval);
   }, [user]);

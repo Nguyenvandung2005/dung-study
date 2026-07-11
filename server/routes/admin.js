@@ -190,9 +190,84 @@ router.get('/events/stream', (req, res) => {
   });
 });
 
-// GET /api/admin/recent-events — Get recent activity events
-router.get('/recent-events', authMiddleware, requireRole('ADMIN'), (req, res) => {
-  res.json({ events: adminEventHub.getRecentEvents() });
+// GET /api/admin/recent-events — Get recent activity events merged with persistent DB logs
+router.get('/recent-events', authMiddleware, requireRole('ADMIN'), async (req, res) => {
+  try {
+    const memoryEvents = adminEventHub.getRecentEvents();
+
+    const recentLogs = await prisma.securityLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 25,
+      include: {
+        user: { select: { name: true, email: true, role: true } }
+      }
+    });
+
+    const dbEvents = recentLogs.map(log => {
+      let title = 'Hoạt động hệ thống 🔔';
+      let message = `IP ${log.ip} đã thực hiện ${log.action}`;
+      let type = log.action;
+      let suggestion = {
+        label: '📋 Xem chi tiết log bảo mật',
+        actionType: 'VIEW_LOG',
+        target: '/admin/security'
+      };
+
+      if (log.action === 'LOGIN_SUCCESS') {
+        type = 'USER_LOGIN';
+        title = 'Người dùng vừa đăng nhập 🔑';
+        message = `${log.user?.name || 'Thành viên'} (${log.user?.email || log.ip}) vừa đăng nhập hệ thống.`;
+      } else if (log.action === 'REGISTER') {
+        type = 'USER_REGISTER';
+        title = 'Thành viên mới đăng ký! 🎉';
+        message = `${log.user?.name || 'Thành viên'} (${log.user?.email || log.ip}) vừa tạo tài khoản (${log.user?.role === 'TEACHER' ? 'Giáo viên' : 'Học sinh'}).`;
+      } else if (log.action === 'BRUTE_FORCE_DETECTED' || log.severity === 'CRITICAL' || log.severity === 'HIGH') {
+        type = 'SECURITY_THREAT';
+        title = '🚨 Cảnh báo xâm nhập / Bất thường!';
+        message = `Phát hiện IP ${log.ip} có thao tác thất bại hoặc hành vi đáng ngờ (${log.action}).`;
+        suggestion = {
+          label: '🚫 Chặn IP này trong 30 phút',
+          actionType: 'BLOCK_IP',
+          target: log.ip
+        };
+      } else if (log.action === 'EXAM_SUBMITTED') {
+        type = 'EXAM_SUBMITTED';
+        title = 'Học sinh vừa nộp bài thi! ✍️';
+        message = `${log.user?.name || 'Học sinh'} vừa hoàn thành đề kiểm tra.`;
+        suggestion = {
+          label: '📄 Xem kết quả bài thi',
+          actionType: 'NAVIGATE',
+          target: '/admin/exams'
+        };
+      }
+
+      return {
+        id: `db-${log.id}`,
+        type,
+        title,
+        message,
+        severity: log.severity,
+        timestamp: log.createdAt,
+        data: { ip: log.ip, action: log.action },
+        actionSuggestion: suggestion
+      };
+    });
+
+    // Merge memory events and db events, deduplicating
+    const seen = new Set();
+    const combined = [...memoryEvents, ...dbEvents].filter(ev => {
+      const key = ev.id || `${ev.type}-${ev.timestamp}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    combined.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    res.json({ events: combined.slice(0, 30) });
+  } catch (err) {
+    res.json({ events: adminEventHub.getRecentEvents() });
+  }
 });
 
 // POST /api/admin/block-ip — Block suspicious IP for durationMinutes
