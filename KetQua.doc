@@ -1,0 +1,302 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>BÁO CÁO KẾT QUẢ VÀ NGHIỆP VỤ HỆ THỐNG DUNG STUDY</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2.5cm;
+  }
+  @page WordSection1 {
+    size: 595.3pt 841.9pt;
+    margin: 70.85pt 70.85pt 70.85pt 70.85pt;
+    mso-header-margin: 35.4pt;
+    mso-footer-margin: 35.4pt;
+    mso-paper-source: 0;
+  }
+  div.WordSection1 {
+    page: WordSection1;
+  }
+  body {
+    font-family: 'Times New Roman', serif;
+    font-size: 13pt;
+    line-height: 1.35;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+    color: #1e3a8a;
+    margin-top: 12pt;
+    margin-bottom: 6pt;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 15pt;
+    font-weight: bold;
+    color: #1e40af;
+    margin-top: 18pt;
+    margin-bottom: 8pt;
+    border-bottom: 1.5pt solid #1e40af;
+    padding-bottom: 3pt;
+  }
+  h3 {
+    font-size: 13.5pt;
+    font-weight: bold;
+    color: #1d4ed8;
+    margin-top: 12pt;
+    margin-bottom: 6pt;
+  }
+  p {
+    margin-top: 4pt;
+    margin-bottom: 6pt;
+    text-align: justify;
+  }
+  ul, ol {
+    margin-top: 4pt;
+    margin-bottom: 8pt;
+  }
+  li {
+    margin-bottom: 4pt;
+    text-align: justify;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8pt;
+    margin-bottom: 14pt;
+    font-size: 12pt;
+  }
+  table.data-table th {
+    background-color: #1e40af;
+    color: #ffffff;
+    font-weight: bold;
+    border: 1pt solid #1e40af;
+    padding: 6pt 8pt;
+    text-align: left;
+  }
+  table.data-table td {
+    border: 1pt solid #cbd5e1;
+    padding: 6pt 8pt;
+    vertical-align: top;
+  }
+  table.data-table tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+  .highlight-box {
+    background-color: #f1f5f9;
+    border-left: 4pt solid #3b82f6;
+    padding: 8pt 12pt;
+    margin: 8pt 0;
+  }
+  .meta-header {
+    text-align: center;
+    font-size: 12pt;
+    font-style: italic;
+    color: #475569;
+    margin-bottom: 18pt;
+  }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+
+<h1>BÁO CÁO TỔNG HỢP KẾT QUẢ ĐẠT ĐƯỢC &amp; NGHIỆP VỤ HỆ THỐNG DUNG STUDY</h1>
+<div class="meta-header">
+  <b>Dự án:</b> Hệ thống Học tập &amp; Thi trực tuyến thông minh thông qua AI (Dung Study)<br>
+  <b>Ngày cập nhật:</b> 11/07/2026 &nbsp;|&nbsp; <b>Quy chuẩn chuyên môn:</b> Sở GD&amp;ĐT tỉnh Nghệ An
+</div>
+
+<h2>PHẦN I: TỔNG HỢP CÁC KẾT QUẢ ĐẠT ĐƯỢC &amp; TÍNH NĂNG NÂNG CẤP MỚI NHẤT</h2>
+<p>Hệ thống đã trải qua quá trình hoàn thiện toàn diện từ trải nghiệm người dùng, bảo mật cho đến khả năng hỗ trợ AI sâu rộng cho Giáo viên và Quản trị viên:</p>
+
+<h3>1. Tối ưu Giao diện Thi trên Thiết bị Di động &amp; Giải quyết Mâu thuẫn Toàn màn hình</h3>
+<ul>
+  <li><b>Giao diện chuyên biệt cho điện thoại (isMobileMode):</b> Tự động nhận diện thiết bị di động để hiển thị Header cố định (thời gian làm bài, tiến độ, điểm số). Toàn bộ danh sách câu hỏi được bố trí dưới dạng <b>Ngăn kéo Modal (Drawer Modal)</b> mở nhanh bằng 1 chạm thay vì chiếm diện tích màn hình.</li>
+  <li><b>Thanh cuộn ngang cảm ứng (Horizontal Scroll):</b> Bổ sung khả năng cuộn ngang ngang mượt mà cho các bảng biểu, câu hỏi dài và hình ảnh, tuyệt đối không bị che khuất nội dung trên di động.</li>
+  <li><b>Giải pháp kép cho Nộp bài Tự luận trong chế độ Toàn màn hình (Fullscreen Anti-cheat):</b>
+    <ul>
+      <li><i>Chế độ Camera Trực tiếp (Live Camera In-App):</i> Học sinh bấm nút <b>"📸 Chụp bằng Camera"</b> để chụp ngay tờ giấy làm bài tự luận trên trình duyệt mà không cần thoát chế độ toàn màn hình.</li>
+      <li><i>Chế độ Ân hạn 90 giây (Grace Period Whitelist):</i> Khi học sinh cần mở ứng dụng máy ảnh điện thoại hoặc chọn file ảnh từ máy, hệ thống hiển thị đếm ngược 90 giây ân hạn, cho phép thao tác mà không bị ghi nhận vi phạm gian lận.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>2. Chuẩn hóa Số liệu Thống kê &amp; Giám sát Bảo mật Thời gian thực</h3>
+<ul>
+  <li><b>Thống kê lượt nộp bài chính xác 100%:</b> Sửa triệt để lỗi tính gộp các lượt vào xem hoặc thoát ngang thành lượt nộp bài. Bảng thống kê của Giáo viên và Admin chỉ thống kê các lượt thi đã nộp thành công (SUBMITTED / GRADED).</li>
+  <li><b>Ghi nhận Nhật ký Bảo mật (SecurityLog):</b> Tự động lưu chi tiết mọi hoạt động của người dùng gồm: Địa chỉ IP, Trình duyệt/Thiết bị (User-Agent), Loại hành động (Đăng nhập, Đăng ký, Nộp bài, Tạo đề, Cảnh báo xâm nhập...) kèm mức độ nghiêm trọng.</li>
+  <li><b>Trung tâm Thông báo Thời gian thực kèm Gợi ý Hành động cho Admin:</b>
+    <ul>
+      <li>Khi có sự kiện mới (học sinh nộp bài, giáo viên tạo đề, người dùng đăng ký/đăng nhập...), hệ thống hiển thị thông báo thời gian thực trên mọi trang làm việc của Admin.</li>
+      <li><b>Gợi ý hành động tức thì theo ngữ cảnh:</b> Nộp bài thi có nút <i>"📄 Xem kết quả bài thi"</i>; Tạo đề thi có nút <i>"📋 Xem đề thi vừa tạo"</i>; Đăng nhập có nút <i>"🔍 Xem chi tiết log"</i>; Cảnh báo tấn công/spam có nút <i>"🛑 Chặn IP 30 phút"</i>.</li>
+      <li><b>Cơ chế lọc trùng lặp thông báo trong 60 giây (Deduplication):</b> Loại bỏ tình trạng 1 lần đăng nhập bị nhân đôi thông báo.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>3. Nâng cấp Trợ lý AI &amp; Chuẩn hóa Ký hiệu Khoa học/Toán học</h3>
+<ul>
+  <li><b>Bắt buộc Quy chuẩn Ký hiệu Toán học &amp; Khoa học (SCIENTIFIC_NOTATION_RULE):</b> Toàn bộ luồng tạo đề AI, quét OCR, đọc file Word/PDF và sinh lời giải tuyệt đối tuân thủ ký hiệu chuẩn: <code>√x</code>, <code>x²</code>, <code>x³</code>, <code>a/b</code>, <code>H₂SO₄</code>, <code>CO₂</code>, <code>Fe²⁺</code>... thay vì viết chữ thô.</li>
+  <li><b>Tính năng mới: ✨ Chỉnh sửa đề thi bằng AI theo câu lệnh:</b> Ngay tại trang soạn thảo đề thi, Giáo viên có thể nhấp nút <i>"✨ Chỉnh sửa đề bằng AI"</i>, nhập câu lệnh mong muốn (VD: "Tăng độ khó lên mức Vận dụng cao", "Sửa lỗi chính tả &amp; bổ sung lời giải chi tiết"). AI sẽ tự động phân tích và chỉnh sửa toàn bộ đề thi theo đúng yêu cầu.</li>
+</ul>
+
+<h3>4. Chuẩn hóa Xuất Đề thi &amp; Đáp án ra Word (.doc)</h3>
+<ul>
+  <li><b>Căn lề A4 chuẩn cân đối (2.5cm đều 4 bên):</b> Thiết lập thẻ <code>@page WordSection1</code> chuyên biệt giúp file Word tải về có lề trái phải cân đối, đẹp mắt, không dính sát mép giấy.</li>
+  <li><b>Xóa sạch viền/nét căn của bảng đáp án trắc nghiệm A, B, C, D:</b> Tự động áp dụng thuộc tính bảng không viền, các đáp án được thẳng hàng theo cột nhưng không còn đường viền nét đứt hay viền đen xung quanh.</li>
+</ul>
+
+<h2>PHẦN II: CHI TIẾT CÁC ACTOR (TÁC NHÂN) VÀ NGHIỆP VỤ HỆ THỐNG</h2>
+<p>Hệ thống được vận hành bởi 04 Actor với phân công nhiệm vụ chuyên biệt được mô tả chi tiết trong bảng sau:</p>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 20%;">Actor (Tác nhân)</th>
+      <th style="width: 25%;">Đặc trưng &amp; Vai trò</th>
+      <th style="width: 55%;">Danh sách Nghiệp vụ (Business Workflows)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Học sinh<br>(Student)</b></td>
+      <td>Người học tham gia đánh giá, kiểm tra năng lực định kỳ theo lớp và trường.</td>
+      <td>
+        - Đăng ký và Đăng nhập tài khoản an toàn.<br>
+        - Làm bài kiểm tra Trắc nghiệm &amp; Tự luận trong thời gian quy định.<br>
+        - Nộp bài tự luận bằng cách chụp ảnh trực tiếp qua Camera In-App hoặc tải file ảnh trong 90 giây ân hạn.<br>
+        - Tra cứu điểm số tức thì, xem lời giải chi tiết và bảng xếp hạng lớp.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Giáo viên<br>(Teacher)</b></td>
+      <td>Người quản lý chuyên môn, tổ chức kiểm tra đánh giá và chấm điểm học sinh.</td>
+      <td>
+        - Soạn đề thi thủ công hoặc nhập tự động từ file Word/PDF.<br>
+        - Sử dụng AI tạo đề thi tự động theo ma trận chuẩn Sở GD&amp;ĐT Nghệ An.<br>
+        - Quét đề thi bằng AI Vision OCR và chỉnh sửa toàn bộ đề thi bằng câu lệnh AI.<br>
+        - Theo dõi danh sách nộp bài, kiểm tra gian lận và chấm điểm bài tự luận.<br>
+        - Xuất đề thi và đáp án chuẩn định dạng Word (.doc) và PDF lề 2.5cm.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Quản trị viên<br>(Admin)</b></td>
+      <td>Người điều hành hệ thống, giám sát an toàn bảo mật và cấu hình tổng thể.</td>
+      <td>
+        - Giám sát các chỉ số hoạt động tổng quan trên Dashboard Thời gian thực.<br>
+        - Tiếp nhận thông báo sự kiện (Đăng ký, Đăng nhập, Nộp bài, Tạo đề) kèm gợi ý xử lý nhanh.<br>
+        - Kiểm tra chi tiết Nhật ký bảo mật (SecurityLog), địa chỉ IP, User-Agent.<br>
+        - Khóa/chặn địa chỉ IP vi phạm hoặc spam, quản lý tài khoản người dùng.
+      </td>
+    </tr>
+    <tr>
+      <td><b>AI Engine<br>(Gemini System)</b></td>
+      <td>Tác nhân tự động hóa AI tích hợp sâu trong Backend API.</td>
+      <td>
+        - Soạn câu hỏi theo ma trận 4 mức độ tư duy chuẩn Sở GD&amp;ĐT Nghệ An.<br>
+        - Phân tích và giải mã hình ảnh OCR đề thi.<br>
+        - Tự động vẽ lại hình minh họa dạng SVG sắc nét.<br>
+        - Chỉnh sửa đề thi theo câu lệnh và gợi ý đáp án/lời giải chi tiết.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>PHẦN III: QUY TRÌNH TƯƠNG TÁC NGHIỆP VỤ GIỮA CÁC ACTOR</h2>
+<p>Quy trình phối hợp nghiệp vụ giữa các Actor được thực hiện theo 6 bước khép kín dưới đây:</p>
+<ol>
+  <li><b>Bước 1 (Giáo viên khởi tạo đề thi):</b> Giáo viên sử dụng chức năng Tạo đề tự động bằng AI, nhập file Word/PDF hoặc sử dụng nút <i>"✨ Chỉnh sửa đề bằng AI"</i>. AI Engine thực hiện phân tích, tuân thủ bộ quy chuẩn ký hiệu khoa học và trả về bộ câu hỏi chuẩn xác.</li>
+  <li><b>Bước 2 (Xuất bản &amp; Thông báo Admin):</b> Khi Giáo viên xuất bản đề kiểm tra, Hệ thống lập tức ghi nhận hoạt động và phát chuông thông báo thời gian thực đến Quản trị viên kèm nút gợi ý <i>"📋 Xem đề thi vừa tạo"</i>.</li>
+  <li><b>Bước 3 (Học sinh tham gia thi):</b> Học sinh đăng nhập hệ thống trên máy tính hoặc điện thoại di động để bắt đầu làm bài. Hệ thống tự động ghi nhật ký bảo mật (SecurityLog) và thông báo cho Admin (đã lọc trùng lặp trong 60s).</li>
+  <li><b>Bước 4 (Nộp bài tự luận thực tiễn):</b> Trong quá trình làm bài, học sinh hoàn thành câu hỏi tự luận ra giấy, bấm nút chụp ảnh qua Camera trực tiếp hoặc tải file ảnh trong 90s ân hạn để đính kèm bài làm mà không vi phạm quy chế toàn màn hình.</li>
+  <li><b>Bước 5 (Học sinh nộp bài &amp; Thông báo kết quả):</b> Khi học sinh nộp bài, Hệ thống tính điểm trắc nghiệm tự động, cập nhật trạng thái bài nộp (SUBMITTED) và phát thông báo thời gian thực đến Admin kèm nút <i>"📄 Xem kết quả bài thi"</i>.</li>
+  <li><b>Bước 6 (Giáo viên chấm tự luận &amp; Công bố điểm):</b> Giáo viên mở trang Thống kê đề thi, xem ảnh chụp bài tự luận của học sinh, chấm điểm và nhận xét. Học sinh có thể tra cứu toàn bộ điểm số cùng lời giải chi tiết.</li>
+</ol>
+
+<h2>PHẦN IV: CHI TIẾT CÁC LỚP THỰC THỂ (DATABASE ENTITY DATA MODEL)</h2>
+<p>Mô hình dữ liệu cơ sở dữ liệu MySQL (Prisma ORM) của hệ thống gồm 06 lớp thực thể cốt lõi có mối quan hệ liên kết chặt chẽ:</p>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 22%;">Lớp Thực Thể (Model)</th>
+      <th style="width: 28%;">Ý nghĩa &amp; Mục đích</th>
+      <th style="width: 50%;">Các Thuộc tính Cốt lõi &amp; Mối quan hệ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>User</b><br>(Người dùng)</td>
+      <td>Lưu trữ thông tin định danh và vai trò tài khoản trong hệ thống.</td>
+      <td>
+        - <b>id</b> (UUID - Khóa chính), <b>name</b>, <b>email</b> (Unique), <b>password</b>.<br>
+        - <b>role</b>: STUDENT | TEACHER | ADMIN.<br>
+        - <b>grade</b>: Khối lớp (1-12), <b>isLocked</b>: Trạng thái khóa tài khoản.<br>
+        - <i>Quan hệ:</i> 1-n với Exam, Submission, SecurityLog.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Exam</b><br>(Đề kiểm tra)</td>
+      <td>Quản lý thông tin cấu trúc, cấu hình thời gian và khối lớp của đề thi.</td>
+      <td>
+        - <b>id</b> (UUID), <b>title</b>, <b>subject</b>, <b>grade</b> (1-12), <b>timeLimit</b> (phút).<br>
+        - <b>isPublished</b>: Trạng thái xuất bản đề thi.<br>
+        - <b>shuffleQuestions</b> / <b>shuffleOptions</b>: Đảo câu hỏi / đảo đáp án.<br>
+        - <i>Quan hệ:</i> Thuộc về 1 User (createdById), chứa nhiều Question và Submission.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Question</b><br>(Câu hỏi)</td>
+      <td>Lưu trữ nội dung câu hỏi, phương án trả lời, đáp án và lời giải thích.</td>
+      <td>
+        - <b>id</b> (UUID), <b>examId</b> (Khóa ngoại Exam), <b>content</b> (Text).<br>
+        - <b>type</b>: SINGLE_CHOICE | MULTIPLE_CHOICE | ESSAY.<br>
+        - <b>options</b> (JSON), <b>correctAnswer</b> (JSON), <b>explanation</b> (Text).<br>
+        - <b>imageUrl</b> (LONGTEXT): Lưu ảnh Base64 hoặc liên kết SVG minh họa.<br>
+        - <b>points</b>: Điểm số của câu hỏi.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Submission</b><br>(Bài nộp học sinh)</td>
+      <td>Ghi nhận mỗi lượt làm bài của học sinh trên một đề thi cụ thể.</td>
+      <td>
+        - <b>id</b> (UUID), <b>examId</b>, <b>userId</b> (Khóa ngoại User).<br>
+        - <b>status</b>: IN_PROGRESS | SUBMITTED | GRADED.<br>
+        - <b>totalScore</b> / <b>percentage</b>: Tổng điểm và tỷ lệ đạt được.<br>
+        - <b>cheatCount</b> / <b>cheatLogs</b>: Số lần và chi tiết vi phạm thoát màn hình.
+      </td>
+    </tr>
+    <tr>
+      <td><b>SubmissionAnswer</b><br>(Chi tiết bài làm)</td>
+      <td>Lưu câu trả lời của học sinh cho từng câu hỏi trong bài thi.</td>
+      <td>
+        - <b>id</b> (UUID), <b>submissionId</b>, <b>questionId</b>.<br>
+        - <b>answer</b> (JSON): Câu trả lời học sinh đã chọn hoặc viết.<br>
+        - <b>isCorrect</b> / <b>scoreEarned</b>: Trạng thái đúng và điểm đạt được.<br>
+        - <b>teacherScore</b> / <b>teacherRemark</b>: Điểm số và nhận xét từ Giáo viên.
+      </td>
+    </tr>
+    <tr>
+      <td><b>SecurityLog</b><br>(Nhật ký bảo mật)</td>
+      <td>Ghi lại chi tiết mọi hoạt động hệ thống và sự kiện an ninh mạng.</td>
+      <td>
+        - <b>id</b> (UUID), <b>userId</b>, <b>ip</b> (Địa chỉ IP), <b>userAgent</b>.<br>
+        - <b>action</b>: Tên hành động (LOGIN_SUCCESS, EXAM_SUBMITTED, BRUTE_FORCE...).<br>
+        - <b>severity</b>: LOW | MEDIUM | HIGH | CRITICAL.<br>
+        - <b>details</b> (JSON): Metadata chi tiết sự kiện.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="highlight-box">
+  <b>Kết luận:</b> Toàn bộ hệ thống Dung Study đã được chuẩn hóa trọn vẹn từ kiến trúc nghiệp vụ, cơ sở dữ liệu thực thể cho đến giao diện người dùng và tích hợp AI, sẵn sàng phục vụ công tác đánh giá chất lượng dạy và học.
+</div>
+
+</div>
+</body>
+</html>
