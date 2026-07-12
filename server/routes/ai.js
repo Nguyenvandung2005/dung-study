@@ -182,6 +182,128 @@ function normalizeAIQuestionContent(q, orig = {}, idx = 0) {
   };
 }
 
+// Hàm parse JSON an toàn tuyệt đối từ phản hồi AI (lọc bỏ ký tự thừa, markdown fence phía sau)
+function safeParseAIJSON(rawText) {
+  if (!rawText) return {};
+  let text = rawText.trim();
+
+  // 1. Loại bỏ markdown codeblock ```json ... ``` hoặc ``` ... ```
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // 2. Thử parse trực tiếp
+  try {
+    return JSON.parse(text);
+  } catch (err1) {
+    // 3. Tìm khối {...} hoặc [...] hợp lệ lớn nhất
+    const firstBrace = text.indexOf('{');
+    const firstBracket = text.indexOf('[');
+
+    // 4. JSON bị cắt đứt giữa chừng (truncated) — quét ngược từ cuối để tìm điểm hợp lệ
+    // Xác định ký tự mở đầu và loại cấu trúc
+    const startIdx = firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)
+      ? firstBrace : firstBracket;
+    const closingChar = (startIdx === firstBrace) ? '}' : ']';
+
+    if (startIdx !== -1) {
+      // Quét ngược: thử cắt tại mỗi vị trí của closing char từ cuối lên
+      let searchFrom = text.length;
+      while (true) {
+        const pos = text.lastIndexOf(closingChar, searchFrom - 1);
+        if (pos <= startIdx) break;
+        try {
+          const candidate = text.substring(startIdx, pos + 1);
+          const parsed = JSON.parse(candidate);
+          console.warn(`[safeParseAIJSON] JSON bị cắt, đã phục hồi tại vị trí ${pos}/${text.length}`);
+          return parsed;
+        } catch (e) {
+          searchFrom = pos;
+        }
+      }
+    }
+
+    throw err1;
+  }
+}
+
+// ─── Quy chuẩn SVG chuyên biệt cho hình minh họa toán học ───────────────────
+const SVG_FIGURE_SPEC = `Quy tắc vẽ SVG hình minh họa toán học (BẮT BUỘC tuân thủ để hình đẹp, rõ ràng và chính xác):
+1. viewBox="0 0 400 300" width="400" height="300" - Kích thước chuẩn, không nhỏ hơn.
+2. Nền trắng: <rect width="400" height="300" fill="white"/>
+3. Hệ trục tọa độ (nếu là đồ thị hàm số / đường thẳng / elip / parabol / hình học giải tích):
+   - Trục Ox: <line x1="20" y1="150" x2="380" y2="150" stroke="black" stroke-width="1.5"/>
+   - Trục Oy: <line x1="200" y1="280" x2="200" y2="20" stroke="black" stroke-width="1.5"/>
+   - Mũi tên trục: thêm <polygon> ở đầu mỗi trục
+   - Nhãn trục: <text> 'x' và 'y' ở đầu mỗi trục, font-size="14"
+   - Đánh số trên trục: mỗi 50px đánh 1 số (ví dụ: -3, -2, -1, 1, 2, 3), font-size="11"
+   - Vạch chia: <line> ngắn 4px ngang và dọc tại mỗi giá trị
+   - Điểm gốc O: <text x="195" y="165" font-size="11">O</text>
+4. Đường đồ thị: stroke-width="2", màu sắc rõ nét (#1d4ed8 cho parabol/đường cong, #dc2626 cho đường thẳng)
+5. Hình hình học (tam giác, hình thoi, hình thang...):
+   - Dùng <polygon> hoặc <path>, fill="none" stroke="#1e40af" stroke-width="2"
+   - Đánh nhãn các đỉnh (A, B, C...) bằng <text> font-size="13" font-weight="bold"
+   - Đánh số liệu cạnh, góc bằng <text> ngay cạnh cạnh tương ứng
+   - Vẽ ký hiệu góc vuông bằng hình vuông nhỏ 8x8px nếu có góc 90°
+6. Ghi chú quan trọng:
+   - Mọi số liệu đề bài nhắc đến (độ dài cạnh, tọa độ điểm, hệ số a/b/c...) PHẢI hiển thị trong hình
+   - Dùng <text> với font-family="serif" hoặc font-family="Arial" cho ký hiệu toán học
+   - Tọa độ điểm đặc biệt: đánh dấu bằng <circle r="3" fill="black"/> và ghi tọa độ (x; y) bên cạnh`;
+
+// Phát hiện câu hỏi cần hình minh họa dựa trên nội dung
+function questionNeedsFigure(content = '') {
+  const lower = content.toLowerCase();
+  return /(cho hình|hình dưới đây|hình bên|theo hình|nhìn hình|hình vẽ|hình \d|hình [a-z]|quan sát hình|trên hình|đồ thị hàm|đồ thị dưới|hình học|tam giác|hình vuông|hình chữ nhật|hình thang|hình thoi|hình lục giác|hình tròn|đường tròn|parabol|ellipse|elip|double-click|biểu đồ|sơ đồ|vẽ hình)/i.test(content);
+}
+
+// Sinh SVG chất lượng cao cho từng câu hỏi cần hình — gọi sau khi đã có danh sách câu hỏi
+async function generateSVGsForQuestions(questions, subject, grade, genAI) {
+  // Lọc câu cần vẽ hình nhưng chưa có SVG
+  const needFigure = questions.reduce((acc, q, idx) => {
+    if (!q.svgFigure && questionNeedsFigure(q.content)) acc.push(idx);
+    return acc;
+  }, []);
+
+  if (needFigure.length === 0) return questions;
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
+
+  // Vẽ từng hình song song (tối đa 8 câu cùng lúc để tránh rate-limit)
+  const BATCH = 8;
+  for (let i = 0; i < needFigure.length; i += BATCH) {
+    const batch = needFigure.slice(i, i + BATCH);
+    await Promise.all(batch.map(async (qIdx) => {
+      const q = questions[qIdx];
+      try {
+        const svgPrompt = `Bạn là chuyên gia đồ họa toán học. Nhiệm vụ: Vẽ hình minh họa SVG chính xác, đẹp, chi tiết cho câu hỏi thi môn ${subject || 'Toán'} lớp ${grade || '12'} sau đây.
+
+NỘI DUNG CÂU HỎI:
+"${q.content}"
+
+${SVG_FIGURE_SPEC}
+
+Quy tắc trả về:
+- Chỉ trả về DUY NHẤT mã SVG hợp lệ hoàn chỉnh, bắt đầu bằng <svg và kết thúc bằng </svg>
+- KHÔNG thêm bất kỳ văn bản, giải thích hay markdown nào khác
+- Hình phải phản ánh ĐÚNG số liệu, tọa độ, kích thước được đề cập trong câu hỏi`;
+
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: svgPrompt }] }],
+          generationConfig: { maxOutputTokens: 4096 }
+        });
+        const svgText = result.response.text().trim();
+        // Trích xuất chỉ phần <svg>...</svg>
+        const match = svgText.match(/<svg[\s\S]*?<\/svg>/i);
+        if (match) {
+          questions[qIdx] = { ...q, svgFigure: match[0] };
+        }
+      } catch (e) {
+        console.warn(`[SVG Gen] Câu ${qIdx + 1}: Bỏ qua lỗi -`, e.message);
+      }
+    }));
+  }
+
+  return questions;
+}
+
 // POST /api/ai/generate-exam — Soạn đề thi tự động bằng AI
 router.post('/generate-exam', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
@@ -198,16 +320,16 @@ router.post('/generate-exam', authMiddleware, requireRole('TEACHER', 'ADMIN'), a
     const totalMcq = Math.min(Math.max(Number(mcqCount) || 0, 0), 100);
     const totalEssay = Math.min(Math.max(Number(essayCount) || 0, 0), 20);
 
-    const difficultyPrompt = difficulty 
-      ? `\n- Phân bổ chi tiết độ khó (BẮT BUỘC tuân thủ): ${difficulty}` 
+    const difficultyPrompt = difficulty
+      ? `\n- Phân bổ chi tiết độ khó (BẮT BUỘC tuân thủ): ${difficulty}`
       : '';
 
-    let mcqInstruction = totalMcq > 0 
-      ? `- ${totalMcq} câu hỏi TRẮC NGHIỆM (type: "MULTIPLE_CHOICE"), mỗi câu có đúng 4 lựa chọn A/B/C/D và đáp án đúng.` 
+    let mcqInstruction = totalMcq > 0
+      ? `- ${totalMcq} câu hỏi TRẮC NGHIỆM (type: "MULTIPLE_CHOICE"), mỗi câu có đúng 4 lựa chọn A/B/C/D và đáp án đúng.`
       : `- KHÔNG TẠO câu hỏi trắc nghiệm nào.`;
 
-    let essayInstruction = totalEssay > 0 
-      ? `- ${totalEssay} câu hỏi TỰ LUẬN (type: "ESSAY"), mỗi câu có gợi ý chấm bài chi tiết.` 
+    let essayInstruction = totalEssay > 0
+      ? `- ${totalEssay} câu hỏi TỰ LUẬN (type: "ESSAY"), mỗi câu có gợi ý chấm bài chi tiết.`
       : `- KHÔNG TẠO câu hỏi tự luận nào.`;
 
     let literatureInstruction = '';
@@ -221,8 +343,20 @@ router.post('/generate-exam', authMiddleware, requireRole('TEACHER', 'ADMIN'), a
     }
 
     const totalQuestions = totalMcq + totalEssay;
-    const customRequestPrompt = difficulty 
-      ? `\n- YÊU CẦU ĐẶC BIỆT TỪ GIÁO VIÊN (BẮT BUỘC TUÂN THỦ TRỌN VẸN): "${difficulty}"\n  (Nếu giáo viên yêu cầu vẽ hình minh họa, hãy tạo mã SVG minh họa hợp lệ vào trường riêng "svgFigure").` 
+
+    // Phát hiện xem giáo viên có yêu cầu vẽ hình minh họa không
+    const wantsFigures = difficulty && /(hình|minh họa|đồ thị|svg|vẽ|hình học|tọa độ|biểu đồ)/i.test(difficulty);
+
+    const customRequestPrompt = difficulty
+      ? `\n- YÊU CẦU ĐẶC BIỆT TỪ GIÁO VIÊN (BẮT BUỘC TUÂN THỦ TRỌN VẸN): "${difficulty}"`
+      : '';
+
+    // Nếu cần hình: thêm hướng dẫn để AI đánh dấu câu nào cần SVG (sẽ vẽ ở bước sau)
+    const figureGuidance = wantsFigures
+      ? `\n⚠️ YÊU CẦU HÌNH MINH HỌA: Với các câu hỏi hình học, đồ thị, tọa độ hoặc câu có đề cập "cho hình dưới đây":
+  - PHẢI đặt trường "svgFigure": "NEEDS_FIGURE" để đánh dấu câu cần vẽ hình
+  - Trong "content" của câu hỏi đó, PHẢI ghi rõ "(Xem hình minh họa bên dưới)"
+  - Ghi đầy đủ số liệu: tọa độ điểm, độ dài cạnh, hệ số hàm số... trong nội dung câu hỏi để hệ thống vẽ hình chính xác`
       : '';
 
     const prompt = `Bạn là một chuyên gia giáo dục và hội đồng ra đề thi xuất sắc của Việt Nam, am hiểu sâu sắc quy chuẩn ra đề của **Sở Giáo dục và Đào tạo tỉnh Nghệ An**.
@@ -230,7 +364,7 @@ Hãy soạn một đề kiểm tra môn **${subject}** dành cho **Lớp ${grade
 
 ⚠️ QUY ĐỊNH BẮT BUỘC VỀ SỐ LƯỢNG CÂU HỎI (CỰC KỲ QUAN TRỌNG):
 - Bạn PHẢI TẠO ĐÚNG VÀ ĐỦ ${totalMcq} câu hỏi TRẮC NGHIỆM và ${totalEssay} câu hỏi TỰ LUẬN.
-- Tổng số câu hỏi trong mảng "questions" BẮT BUỘC PHẢI CHÍNH XÁC LÀ ${totalQuestions} câu. TUYỆT ĐỐI KHÔNG TẠO THIẾU DÙ CHỈ 1 CÂU! KHÔNG VIẾT TẮT HAY DỪNG GIỮA CHỪNG!
+- Tổng số câu hỏi trong mảng "questions" BẮT BUỘC PHẢI CHÍNH XÁC LÀ ${totalQuestions} câu. TUYỆT ĐỐI KHÔNG TẠO THIẾU DÙ CHỈ 1 CÂU! KHÔNG VIẾT TẮT HAY DỪNG GIỮA CHỪNG!${figureGuidance}
 
 YÊU CẦU CHUYÊN MÔN VÀ CẤU TRÚC ĐỀ THI (CHUẨN SỞ GD&ĐT TỈNH NGHỆ AN):
 - **Bám sát cấu trúc thi của Sở GD&ĐT Nghệ An**: Câu hỏi phải tuân thủ đúng định hướng ra đề kiểm tra định kỳ / khảo sát chất lượng hiện hành của Sở GD&ĐT tỉnh Nghệ An theo Chương trình GDPT 2018.
@@ -271,20 +405,30 @@ Chỉ trả về chuỗi JSON hợp lệ.`;
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { 
+      generationConfig: {
         responseMimeType: "application/json",
         maxOutputTokens: 65536
       }
     });
     const text = result.response.text().trim();
-    
-    // Gemini with responseMimeType="application/json" returns the exact JSON string
-    const parsed = JSON.parse(text);
+
+    // Parse JSON an toàn kể cả khi AI trả kèm ký tự thừa hay markdown block
+    const parsed = safeParseAIJSON(text);
     const rawQuestions = parsed.questions || parsed || [];
     const metadata = parsed.metadata || {};
 
     // Chuẩn hóa câu hỏi và tách SVG nếu cần
-    const questions = rawQuestions.map((q, idx) => normalizeAIQuestionContent(q, {}, idx));
+    let questions = rawQuestions.map((q, idx) => {
+      // Nếu AI đánh dấu NEEDS_FIGURE thì reset về rỗng để generateSVGsForQuestions vẽ
+      if (q.svgFigure === 'NEEDS_FIGURE') q.svgFigure = '';
+      return normalizeAIQuestionContent(q, {}, idx);
+    });
+
+    // Bước 2: Vẽ SVG chất lượng cao cho các câu cần hình (nếu giáo viên yêu cầu hoặc câu tự phát hiện)
+    if (wantsFigures || questions.some(q => questionNeedsFigure(q.content) && !q.svgFigure)) {
+      console.log('[SVG Pipeline] Đang vẽ hình minh họa cho các câu hỏi cần hình...');
+      questions = await generateSVGsForQuestions(questions, subject, grade, genAI);
+    }
 
     console.log('AI RES METADATA:', metadata); res.json({ questions, metadata, total: questions.length });
   } catch (error) {
@@ -309,22 +453,107 @@ router.post('/modify-exam', authMiddleware, requireRole('TEACHER', 'ADMIN'), asy
       return res.status(503).json({ message: 'Chưa cấu hình GEMINI_API_KEY.' });
     }
 
+    // ─── Phát hiện yêu cầu "tạo thêm N câu" ─────────────────────────────────
+    // Regex lấy số lượng câu cần thêm từ câu lệnh (vd: "tạo thêm 44 câu", "thêm 10 câu trắc nghiệm")
+    const addMoreMatch = instruction.match(
+      /(?:tạo\s+thêm|thêm|bổ\s+sung|thêm\s+vào)\s+(\d+)\s*(?:câu|câu\s+hỏi)/i
+    );
+
+    if (addMoreMatch) {
+      // ─── Nhánh A: Sinh thêm câu hỏi bằng cách gọi riêng API generate ────────
+      const extraCount = Math.min(parseInt(addMoreMatch[1], 10), 200);
+
+      // Đề thi hiện tại được dùng làm context, không phải output — giảm tải mô hình
+      const existingTopics = questions
+        .slice(0, 5)
+        .map((q, i) => `Câu ${i + 1}: ${q.content || ''}`.substring(0, 150))
+        .join('\n');
+
+      const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
+
+      // Xác định loại câu hỏi dựa trên instruction
+      const isEssay = /tự\s*luận/i.test(instruction);
+      const extraMcq = isEssay ? 0 : extraCount;
+      const extraEssay = isEssay ? extraCount : 0;
+
+      const customAddRequest = instruction.replace(addMoreMatch[0], '').trim() || '';
+
+      const addPrompt = `Bạn là chuyên gia giáo dục, hội đồng ra đề thi của Sở GD&ĐT tỉnh Nghệ An.
+Đề thi hiện tại môn **${subject || 'chuyên môn'}** (Lớp ${grade || 'phổ thông'}) đang có ${questions.length} câu.
+Một số câu hỏi hiện tại để tham khảo phong cách:
+${existingTopics}
+
+⚠️ NHIỆM VỤ: Tạo thêm ĐÚNG VÀ ĐỦ ${extraCount} câu hỏi MỚI HOÀN TOÀN (không trùng nội dung với các câu đã có).
+${extraMcq > 0 ? `- Tạo đúng ${extraMcq} câu TRẮC NGHIỆM (type: "MULTIPLE_CHOICE"), mỗi câu có 4 đáp án A/B/C/D.` : ''}
+${extraEssay > 0 ? `- Tạo đúng ${extraEssay} câu TỰ LUẬN (type: "ESSAY").` : ''}
+${customAddRequest ? `- YÊU CẦU THÊM: ${customAddRequest}` : ''}
+- TUYỆT ĐỐI PHẢI TẠO ĐỦ ${extraCount} CÂU. KHÔNG ĐƯỢC THIẾU DÙ 1 CÂU!
+${SCIENTIFIC_NOTATION_RULE}
+
+Trả về mảng JSON đúng định dạng sau (chỉ ${extraCount} câu hỏi mới):
+[
+  {
+    "id": "",
+    "section": "",
+    "type": "MULTIPLE_CHOICE",
+    "content": "<nội dung câu hỏi sạch>",
+    "options": ["A...", "B...", "C...", "D..."],
+    "correctAnswer": "0",
+    "points": 1,
+    "explanation": "<giải thích>",
+    "svgFigure": ""
+  }
+]
+Chỉ trả về mảng JSON hợp lệ.`;
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: addPrompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          maxOutputTokens: 65536
+        }
+      });
+
+      const text = result.response.text().trim();
+      const parsed = safeParseAIJSON(text);
+      const newRaw = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+      const newQuestions = newRaw.map((q, idx) => normalizeAIQuestionContent(q, {}, questions.length + idx));
+
+      // Merge: giữ nguyên toàn bộ câu gốc + thêm câu mới vào cuối
+      const merged = [...questions, ...newQuestions];
+      return res.json({ questions: merged, total: merged.length, added: newQuestions.length });
+    }
+
+    // ─── Nhánh B: Chỉnh sửa bình thường (không tạo thêm) ─────────────────────
+    // Nếu đề thi quá lớn (>30 câu), chỉ gửi phần tóm tắt + ID câu gốc để tiết kiệm token
     const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
+
+    // Với đề lớn: gửi tóm gọn từng câu thay vì toàn bộ JSON đầy đủ
+    const questionsPayload = questions.length > 30
+      ? questions.map((q, i) => ({
+        idx: i,
+        id: q.id || `q_${i}`,
+        type: q.type,
+        content: (q.content || '').substring(0, 300),
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        points: q.points
+      }))
+      : questions;
 
     const prompt = `Bạn là chuyên gia giáo dục và hội đồng thẩm định đề thi xuất sắc của Việt Nam.
 Dưới đây là danh sách câu hỏi hiện tại của đề thi môn ${subject || 'chuyên môn'} (khối lớp ${grade || 'phổ thông'}):
-${JSON.stringify(questions, null, 2)}
+${JSON.stringify(questionsPayload, null, 2)}
 
-YÊU CẦU CHỈNH SỬA / BỔ SUNG TỪ GIÁO VIÊN:
+YÊU CẦU CHỈNH SỬA TỪ GIÁO VIÊN:
 "${instruction}"
 
 NHIỆM VỤ CỦA BẠN:
-1. Hãy thực hiện chính xác yêu cầu chỉnh sửa trên đối với toàn bộ đề thi hoặc các câu hỏi liên quan.
-2. Bạn có thể sửa nội dung câu hỏi, sửa phương án trả lời, cập nhật đáp án đúng, sửa giải thích, thêm/bớt độ khó, chuẩn hóa chính tả...
-3. NẾU GIÁO VIÊN YÊU CẦU TẠO THÊM CÂU HỎI MỚI (ví dụ: "thêm 5 câu nữa", "tạo thêm 10 câu khó"...), bạn HÃY TẠO THÊM đúng số câu hỏi mới đó vào danh sách trả về.
-4. QUY ĐỊNH VỀ HÌNH VẼ MINH HỌA (SVG): TUYỆT ĐỐI KHÔNG ghi mã <svg...> hoặc [SVG Figure: ...] vào trường "content". Nếu câu hỏi cần vẽ hình minh họa (đồ thị, hình học, mạch điện...), hãy viết mã SVG hợp lệ vào trường riêng "svgFigure".
+1. Hãy thực hiện chính xác yêu cầu chỉnh sửa trên đối với toàn bộ đề thi.
+2. ⚠️ BẮT BUỘC: Trả về ĐẦY ĐỦ TẤT CẢ ${questions.length} CÂU HỎI. KHÔNG ĐƯỢC CẮT BỚT HAY TÓM TẮT!
+3. Chỉ sửa những gì được yêu cầu, giữ nguyên nội dung các câu không liên quan đến yêu cầu.
+4. QUY ĐỊNH SVG: TUYỆT ĐỐI KHÔNG ghi mã <svg...> vào trường "content". Nếu cần hình minh họa hãy viết vào trường "svgFigure".
 ${SCIENTIFIC_NOTATION_RULE}
-5. TRẢ VỀ DUY NHẤT một mảng JSON chứa danh sách câu hỏi sau khi đã được chỉnh sửa / bổ sung hoàn chỉnh.
 
 Format mỗi câu hỏi trong mảng JSON trả về:
 [
@@ -343,14 +572,14 @@ Format mỗi câu hỏi trong mảng JSON trả về:
 Chỉ trả về mảng JSON hợp lệ, không kèm văn bản markdown nào khác.`;
 
     const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { 
-        responseMimeType: "application/json",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
         maxOutputTokens: 65536
       }
     });
     const text = result.response.text().trim();
-    const parsed = JSON.parse(text);
+    const parsed = safeParseAIJSON(text);
     const rawQuestions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
 
     const updatedQuestions = rawQuestions.map((q, idx) => normalizeAIQuestionContent(q, questions[idx] || {}, idx));
@@ -427,7 +656,7 @@ Hãy trả về một Object JSON gồm metadata và questions:
       contents: [{ role: "user", parts }],
       generationConfig: { responseMimeType: "application/json" }
     });
-    
+
     let rawData = { questions: [], metadata: {} };
     try {
       rawData = JSON.parse(result.response.text().trim());
@@ -554,7 +783,7 @@ Format trả về:
       generationConfig: { responseMimeType: "application/json" }
     });
     const responseText = result.response.text().trim();
-    
+
     let rawQuestions = [];
     let metadata = {};
     try {

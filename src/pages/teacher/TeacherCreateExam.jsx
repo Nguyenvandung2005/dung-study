@@ -36,63 +36,74 @@ function AIGeneratorModal({ onClose, onGenerated }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
-      backdropFilter: 'blur(8px)'
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+      backdropFilter: 'blur(8px)',
+      overflowY: 'auto'
     }}>
-      <div className="glass-card" style={{ width: '100%', maxWidth: 500, borderRadius: 'var(--radius-lg)', padding: 'var(--space-8)', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.3rem' }}>✕</button>
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🪄</div>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Soạn đề nhanh bằng AI
+      <div className="glass-card" style={{
+        width: '100%', maxWidth: 520, borderRadius: 'var(--radius-lg)',
+        padding: '20px 24px', position: 'relative',
+        maxHeight: '88vh', display: 'flex', flexDirection: 'column'
+      }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.3rem', zIndex: 10 }}>✕</button>
+        
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 14, flexShrink: 0 }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            🪄 Soạn đề nhanh bằng AI
           </h2>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '4px 12px', borderRadius: 999, marginTop: 10, fontSize: '0.78rem', color: '#60a5fa', fontWeight: 600 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '3px 10px', borderRadius: 999, marginTop: 6, fontSize: '0.76rem', color: '#60a5fa', fontWeight: 600 }}>
             <span>📍</span> Tuân thủ cấu trúc thi K1–K12 Sở GD&ĐT Nghệ An
           </div>
         </div>
 
+        {/* Scrollable Body */}
+        <div style={{ overflowY: 'auto', flex: 1, paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Môn học *</label>
+              <input name="subject" value={form.subject} onChange={handleChange}
+                placeholder="Vd: Toán, Văn..."
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.88rem', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Khối lớp *</label>
+              <select name="grade" value={form.grade} onChange={handleChange}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.88rem' }}
+              >
+                {[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1} style={{ background: '#1e1e2d', color: '#fff' }}>Lớp {i + 1}</option>)}
+              </select>
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Môn học *</label>
-            <input name="subject" value={form.subject} onChange={handleChange}
-              placeholder="Vd: Toán, Văn, Lý, Hóa, Sinh..."
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.9rem', boxSizing: 'border-box' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Khối lớp *</label>
-            <select name="grade" value={form.grade} onChange={handleChange}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.9rem' }}
-            >
-              {[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1} style={{ background: '#1e1e2d', color: '#fff' }}>Lớp {i + 1}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Chủ đề / Nội dung ôn tập *</label>
-            <textarea name="topic" value={form.topic} onChange={handleChange} rows={3}
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Chủ đề / Nội dung ôn tập *</label>
+            <textarea name="topic" value={form.topic} onChange={handleChange} rows={2}
               placeholder="Vd: Chương 3 – Phương trình bậc hai một ẩn; Chiến dịch Điện Biên Phủ..."
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.88rem', resize: 'vertical', boxSizing: 'border-box' }}
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Số câu Trắc nghiệm</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Số câu Trắc nghiệm</label>
               <input type="number" name="mcqCount" value={form.mcqCount} onChange={handleChange} min={0} max={100}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.88rem', boxSizing: 'border-box' }}
               />
             </div>
             <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Số câu Tự luận</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Số câu Tự luận</label>
               <input type="number" name="essayCount" value={form.essayCount} onChange={handleChange} min={0} max={20}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', fontSize: '0.88rem', boxSizing: 'border-box' }}
               />
             </div>
           </div>
+
           <div>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Mức độ chung của đề</label>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Mức độ chung của đề</label>
             <select name="overallDifficulty" value={form.overallDifficulty} onChange={handleChange}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.9rem' }}
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.88rem' }}
             >
               {['Dễ', 'Trung bình', 'Khó', 'Cực khó'].map((lvl) => (
                 <option key={lvl} value={lvl} style={{ background: '#1e1e2d', color: '#fff' }}>{lvl}</option>
@@ -101,35 +112,38 @@ function AIGeneratorModal({ onClose, onGenerated }) {
           </div>
 
           <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               ✨ Yêu cầu chi tiết cho AI (nhập mọi yêu cầu mong muốn)
             </label>
             <textarea
               name="difficulty"
               value={form.difficulty}
               onChange={handleChange}
-              rows={3}
+              rows={2}
               placeholder="Vd: Tạo đúng 50 câu hỏi, vẽ hình minh họa bằng SVG cho các câu đồ thị, lồng ghép ngữ liệu thực tế Nghệ An..."
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(167, 139, 250, 0.4)', background: 'rgba(167, 139, 250, 0.06)', color: 'var(--text-primary)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(167, 139, 250, 0.4)', background: 'rgba(167, 139, 250, 0.06)', color: 'var(--text-primary)', fontSize: '0.88rem', resize: 'vertical', boxSizing: 'border-box' }}
             />
           </div>
+
+          {error && <div className="auth-error" style={{ marginTop: 4, marginBottom: 0 }}>⚠️ {error}</div>}
         </div>
 
-        {error && <div className="auth-error" style={{ marginBottom: 'var(--space-4)' }}>⚠️ {error}</div>}
-
-        <button
-          onClick={handleGenerate} disabled={loading}
-          style={{
-            width: '100%', marginTop: 'var(--space-4)', padding: '12px',
-            borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-            background: 'var(--gradient-primary)', color: '#fff', fontSize: '1rem', fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          {loading ? (
-            <><div className="spinner" style={{ width: 18, height: 18 }} /> Đang soạn đề... (~15 giây)</>
-          ) : '🪄 Soạn đề ngay'}
-        </button>
+        {/* Sticky Footer Button */}
+        <div style={{ flexShrink: 0, marginTop: 14 }}>
+          <button
+            onClick={handleGenerate} disabled={loading}
+            style={{
+              width: '100%', padding: '12px',
+              borderRadius: 'var(--radius-sm)', border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+              background: 'var(--gradient-primary)', color: '#fff', fontSize: '0.96rem', fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            {loading ? (
+              <><div className="spinner" style={{ width: 18, height: 18 }} /> Đang soạn đề... (~15 giây)</>
+            ) : '🪄 Soạn đề ngay'}
+          </button>
+        </div>
       </div>
     </div>
   );
