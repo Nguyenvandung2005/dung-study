@@ -70,8 +70,14 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const user = await register(form);
-      if (user.role === 'TEACHER') navigate('/teacher');
-      else navigate('/student');
+      const redirectUrl = localStorage.getItem('redirectUrl');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectUrl');
+        navigate(redirectUrl);
+      } else {
+        if (user.role === 'TEACHER') navigate('/teacher');
+        else navigate('/student');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Đăng ký thất bại');
     } finally {
@@ -80,18 +86,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-page-asian">
+    <main className="auth-page-asian">
       {/* Register Form Pane (Left Side) */}
-      <div className="auth-split-form anim-slide-left">
+      <section className="auth-split-form anim-slide-left">
         <div className="auth-container" style={{ width: '100%', maxWidth: '440px', background: 'transparent' }}>
-          <div className="auth-brand anim-stagger-1" style={{ marginBottom: '15px' }}>
+          <header className="auth-brand anim-stagger-1" style={{ marginBottom: '15px' }}>
             <div className="auth-logo" style={{ marginBottom: '12px' }}><LogoWaveBounce size="lg" /></div>
             <h1 className="auth-title">Dung-<span className="gradient-text">Study</span></h1>
 
             <p className="auth-subtitle">Tạo tài khoản học tập miễn phí</p>
-          </div>
+          </header>
 
-          <div className="glass-card auth-card anim-stagger-2" style={{ padding: '24px', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <article className="glass-card auth-card anim-stagger-2" style={{ padding: '24px', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.05)' }}>
             <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Đăng ký</h2>
             {error && <div className="auth-error"><span>⚠️</span> {error}</div>}
 
@@ -147,15 +153,15 @@ export default function RegisterPage() {
             <p className="auth-link" style={{ marginTop: '20px' }}>
               Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
             </p>
-          </div>
+          </article>
         </div>
-      </div>
+      </section>
 
       {/* Background Image Pane (Puzzle Effect) (Right Side) */}
       <div className="auth-split-image fade-left">
         <ImagePuzzle />
       </div>
 
-    </div>
+    </main>
   );
 }

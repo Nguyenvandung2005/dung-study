@@ -1,8 +1,9 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function PrivateRoute({ children, roles }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -15,7 +16,11 @@ export default function PrivateRoute({ children, roles }) {
     );
   }
 
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) {
+    // Save the intended destination
+    localStorage.setItem('redirectUrl', location.pathname + location.search);
+    return <Navigate to="/login" replace />;
+  }
 
   // Admin is allowed to bypass all route guards for testing purposes
   if (user.role === 'ADMIN') {

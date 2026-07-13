@@ -26,6 +26,7 @@ export default function TeacherDashboard() {
 
   const [exportExam, setExportExam] = useState(null);
   const [exportingId, setExportingId] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const handleOpenExportModal = async (examId) => {
     try {
@@ -48,6 +49,10 @@ export default function TeacherDashboard() {
       setExams(examsRes.data);
     }).catch(console.error)
       .finally(() => setLoading(false));
+      
+    const handleClickOutside = () => setOpenDropdownId(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
   const handlePublish = async (id, isPublished) => {
@@ -177,18 +182,81 @@ export default function TeacherDashboard() {
                             </button>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                              <button 
-                                type="button"
-                                className="btn btn-outline btn-sm"
-                                style={{ borderColor: '#38bdf8', color: '#38bdf8' }}
-                                disabled={exportingId === exam.id}
-                                onClick={() => handleOpenExportModal(exam.id)}
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '6px 8px', borderRadius: '8px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(openDropdownId === exam.id ? null : exam.id);
+                                }}
+                                title="Hành động"
                               >
-                                {exportingId === exam.id ? '⌛' : '📥 Xuất đề'}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                                </svg>
                               </button>
-                              <Link to={`/teacher/statistics/${exam.id}`} className="btn btn-outline btn-sm">📊 Thống kê</Link>
-                              <Link to={`/teacher/edit/${exam.id}`} className="btn btn-ghost btn-sm">Sửa</Link>
+                              
+                              {openDropdownId === exam.id && (
+                                <div 
+                                  className="glass-card fade-in"
+                                  style={{
+                                    position: 'absolute',
+                                    right: '0',
+                                    top: '100%',
+                                    marginTop: '8px',
+                                    padding: '8px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '6px',
+                                    zIndex: 50,
+                                    minWidth: '160px',
+                                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    borderRadius: '12px'
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    type="button"
+                                    className="btn btn-ghost btn-sm dropdown-action-item action-share"
+                                    onClick={() => {
+                                      const link = `${window.location.origin}/student/exam/${exam.id}`;
+                                      navigator.clipboard.writeText(link).then(() => {
+                                        alert('Đã copy link bài thi: ' + link);
+                                        setOpenDropdownId(null);
+                                      });
+                                    }}
+                                  >
+                                    🔗 Chia sẻ
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    className="btn btn-ghost btn-sm dropdown-action-item action-export"
+                                    disabled={exportingId === exam.id}
+                                    onClick={() => {
+                                      handleOpenExportModal(exam.id);
+                                      setOpenDropdownId(null);
+                                    }}
+                                  >
+                                    {exportingId === exam.id ? '⌛ Đang tải...' : '📥 Xuất đề'}
+                                  </button>
+                                  <Link 
+                                    to={`/teacher/statistics/${exam.id}`} 
+                                    className="btn btn-ghost btn-sm dropdown-action-item action-stats"
+                                  >
+                                    📊 Thống kê
+                                  </Link>
+                                  <Link 
+                                    to={`/teacher/edit/${exam.id}`} 
+                                    className="btn btn-ghost btn-sm dropdown-action-item action-edit"
+                                  >
+                                    ✏️ Sửa
+                                  </Link>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>

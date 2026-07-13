@@ -71,7 +71,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="landing">
+    <main className="landing">
       <HeroPuzzle />
       
       {/* Header */}
@@ -126,11 +126,11 @@ export default function LandingPage() {
         <h2 className="section-title">Tính năng nổi bật</h2>
         <div className="features-grid">
           {FEATURES.map((f, i) => (
-            <div key={i} className="feature-card glass-card" style={{ animationDelay: `${i * 0.1}s` }}>
+            <article key={i} className="feature-card glass-card" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="feature-icon">{f.icon}</div>
               <h3 className="feature-title">{f.title}</h3>
               <p className="feature-desc">{f.desc}</p>
-            </div>
+            </article>
           ))}
         </div>
       </section>
@@ -149,6 +149,6 @@ export default function LandingPage() {
       <footer className="landing-footer">
         <p>© 2026 Dung-Study — Phát triển bởi Nguyễn Văn Dũng</p>
       </footer>
-    </div>
+    </main>
   );
 }

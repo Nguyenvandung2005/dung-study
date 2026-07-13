@@ -42,10 +42,16 @@ router.post('/generate-answers', authMiddleware, requireRole('TEACHER', 'ADMIN')
     let generatedAnswers = [];
 
     const generateForChunk = async (chunk, retryCount = 0) => {
-      const prompt = `Bạn là một chuyên gia giáo dục. Nhiệm vụ của bạn là giải đề thi/câu hỏi được cung cấp và sinh ra đáp án đúng.
+      const prompt = `Bạn là một chuyên gia giáo dục. Nhiệm vụ của bạn là giải đề thi/câu hỏi được cung cấp và sinh ra đáp án cực kỳ chi tiết, chuẩn xác, kèm ba-rem (parem) chấm điểm.
 Dưới đây là một mảng JSON chứa danh sách các câu hỏi.
-Đối với câu trắc nghiệm (MULTIPLE_CHOICE), hãy xác định chỉ mục (index từ 0 đến 3) của đáp án đúng trong mảng options.
-Đối với câu tự luận (ESSAY), hãy viết một hướng dẫn/gợi ý chấm bài ngắn gọn (tối đa 150 chữ).
+1. Đối với câu trắc nghiệm (MULTIPLE_CHOICE), hãy xác định chỉ mục (index từ 0 đến 3) của đáp án đúng trong mảng options.
+2. Đối với câu tự luận hoặc viết văn (ESSAY):
+   - Bạn BẮT BUỘC phải viết một ba-rem chấm điểm chi tiết dưới dạng BẢNG (Markdown table). Bảng phải chia rõ từng ý/phần và mức điểm tương ứng.
+   - Ví dụ:
+     | Phần/Ý | Nội dung yêu cầu | Điểm |
+     |---|---|---|
+     | 1 | Mở bài... | 1.0 |
+   - Nếu bài giải cần vẽ hình minh họa, BẮT BUỘC quy định điểm cho phần vẽ hình trong bảng, VÀ tạo một mã <svg> hợp lệ cho hình đó.
 ${SCIENTIFIC_NOTATION_RULE}
 
 DANH SÁCH CÂU HỎI:
@@ -56,7 +62,8 @@ Hãy trả về một mảng JSON chứa các object có định dạng sau:
   {
     "id": "<id_cua_cau_hoi>",
     "correctAnswer": "<chỉ_mục_dạng_string_từ_0_đến_3_nếu_là_trắc_nghiệm>",
-    "explanation": "<gợi_ý_chấm_bài_nếu_là_tự_luận>"
+    "explanation": "<Lưu ý: Nếu là tự luận, hãy điền BẢNG BA-REM điểm và đáp án cực kỳ chi tiết vào đây>",
+    "svgFigure": "<Chỉ tạo mã <svg> nếu câu trả lời yêu cầu phải vẽ hình minh họa, ngược lại để rỗng>"
   }
 ]
 Chỉ trả về chuỗi JSON hợp lệ, không kèm văn bản nào khác.`;
@@ -329,7 +336,7 @@ router.post('/generate-exam', authMiddleware, requireRole('TEACHER', 'ADMIN'), a
       : `- KHÔNG TẠO câu hỏi trắc nghiệm nào.`;
 
     let essayInstruction = totalEssay > 0
-      ? `- ${totalEssay} câu hỏi TỰ LUẬN (type: "ESSAY"), mỗi câu có gợi ý chấm bài chi tiết.`
+      ? `- ${totalEssay} câu hỏi TỰ LUẬN (type: "ESSAY"). ĐỐI VỚI CÂU TỰ LUẬN: Yêu cầu bắt buộc phải viết ba-rem chấm điểm cực kỳ chi tiết dưới dạng BẢNG (Markdown table) trong trường "explanation". Bảng phải chia rõ từng ý/phần, phân bổ điểm cộng trừ cho từng ý, và nếu yêu cầu vẽ hình minh họa thì phải ghi rõ điểm cho phần vẽ hình.`
       : `- KHÔNG TẠO câu hỏi tự luận nào.`;
 
     let literatureInstruction = '';

@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../api/client';
 import ExportExamModal from './ExportExamModal';
+import GeoGebraBoard from './GeoGebraBoard';
+import FabricBoard from './FabricBoard';
 
 export const SUBJECTS = ['Toán', 'Văn', 'Anh', 'Lý', 'Hóa', 'Sinh', 'Sử', 'Địa', 'GDCD', 'Tin học', 'Khác'];
 export const GRADES = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -475,11 +477,54 @@ export function QuestionEditor({ q, idx, onChange, onRemove, ocrSourceImages = [
               </div>
             </div>
 
-            {/* Render SVG hoặc ảnh */}
-            <div className="svg-wrapper-render" style={{ background: q.svgFigure ? '#fff' : '#000', padding: '12px', borderRadius: '6px', textAlign: 'center', maxHeight: 280, overflow: 'auto' }}>
+              {/* Render SVG hoặc ảnh */}
+            <div className="svg-wrapper-render" style={{ background: q.svgFigure ? '#fff' : '#000', padding: '12px', borderRadius: '6px', textAlign: 'center', maxHeight: 350, overflow: 'auto' }}>
               {q.svgFigure ? (
-                <div dangerouslySetInnerHTML={{ __html: q.svgFigure }}
-                  style={{ display: 'inline-block', maxWidth: '100%', width: '100%' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    {editingContent ? (
+                      <button type="button" className="btn btn-outline btn-sm"
+                        onClick={() => setEditingContent(false)}>
+                        👀 Đóng bảng vẽ
+                      </button>
+                    ) : (
+                      <>
+                        <button type="button" className="btn btn-outline btn-sm" style={{ borderColor: '#8b5cf6', color: '#8b5cf6' }}
+                          onClick={() => setEditingContent('fabric')}>
+                          🎨 Sửa nét vẽ (Smart Canvas)
+                        </button>
+                        <button type="button" className="btn btn-outline btn-sm" style={{ borderColor: '#3b82f6', color: '#3b82f6' }}
+                          onClick={() => setEditingContent('geogebra')}>
+                          📐 Vẽ mới (GeoGebra)
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {editingContent === 'geogebra' && (
+                    <GeoGebraBoard 
+                      initialSvg={q.svgFigure}
+                      onApply={(newSvg) => {
+                        update('svgFigure', newSvg);
+                        setEditingContent(false);
+                      }}
+                      onClose={() => setEditingContent(false)}
+                    />
+                  )}
+                  {editingContent === 'fabric' && (
+                    <FabricBoard 
+                      initialSvg={q.svgFigure}
+                      onApply={(newSvg) => {
+                        update('svgFigure', newSvg);
+                        setEditingContent(false);
+                      }}
+                      onClose={() => setEditingContent(false)}
+                    />
+                  )}
+                  {!editingContent && (
+                    <div dangerouslySetInnerHTML={{ __html: q.svgFigure }}
+                      style={{ display: 'inline-block', maxWidth: '100%', width: '100%' }} />
+                  )}
+                </div>
               ) : (
                 <img src={q.imageUrl} alt={`Minh họa câu ${idx + 1}`}
                   style={{ maxHeight: 240, maxWidth: '100%', objectFit: 'contain' }} />
@@ -741,11 +786,14 @@ export default function ExamForm({ initialMeta, initialQuestions = [], onBack, o
         </button>
       </div>
 
-      <ExportExamModal
-        isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
-        exam={{ ...meta, questions }}
-      />
+      {showExportModal && createPortal(
+        <ExportExamModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          exam={{ ...meta, questions }}
+        />,
+        document.body
+      )}
 
       {showAIModifyModal && createPortal(
         <AIModifyExamModal

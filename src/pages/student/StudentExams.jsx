@@ -116,12 +116,27 @@ export default function StudentExams() {
                   <span>📋 {exam._count?.questions || 0} câu</span>
                   <span>👩‍🏫 {exam.createdBy?.name}</span>
                 </div>
-                <Link to={`/student/exam/${exam.id}`}
-                  className="btn btn-primary"
-                  style={{ marginTop: 'auto' }}
-                  id={`start-exam-${exam.id}`}>
-                  🚀 Bắt đầu làm bài
-                </Link>
+                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                  <Link to={`/student/exam/${exam.id}`}
+                    className="btn btn-primary"
+                    style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                    id={`start-exam-${exam.id}`}>
+                    🚀 Bắt đầu làm bài
+                  </Link>
+                  <button
+                    className="btn btn-outline"
+                    title="Copy link bài thi"
+                    style={{ padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => {
+                      const link = `${window.location.origin}/student/exam/${exam.id}`;
+                      navigator.clipboard.writeText(link).then(() => {
+                        alert('Đã copy link bài thi: ' + link);
+                      });
+                    }}
+                  >
+                    🔗
+                  </button>
+                </div>
               </div>
             ))}
           </div>

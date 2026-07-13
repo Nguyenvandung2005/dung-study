@@ -286,10 +286,21 @@ export default function ExportExamModal({ isOpen, onClose, exam }) {
             font-family: 'Times New Roman', serif;
             font-size: 12pt;
             color: #000;
-            background: #fff;
+            background: #525659;
             line-height: 1.35;
             margin: 0;
-            padding: 20px 28px;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+          }
+          .paper-wrapper {
+            background: #fff;
+            width: 100%;
+            max-width: 794px;
+            min-height: 1123px;
+            padding: 48px 56px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           }
           table { border-collapse: collapse; }
           table.no-border, table.no-border tr, table.no-border td {
@@ -297,12 +308,23 @@ export default function ExportExamModal({ isOpen, onClose, exam }) {
             mso-border-alt: none !important;
           }
           @media print {
-            body { padding: 0; margin: 0; }
+            body { 
+              padding: 0; 
+              margin: 0; 
+              background: #fff; 
+              display: block; 
+            }
+            .paper-wrapper {
+              box-shadow: none;
+              padding: 0;
+              min-height: auto;
+              max-width: none;
+            }
           }
         </style>
       </head>
       <body>
-        <div class="WordSection1" style="max-width: 780px; margin: 0 auto;">
+        <div class="WordSection1 paper-wrapper">
           ${headerHtml}
           ${(exportMode === 'all' || exportMode === 'questions') ? candidateInfoHtml : ''}
           ${questionsHtml}

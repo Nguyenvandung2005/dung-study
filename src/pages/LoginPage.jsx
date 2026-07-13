@@ -63,9 +63,15 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
-      if (user.role === 'ADMIN') navigate('/admin');
-      else if (user.role === 'TEACHER') navigate('/teacher');
-      else navigate('/student');
+      const redirectUrl = localStorage.getItem('redirectUrl');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectUrl');
+        navigate(redirectUrl);
+      } else {
+        if (user.role === 'ADMIN') navigate('/admin');
+        else if (user.role === 'TEACHER') navigate('/teacher');
+        else navigate('/student');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại');
     } finally {
@@ -74,7 +80,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-page-asian">
+    <main className="auth-page-asian">
       {/* Background Image Pane (Puzzle Effect) */}
       <div className="auth-split-image fade-right">
         <ImagePuzzle />
@@ -82,16 +88,16 @@ export default function LoginPage() {
 
 
       {/* Login Form Pane */}
-      <div className="auth-split-form anim-slide-right">
+      <section className="auth-split-form anim-slide-right">
         <div className="auth-container" style={{ width: '100%', maxWidth: '440px', background: 'transparent' }}>
-          <div className="auth-brand anim-stagger-1" style={{ marginBottom: '20px' }}>
+          <header className="auth-brand anim-stagger-1" style={{ marginBottom: '20px' }}>
             <div className="auth-logo" style={{ marginBottom: '12px' }}><LogoWaveBounce size="lg" /></div>
             <h1 className="auth-title">Dung-<span className="gradient-text">Study</span></h1>
 
             <p className="auth-subtitle">Nền tảng học tập & kiểm tra K1–K12</p>
-          </div>
+          </header>
 
-          <div className="glass-card auth-card anim-stagger-2" style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <article className="glass-card auth-card anim-stagger-2" style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <h2 className="auth-card-title">Đăng nhập</h2>
             {error && (
               <div className="auth-error">
@@ -116,9 +122,9 @@ export default function LoginPage() {
             <p className="auth-link anim-stagger-3">
               Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
             </p>
-          </div>
+          </article>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

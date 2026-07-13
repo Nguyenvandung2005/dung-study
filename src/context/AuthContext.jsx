@@ -3,6 +3,8 @@ import api from '../api/client';
 
 const AuthContext = createContext(null);
 
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -10,10 +12,20 @@ export const AuthProvider = ({ children }) => {
   const fetchMe = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) { setLoading(false); return; }
+
+    // Check inactivity before fetching me
+    const lastActivity = localStorage.getItem('lastActivity');
+    if (lastActivity && Date.now() - parseInt(lastActivity, 10) > INACTIVITY_TIMEOUT) {
+      logout();
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data } = await api.get('/auth/me');
       setUser(data);
       applyUserSettings(data.settings);
+      localStorage.setItem('lastActivity', Date.now().toString());
     } catch {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -54,6 +66,7 @@ export const AuthProvider = ({ children }) => {
     const { data } = await api.post('/auth/login', { email, password });
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('lastActivity', Date.now().toString());
     setUser(data.user);
     applyUserSettings(data.user?.settings);
     return data.user;
@@ -63,6 +76,7 @@ export const AuthProvider = ({ children }) => {
     const { data } = await api.post('/auth/register', formData);
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('lastActivity', Date.now().toString());
     setUser(data.user);
     applyUserSettings(data.user?.settings);
     return data.user;
@@ -75,6 +89,36 @@ export const AuthProvider = ({ children }) => {
     document.documentElement.style.removeProperty('--clr-primary-500');
     document.documentElement.style.removeProperty('--text-size');
   };
+
+  // Activity tracking for auto logout
+  useEffect(() => {
+    if (!user) return;
+
+    let intervalId;
+
+    const updateActivity = () => {
+      localStorage.setItem('lastActivity', Date.now().toString());
+    };
+
+    const checkInactivity = () => {
+      const lastActivity = localStorage.getItem('lastActivity');
+      if (lastActivity && Date.now() - parseInt(lastActivity, 10) > INACTIVITY_TIMEOUT) {
+        logout();
+        window.location.href = '/login'; // Force redirect
+      }
+    };
+
+    const events = ['mousemove', 'mousedown', 'keypress', 'touchmove', 'scroll'];
+    events.forEach(e => window.addEventListener(e, updateActivity));
+
+    // Check every minute
+    intervalId = setInterval(checkInactivity, 60000);
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, updateActivity));
+      clearInterval(intervalId);
+    };
+  }, [user]);
 
   const isAdmin = user?.role === 'ADMIN';
   const isTeacher = user?.role === 'TEACHER' || isAdmin;
