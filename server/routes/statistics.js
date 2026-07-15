@@ -1,4 +1,5 @@
 const express = require('express');
+const { formatErrorMessage } = require('../utils/errorHandler');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 
@@ -106,7 +107,7 @@ router.get('/global', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (re
     });
   } catch (error) {
     console.error('[Global Stats API Error]', error);
-    res.status(500).json({ message: 'Lỗi khi tải thống kê tổng quan.' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải thống kê tổng quan.') });
   }
 });
 
@@ -232,7 +233,7 @@ router.get('/exam/:examId', authMiddleware, requireRole('TEACHER', 'ADMIN'), asy
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi tải thống kê' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải thống kê') });
   }
 });
 
@@ -252,7 +253,7 @@ router.get('/teacher', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (r
       pendingGrading,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải thống kê giáo viên' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải thống kê giáo viên') });
   }
 });
 
@@ -295,7 +296,7 @@ router.get('/leaderboard', authMiddleware, async (req, res) => {
     res.json({ leaderboard, total: leaderboard.length });
   } catch (error) {
     console.error('[Leaderboard]', error);
-    res.status(500).json({ message: 'Lỗi khi tải bảng xếp hạng.' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải bảng xếp hạng.') });
   }
 });
 

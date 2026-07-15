@@ -43,8 +43,18 @@ app.get('/api/health', (req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('[Global Error]', err.stack || err);
   res.status(500).json({ message: formatErrorMessage(err) });
+});
+
+// Bắt lỗi crash NodeJS để ghi log
+process.on('uncaughtException', (err) => {
+  console.error('[Uncaught Exception]', err);
+  require('./utils/errorHandler').formatErrorMessage(err, 'Lỗi hệ thống nghiêm trọng');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection]', reason);
+  require('./utils/errorHandler').formatErrorMessage(reason, 'Lỗi hệ thống chưa xử lý');
 });
 
 app.listen(PORT, () => {

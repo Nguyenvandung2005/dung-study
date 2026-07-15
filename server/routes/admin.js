@@ -1,4 +1,5 @@
 const express = require('express');
+const { formatErrorMessage } = require('../utils/errorHandler');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const adminEventHub = require('../utils/adminEventHub');
@@ -26,7 +27,7 @@ router.get('/dashboard', authMiddleware, requireRole('ADMIN'), async (req, res) 
 
     res.json({ totalUsers, totalExams, totalSubmissions, pendingGrading, usersByRole, criticalLogs, recentLogs });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải dashboard' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải dashboard') });
   }
 });
 
@@ -47,7 +48,7 @@ router.get('/users', authMiddleware, requireRole('ADMIN'), async (req, res) => {
     ]);
     res.json({ users, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải danh sách người dùng' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải danh sách người dùng') });
   }
 });
 
@@ -58,7 +59,7 @@ router.patch('/users/:id/lock', authMiddleware, requireRole('ADMIN'), async (req
     const user = await prisma.user.update({ where: { id: req.params.id }, data: { isLocked } });
     res.json({ message: isLocked ? 'Đã khóa tài khoản' : 'Đã mở khóa tài khoản', user });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi cập nhật tài khoản' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi cập nhật tài khoản') });
   }
 });
 
@@ -69,7 +70,7 @@ router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), async (req
     const user = await prisma.user.update({ where: { id: req.params.id }, data: { role } });
     res.json({ message: 'Đã cập nhật vai trò', user });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi cập nhật vai trò' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi cập nhật vai trò') });
   }
 });
 
@@ -87,7 +88,7 @@ router.get('/security-logs', authMiddleware, requireRole('ADMIN'), async (req, r
     const total = await prisma.securityLog.count({ where });
     res.json({ logs, total });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải logs bảo mật' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải logs bảo mật') });
   }
 });
 
@@ -97,7 +98,7 @@ router.get('/animation-themes', async (req, res) => {
     const themes = await prisma.animationTheme.findMany({ orderBy: { createdAt: 'asc' } });
     res.json(themes);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải themes' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải themes') });
   }
 });
 
@@ -109,7 +110,7 @@ router.put('/animation-themes/active', authMiddleware, requireRole('ADMIN'), asy
     const theme = await prisma.animationTheme.update({ where: { id: themeId }, data: { isActive: true } });
     res.json({ message: 'Đã áp dụng theme', theme });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi đổi theme' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi đổi theme') });
   }
 });
 
@@ -138,7 +139,7 @@ router.post('/animation-themes/custom', authMiddleware, requireRole('ADMIN'), as
     res.json({ message: 'Đã áp dụng giao diện hệ thống mới', theme });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi cấu hình giao diện' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi cấu hình giao diện') });
   }
 });
 
@@ -172,7 +173,7 @@ router.get('/anomalies', authMiddleware, requireRole('ADMIN'), async (req, res) 
 
     res.json({ anomalies, totalCritical: criticalLogs.length });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi phân tích bất thường' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi phân tích bất thường') });
   }
 });
 
@@ -284,7 +285,7 @@ router.post('/block-ip', authMiddleware, requireRole('ADMIN'), async (req, res) 
     const result = await blockIP(ip, durationMinutes, reason, req.user.id);
     res.json({ message: `Đã chặn IP ${ip} trong ${durationMinutes} phút`, result });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi chặn IP' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi chặn IP') });
   }
 });
 

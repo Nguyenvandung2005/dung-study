@@ -1,4 +1,5 @@
 const express = require('express');
+const { formatErrorMessage } = require('../utils/errorHandler');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const { gradeEssayWithAI } = require('../utils/aiGrader');
@@ -48,7 +49,7 @@ router.post('/start', authMiddleware, requireRole('STUDENT', 'ADMIN'), async (re
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi bắt đầu bài kiểm tra' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi bắt đầu bài kiểm tra') });
   }
 });
 
@@ -189,7 +190,7 @@ router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), asyn
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi nộp bài' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi nộp bài') });
   }
 });
 
@@ -207,7 +208,7 @@ router.get('/history', authMiddleware, async (req, res) => {
     });
     res.json(submissions);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải lịch sử' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải lịch sử') });
   }
 });
 
@@ -237,7 +238,7 @@ router.get('/pending-grading', authMiddleware, requireRole('TEACHER', 'ADMIN'), 
     res.json(tasks);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi tải danh sách cần chấm' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải danh sách cần chấm') });
   }
 });
 
@@ -257,7 +258,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     }
     res.json(submission);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải bài làm' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải bài làm') });
   }
 });
 
@@ -302,7 +303,7 @@ router.put('/:id/grade-essay', authMiddleware, requireRole('TEACHER', 'ADMIN'), 
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi chấm bài' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi chấm bài') });
   }
 });
 

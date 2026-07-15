@@ -1,4 +1,5 @@
 const express = require('express');
+const { formatErrorMessage } = require('../utils/errorHandler');
 const multer = require('multer');
 const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse'); // v1.1.1
@@ -240,7 +241,7 @@ router.post('/word', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sin
     });
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ message: 'Lỗi khi đọc file Word: ' + error.message });
+    res.status(500).json({ message: formatErrorMessage(error, 'Lỗi khi đọc file Word: ') });
   }
 });
 
@@ -270,7 +271,7 @@ router.post('/pdf', authMiddleware, requireRole('TEACHER', 'ADMIN'), upload.sing
     res.json({ questions, total: questions.length, rawText });
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ message: 'Lỗi khi đọc file PDF: ' + error.message });
+    res.status(500).json({ message: formatErrorMessage(error, 'Lỗi khi đọc file PDF: ') });
   }
 });
 
@@ -319,7 +320,7 @@ router.post('/image', authMiddleware, uploadImage.single('image'), (req, res) =>
       : `/uploads/answers/${req.file.filename}`;
     res.json({ url: fileUrl, isCloud: !!cloudinaryEnabled });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi tải ảnh lên: ' + error.message });
+    res.status(500).json({ message: formatErrorMessage(error, 'Lỗi khi tải ảnh lên: ') });
   }
 });
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const { formatErrorMessage } = require('../utils/errorHandler');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, requireRole, optionalAuth } = require('../middleware/auth');
 const adminEventHub = require('../utils/adminEventHub');
@@ -34,7 +35,7 @@ router.get('/', authMiddleware, async (req, res) => {
     res.json(exams);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi tải danh sách bài kiểm tra' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải danh sách bài kiểm tra') });
   }
 });
 
@@ -76,7 +77,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     res.json(exam);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi tải bài kiểm tra' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải bài kiểm tra') });
   }
 });
 
@@ -152,7 +153,7 @@ router.post('/', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, re
     res.status(201).json(exam);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi tạo bài kiểm tra' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tạo bài kiểm tra') });
   }
 });
 
@@ -178,7 +179,7 @@ router.put('/:id', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, 
     res.json(updated);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi cập nhật bài kiểm tra' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi cập nhật bài kiểm tra') });
   }
 });
 
@@ -194,7 +195,7 @@ router.delete('/:id', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (re
     res.json({ message: 'Đã xóa bài kiểm tra' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Lỗi khi xóa bài kiểm tra' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi xóa bài kiểm tra') });
   }
 });
 
@@ -227,7 +228,7 @@ router.patch('/:id/publish', authMiddleware, requireRole('TEACHER', 'ADMIN'), as
     });
     res.json(exam);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi cập nhật trạng thái') });
   }
 });
 
@@ -276,7 +277,7 @@ router.post('/:id/questions', authMiddleware, requireRole('TEACHER', 'ADMIN'), a
   } catch (error) {
     console.error(error);
     require('fs').writeFileSync('error.log', String(error) + '\\n' + JSON.stringify(error, Object.getOwnPropertyNames(error)) + '\\n' + error.stack);
-    res.status(500).json({ message: 'Lỗi khi thêm câu hỏi' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi thêm câu hỏi') });
   }
 });
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const { formatErrorMessage } = require('../utils/errorHandler');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware } = require('../middleware/auth');
@@ -59,7 +60,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
     res.json({ message: 'Cập nhật thành công', user: updatedUser });
   } catch (error) {
     console.error('[Update Profile Error]', error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi máy chủ') });
   }
 });
 
@@ -90,7 +91,7 @@ router.put('/password', authMiddleware, async (req, res) => {
     res.json({ message: 'Đổi mật khẩu thành công' });
   } catch (error) {
     console.error('[Update Password Error]', error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi máy chủ') });
   }
 });
 
@@ -112,7 +113,7 @@ router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req
     res.json({ message: 'Cập nhật ảnh đại diện thành công', user: updatedUser });
   } catch (error) {
     console.error('[Upload Avatar Error]', error);
-    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+    res.status(500).json({ message: formatErrorMessage(error, 'Lỗi máy chủ') });
   }
 });
 
