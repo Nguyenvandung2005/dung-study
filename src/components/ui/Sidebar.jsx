@@ -2,31 +2,52 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getFullUploadUrl } from '../../api/client';
+import {
+  House,
+  ClipboardText,
+  ChartBar,
+  Trophy,
+  PlusCircle,
+  PencilSimple,
+  Users,
+  Lock,
+  Palette,
+  SignOut,
+  Wrench,
+  UserCircle,
+  CaretDown,
+} from '@phosphor-icons/react';
 import LogoWaveBounce from './LogoWaveBounce';
 import './Sidebar.css';
 
 
 const navItems = {
   STUDENT: [
-    { to: '/student', icon: '🏠', label: 'Trang chủ' },
-    { to: '/student/exams', icon: '📝', label: 'Bài kiểm tra' },
-    { to: '/student/history', icon: '📊', label: 'Lịch sử' },
-    { to: '/student/leaderboard', icon: '🏆', label: 'Bảng xếp hạng' },
+    { to: '/student', icon: House, label: 'Trang chủ' },
+    { to: '/student/exams', icon: ClipboardText, label: 'Bài kiểm tra' },
+    { to: '/student/history', icon: ChartBar, label: 'Lịch sử' },
+    { to: '/student/leaderboard', icon: Trophy, label: 'Bảng xếp hạng' },
   ],
   TEACHER: [
-    { to: '/teacher', icon: '🏠', label: 'Tổng quan' },
-    { to: '/teacher/exams', icon: '📝', label: 'Bài kiểm tra' },
-    { to: '/teacher/create', icon: '➕', label: 'Tạo bài mới' },
-    { to: '/teacher/statistics', icon: '📊', label: 'Thống kê' },
-    { to: '/teacher/grading', icon: '✏️', label: 'Chấm bài' },
+    { to: '/teacher', icon: House, label: 'Tổng quan' },
+    { to: '/teacher/exams', icon: ClipboardText, label: 'Bài kiểm tra' },
+    { to: '/teacher/create', icon: PlusCircle, label: 'Tạo bài mới' },
+    { to: '/teacher/statistics', icon: ChartBar, label: 'Thống kê' },
+    { to: '/teacher/grading', icon: PencilSimple, label: 'Chấm bài' },
   ],
   ADMIN: [
-    { to: '/admin', icon: '🏠', label: 'Dashboard' },
-    { to: '/admin/users', icon: '👥', label: 'Người dùng' },
-    { to: '/admin/exams', icon: '📝', label: 'Bài kiểm tra' },
-    { to: '/admin/security', icon: '🔒', label: 'Bảo mật' },
-    { to: '/admin/animation', icon: '🎨', label: 'Giao diện (Theme)' },
+    { to: '/admin', icon: House, label: 'Dashboard' },
+    { to: '/admin/users', icon: Users, label: 'Người dùng' },
+    { to: '/admin/exams', icon: ClipboardText, label: 'Bài kiểm tra' },
+    { to: '/admin/security', icon: Lock, label: 'Bảo mật' },
+    { to: '/admin/animation', icon: Palette, label: 'Giao diện' },
   ],
+};
+
+const roleLabels = {
+  ADMIN: { label: 'Admin', icon: Wrench },
+  TEACHER: { label: 'Giáo viên', icon: PencilSimple },
+  STUDENT: { label: 'Học sinh', icon: UserCircle },
 };
 
 export default function Sidebar() {
@@ -36,7 +57,6 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   
-  // Set simulated role for Admin (defaults to ADMIN, can be simulated as TEACHER or STUDENT)
   const [simulatedRole, setSimulatedRole] = useState(() => {
     return localStorage.getItem('simulatedRole') || user?.role || 'STUDENT';
   });
@@ -55,7 +75,6 @@ export default function Sidebar() {
     else navigate('/student');
   };
 
-  // If user is Admin, use simulatedRole to choose navigation layout, else use default role
   const activeRole = user?.role === 'ADMIN' ? simulatedRole : (user?.role || 'STUDENT');
   const items = navItems[activeRole] || [];
 
@@ -63,38 +82,37 @@ export default function Sidebar() {
     <>
       <div className="sidebar-brand">
         <LogoWaveBounce size="sm" />
-        <span className="sidebar-brand-text">Dung-<span className="gradient-text">Study</span></span>
+        <span className="sidebar-brand-text">Dung-Study</span>
       </div>
 
+      <div className="sidebar-divider" />
 
-      <div className="divider" />
-
-      {/* Role simulator for admin */}
+      {/* Role simulator for admin (Minimal Dropdown) */}
       {user?.role === 'ADMIN' && (
-        <div className="glass-card" style={{ padding: '8px', marginBottom: '8px', border: '1px solid rgba(245,158,11,0.3)' }}>
-          <p style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 'bold', marginBottom: '4px', textAlign: 'center' }}>
-            🛠️ MÔ PHỎNG VAI TRÒ
-          </p>
+        <div className="role-sim-minimal">
+          <div className="icon-wrap">
+            <Wrench size={16} weight="duotone" />
+          </div>
           <select 
             value={simulatedRole} 
             onChange={e => handleSimulateRole(e.target.value)}
-            className="input" 
-            style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'rgba(0,0,0,0.3)', color: '#f59e0b', border: '1px solid #f59e0b' }}
+            className="role-sim-select"
           >
-            <option value="ADMIN" style={{ background: '#0a0a1e', color: '#fff' }}>🔑 Admin (Gốc)</option>
-            <option value="TEACHER" style={{ background: '#0a0a1e', color: '#fff' }}>👩‍🏫 Giáo viên</option>
-            <option value="STUDENT" style={{ background: '#0a0a1e', color: '#fff' }}>🎓 Học sinh</option>
+            <option value="ADMIN">Admin Mode</option>
+            <option value="TEACHER">Giáo viên</option>
+            <option value="STUDENT">Học sinh</option>
           </select>
+          <CaretDown size={14} weight="bold" className="role-sim-caret" />
         </div>
       )}
 
       <div className="sidebar-user">
-        <div className="sidebar-avatar" style={{ overflow: 'hidden', position: 'relative', background: 'var(--clr-primary-500)' }}>
+        <div className="sidebar-avatar">
           {user?.avatar && !avatarError ? (
             <img 
               src={getFullUploadUrl(user.avatar)} 
               alt={user.name} 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
               onError={() => setAvatarError(true)}
             />
           ) : (
@@ -102,30 +120,46 @@ export default function Sidebar() {
           )}
         </div>
         <div className="sidebar-user-info">
-          <Link to="/profile" className="sidebar-user-name" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to="/profile" className="sidebar-user-name">
             {user?.name}
           </Link>
-          <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
-            {user?.role === 'ADMIN' ? `Admin (${activeRole})` : user?.role === 'TEACHER' ? 'Giáo viên' : `Lớp ${user?.grade}`}
+          <span className="sidebar-user-role">
+            {user?.role === 'ADMIN' 
+              ? `Hệ thống gốc` 
+              : user?.role === 'TEACHER' 
+                ? 'Giáo viên' 
+                : `Lớp ${user?.grade}`}
           </span>
         </div>
       </div>
 
-      <div className="divider" />
+      <div className="sidebar-divider" />
 
       <nav className="sidebar-nav">
-        {items.map(item => (
-          <Link key={item.to} to={item.to} className={`sidebar-nav-item ${location.pathname === item.to ? 'active' : ''}`}
-            onClick={() => setMobileOpen(false)}>
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
-          </Link>
-        ))}
+        {items.map(item => {
+          const IconComp = item.icon;
+          const isActive = location.pathname === item.to;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`sidebar-nav-item glow-border ${isActive ? 'active' : ''}`}
+              onClick={() => setMobileOpen(false)}
+            >
+              <span className="nav-icon-wrap">
+                <IconComp size={18} weight={isActive ? 'fill' : 'duotone'} />
+              </span>
+              <span className="nav-label">{item.label}</span>
+              {isActive && <span className="nav-active-dot" />}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">
-        <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'flex-start', gap: 8 }} onClick={handleLogout}>
-          <span>🚪</span> Đăng xuất
+        <button className="sidebar-logout-btn" onClick={handleLogout}>
+          <SignOut size={18} weight="regular" />
+          <span>Đăng xuất hệ thống</span>
         </button>
       </div>
     </>
@@ -133,12 +167,15 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile toggle */}
       <button className="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)} id="mobile-menu-toggle">
-        ☰
+        <svg width="20" height="14" viewBox="0 0 18 14" fill="none">
+          <path d="M1 1h16M1 7h16M1 13h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
       </button>
       {mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}
-      <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>{content}</aside>
+      <aside className={`sidebar-island glow-border-rainbow ${mobileOpen ? 'open' : ''}`}>
+        {content}
+      </aside>
     </>
   );
 }

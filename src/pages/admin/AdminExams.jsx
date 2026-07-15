@@ -116,7 +116,7 @@ export default function AdminExams() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button 
+                          <button
                             type="button"
                             className="btn btn-outline btn-sm"
                             style={{ borderColor: '#38bdf8', color: '#38bdf8' }}

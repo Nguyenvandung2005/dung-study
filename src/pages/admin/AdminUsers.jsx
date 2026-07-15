@@ -59,7 +59,7 @@ export default function AdminUsers() {
           <input type="text" className="input" placeholder="Tìm kiếm tên hoặc email..."
             style={{ flex: 1, minWidth: '200px' }}
             value={search} onChange={e => setSearch(e.target.value)} />
-            
+
           <select className="input" value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ width: '150px' }}>
             <option value="">Tất cả Vai trò</option>
             <option value="STUDENT">Học sinh</option>
@@ -79,7 +79,7 @@ export default function AdminUsers() {
             <option value="active">Đang hoạt động</option>
             <option value="locked">Đã khóa</option>
           </select>
-          
+
           <button className="btn btn-primary" onClick={fetchUsers}>🔎 Tìm kiếm</button>
         </div>
 

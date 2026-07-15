@@ -9,7 +9,7 @@ export default function AdminSecurity() {
   const [anomalies, setAnomalies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState(null);
-  
+
   // Filter states
   const [filterSeverity, setFilterSeverity] = useState('ALL');
   const [filterAction, setFilterAction] = useState('ALL');
@@ -56,7 +56,7 @@ export default function AdminSecurity() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-            
+
             {/* AI assisted recommendations */}
             <section>
               <h2 className="section-heading" style={{ marginBottom: 'var(--space-3)' }}>🤖 Hỗ trợ quyết định (AI-Assisted Security Analysis)</h2>
@@ -87,10 +87,10 @@ export default function AdminSecurity() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
                 <h2 className="section-heading" style={{ margin: 0 }}>📋 Chi tiết Security Logs</h2>
                 <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-                  <input 
-                    type="text" 
-                    className="input" 
-                    placeholder="🔍 Tìm kiếm IP..." 
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="🔍 Tìm kiếm IP..."
                     value={searchIp}
                     onChange={e => setSearchIp(e.target.value)}
                     style={{ width: '200px' }}
@@ -140,8 +140,8 @@ export default function AdminSecurity() {
                             </span>
                           </td>
                           <td>
-                            <button 
-                              className="btn btn-outline" 
+                            <button
+                              className="btn btn-outline"
                               style={{ padding: '4px 10px', fontSize: '0.8rem' }}
                               onClick={(e) => { e.stopPropagation(); setSelectedLog(log); }}
                             >

@@ -49,7 +49,7 @@ export default function TeacherDashboard() {
       setExams(examsRes.data);
     }).catch(console.error)
       .finally(() => setLoading(false));
-      
+
     const handleClickOutside = () => setOpenDropdownId(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
@@ -125,7 +125,7 @@ export default function TeacherDashboard() {
               <div className="section-header">
                 <h2 className="section-heading">Danh sách bài thi của bạn</h2>
               </div>
-              
+
               {exams.length > 0 && (
                 <div className="glass-card" style={{ padding: 'var(--space-4)', marginBottom: 'var(--space-4)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <select className="input" value={filterSubject} onChange={e => setFilterSubject(e.target.value)} style={{ width: '180px' }}>
@@ -198,9 +198,9 @@ export default function TeacherDashboard() {
                                   <line x1="3" y1="18" x2="21" y2="18"></line>
                                 </svg>
                               </button>
-                              
+
                               {openDropdownId === exam.id && (
-                                <div 
+                                <div
                                   className="glass-card fade-in"
                                   style={{
                                     position: 'absolute',
@@ -232,7 +232,7 @@ export default function TeacherDashboard() {
                                   >
                                     🔗 Chia sẻ
                                   </button>
-                                  <button 
+                                  <button
                                     type="button"
                                     className="btn btn-ghost btn-sm dropdown-action-item action-export"
                                     disabled={exportingId === exam.id}
@@ -243,14 +243,14 @@ export default function TeacherDashboard() {
                                   >
                                     {exportingId === exam.id ? '⌛ Đang tải...' : '📥 Xuất đề'}
                                   </button>
-                                  <Link 
-                                    to={`/teacher/statistics/${exam.id}`} 
+                                  <Link
+                                    to={`/teacher/statistics/${exam.id}`}
                                     className="btn btn-ghost btn-sm dropdown-action-item action-stats"
                                   >
                                     📊 Thống kê
                                   </Link>
-                                  <Link 
-                                    to={`/teacher/edit/${exam.id}`} 
+                                  <Link
+                                    to={`/teacher/edit/${exam.id}`}
                                     className="btn btn-ghost btn-sm dropdown-action-item action-edit"
                                   >
                                     ✏️ Sửa

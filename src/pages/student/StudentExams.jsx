@@ -64,7 +64,7 @@ export default function StudentExams() {
           <input type="text" className="input" placeholder="Tìm kiếm theo tên bài hoặc môn học..."
             style={{ flex: 1, minWidth: '200px' }}
             value={filter} onChange={e => setFilter(e.target.value)} />
-          
+
           <select className="input" value={selectedGrade} onChange={e => setSelectedGrade(e.target.value)} style={{ width: '150px' }}>
             <option value="">Tất cả Khối</option>
             {GRADES.map(g => <option key={g} value={String(g)}>Lớp {g}</option>)}
@@ -74,7 +74,7 @@ export default function StudentExams() {
             <option value="">Tất cả Môn</option>
             {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          
+
           {(filter !== '' || selectedGrade !== '' || selectedSubject !== '') && (
             <button className="btn btn-ghost btn-sm" onClick={() => { setFilter(''); setSelectedGrade(''); setSelectedSubject(''); }}>
               ✕ Xóa lọc
@@ -99,9 +99,9 @@ export default function StudentExams() {
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, height: '4px',
                   background: exam.subject === 'Toán' ? 'linear-gradient(90deg, #ec4899, #eab308)' :
-                              exam.subject === 'Văn' ? 'linear-gradient(90deg, #3b82f6, #8b5cf6)' :
-                              exam.subject === 'Anh' ? 'linear-gradient(90deg, #10b981, #3b82f6)' :
-                              'var(--gradient-primary)'
+                    exam.subject === 'Văn' ? 'linear-gradient(90deg, #3b82f6, #8b5cf6)' :
+                      exam.subject === 'Anh' ? 'linear-gradient(90deg, #10b981, #3b82f6)' :
+                        'var(--gradient-primary)'
                 }} />
                 <div className="exam-card-header">
                   <span className="badge badge-cyan">{getSubjectIcon(exam.subject)} {exam.subject}</span>
