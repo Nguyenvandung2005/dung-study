@@ -6,23 +6,48 @@ const { authMiddleware } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Cấu hình Cloudinary (chỉ khởi tạo nếu có đầy đủ keys)
+const cloudinaryEnabled =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET;
+
+if (cloudinaryEnabled) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
 // Cấu hình Multer lưu ảnh avatar
-const avatarStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../uploads/avatars');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `avatar-${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
+const avatarStorage = cloudinaryEnabled
+  ? new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: 'dung-study/avatars',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
+      },
+    })
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../uploads/avatars');
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+      },
+      filename: (req, file, cb) => {
+        cb(null, `avatar-${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+      }
+    });
 
 const uploadAvatar = multer({
   storage: avatarStorage,
@@ -96,14 +121,17 @@ router.put('/password', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/users/avatar - Upload Avatar
+// POST /api/users/avatar - Cập nhật avatar
 router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'Vui lòng chọn ảnh' });
+      return res.status(400).json({ message: 'Vui lòng chọn file ảnh' });
     }
-
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    
+    // Nếu dùng Cloudinary, path sẽ là URL đám mây
+    const avatarUrl = cloudinaryEnabled
+      ? req.file.path
+      : `/uploads/avatars/${req.file.filename}`;
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
@@ -111,10 +139,11 @@ router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req
       select: { id: true, name: true, email: true, role: true, grade: true, school: true, avatar: true, settings: true }
     });
 
-    res.json({ message: 'Cập nhật ảnh đại diện thành công', user: updatedUser });
+    res.json({ message: 'Cập nhật avatar thành công', user: updatedUser });
   } catch (error) {
     console.error('[Upload Avatar Error]', error);
-    res.status(500).json({ message: formatErrorMessage(error, 'Lỗi máy chủ') });
+    if (!cloudinaryEnabled && req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ message: formatErrorMessage(error) });
   }
 });
 
