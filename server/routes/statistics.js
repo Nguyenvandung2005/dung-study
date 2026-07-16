@@ -10,6 +10,34 @@ const prisma = new PrismaClient();
 router.get('/global', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
     const { subject } = req.query;
+    const type = req.query.type || req.query.timeType;
+    const start = req.query.start || req.query.timeStart;
+    const end = req.query.end || req.query.timeEnd;
+
+    let dateFilter = {};
+    const now = new Date();
+
+    if (type === 'today') {
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = { gte: today };
+    } else if (type === 'week') {
+      const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+      firstDay.setHours(0, 0, 0, 0);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'custom') {
+      if (start && end) {
+        dateFilter = { gte: new Date(start), lte: new Date(end) };
+      } else if (start && !end) {
+        dateFilter = { gte: new Date(start), lte: new Date() };
+      } else if (!start && end) {
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { gte: startOfYear, lte: new Date(end) };
+      }
+    }
+
     const whereExam = req.user.role === 'ADMIN' ? {} : { createdById: req.user.id };
     if (subject) {
       whereExam.subject = subject;
@@ -21,9 +49,12 @@ router.get('/global', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (re
       return res.json({ totalExams: 0, totalSubmissions: 0, avgScore: 0, totalCheating: 0, trendData: [], subjectData: [], scoreDistribution: [], subjectPerformance: [], recentSubmissions: [] });
     }
 
+    const submissionWhere = { examId: { in: examIds }, status: { in: ['SUBMITTED', 'GRADED'] } };
+    if (Object.keys(dateFilter).length > 0) submissionWhere.submittedAt = dateFilter;
+
     const submissions = await prisma.submission.findMany({
-      where: { examId: { in: examIds }, status: { in: ['SUBMITTED', 'GRADED'] } },
-      include: { 
+      where: submissionWhere,
+      include: {
         exam: { select: { subject: true, title: true } },
         user: { select: { name: true } }
       },
@@ -114,6 +145,34 @@ router.get('/global', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (re
 // GET /api/statistics/exam/:examId — full exam statistics for teacher
 router.get('/exam/:examId', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
+    const type = req.query.type || req.query.timeType;
+    const start = req.query.start || req.query.timeStart;
+    const end = req.query.end || req.query.timeEnd;
+
+    let dateFilter = {};
+    const now = new Date();
+
+    if (type === 'today') {
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = { gte: today };
+    } else if (type === 'week') {
+      const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+      firstDay.setHours(0, 0, 0, 0);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'custom') {
+      if (start && end) {
+        dateFilter = { gte: new Date(start), lte: new Date(end) };
+      } else if (start && !end) {
+        dateFilter = { gte: new Date(start), lte: new Date() };
+      } else if (!start && end) {
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { gte: startOfYear, lte: new Date(end) };
+      }
+    }
+
     const exam = await prisma.exam.findUnique({
       where: { id: req.params.examId },
       include: { questions: { orderBy: { order: 'asc' } } }
@@ -123,8 +182,11 @@ router.get('/exam/:examId', authMiddleware, requireRole('TEACHER', 'ADMIN'), asy
       return res.status(403).json({ message: 'Không có quyền xem thống kê' });
     }
 
+    const submissionWhere = { examId: req.params.examId, status: { in: ['SUBMITTED', 'GRADED'] } };
+    if (Object.keys(dateFilter).length > 0) submissionWhere.submittedAt = dateFilter;
+
     const submissions = await prisma.submission.findMany({
-      where: { examId: req.params.examId, status: { in: ['SUBMITTED', 'GRADED'] } },
+      where: submissionWhere,
       include: {
         user: { select: { id: true, name: true, email: true, grade: true } },
         answers: true,
@@ -241,19 +303,201 @@ router.get('/exam/:examId', authMiddleware, requireRole('TEACHER', 'ADMIN'), asy
 router.get('/teacher', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (req, res) => {
   try {
     const teacherId = req.user.id;
-    const exams = await prisma.exam.findMany({ where: { createdById: teacherId } });
+    const type = req.query.type || req.query.timeType;
+    const start = req.query.start || req.query.timeStart;
+    const end = req.query.end || req.query.timeEnd;
+
+    let dateFilter = {};
+    const now = new Date();
+
+    if (type === 'today') {
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = { gte: today };
+    } else if (type === 'week') {
+      const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+      firstDay.setHours(0, 0, 0, 0);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'custom') {
+      if (start && end) {
+        dateFilter = { gte: new Date(start), lte: new Date(end) };
+      } else if (start && !end) {
+        dateFilter = { gte: new Date(start), lte: new Date() };
+      } else if (!start && end) {
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { gte: startOfYear, lte: new Date(end) };
+      }
+    }
+
+    const examWhere = { createdById: teacherId };
+    if (Object.keys(dateFilter).length > 0) examWhere.createdAt = dateFilter;
+    const exams = await prisma.exam.findMany({ where: examWhere });
     const examIds = exams.map(e => e.id);
-    const totalSubmissions = await prisma.submission.count({ where: { examId: { in: examIds }, status: { in: ['SUBMITTED', 'GRADED'] } } });
-    const pendingGrading = await prisma.gradingTask.count({ where: { submissionId: { in: (await prisma.submission.findMany({ where: { examId: { in: examIds } } })).map(s => s.id) }, status: { in: ['PENDING', 'AI_GRADED'] } } });
+
+    const submissionWhere = { examId: { in: examIds }, status: { in: ['SUBMITTED', 'GRADED'] } };
+    if (Object.keys(dateFilter).length > 0) submissionWhere.submittedAt = dateFilter;
+
+    const submissions = await prisma.submission.findMany({
+      where: submissionWhere,
+      select: { id: true, percentage: true, submittedAt: true }
+    });
+
+    const pendingGradingWhere = { submissionId: { in: submissions.map(s => s.id) }, status: { in: ['PENDING', 'AI_GRADED'] } };
+    if (Object.keys(dateFilter).length > 0) pendingGradingWhere.createdAt = dateFilter;
+    const pendingGrading = await prisma.gradingTask.count({ where: pendingGradingWhere });
+
+    // Chart 1: Trend Data (Line chart - Tần suất nộp bài)
+    const trendMap = {};
+    submissions.forEach(s => {
+      if (s.submittedAt) {
+        const d = new Date(s.submittedAt);
+        const label = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        if (!trendMap[label]) trendMap[label] = { name: label, nopBai: 0, rawDate: new Date(d.setHours(0, 0, 0, 0)).getTime() };
+        trendMap[label].nopBai++;
+      }
+    });
+    const trendData = Object.values(trendMap).sort((a, b) => a.rawDate - b.rawDate).map(({ rawDate, ...rest }) => rest);
+
+    // Chart 2: Score Distribution (Bar chart - Phổ điểm)
+    const scoreDist = Array(10).fill(0);
+    submissions.forEach(s => {
+      if (s.percentage !== null) {
+        const index = Math.min(Math.floor(s.percentage / 10), 9);
+        scoreDist[index]++;
+      }
+    });
+    const scoreDistribution = scoreDist.map((count, i) => ({ name: `${i * 10}-${i * 10 + 9}`, HocSinh: count }));
+
+    // Chart 3: Subject Distribution (Pie chart - Tỷ lệ môn học/bài kiểm tra)
+    const subjectCount = exams.reduce((acc, curr) => {
+      acc[curr.subject] = (acc[curr.subject] || 0) + 1;
+      return acc;
+    }, {});
+    const colors = ['#38bdf8', '#a78bfa', '#fb7185', '#34d399', '#facc15'];
+    const subjectData = Object.keys(subjectCount).map((name, i) => ({ name, value: subjectCount[name], color: colors[i % colors.length] }));
 
     res.json({
       totalExams: exams.length,
       publishedExams: exams.filter(e => e.isPublished).length,
-      totalSubmissions,
+      totalSubmissions: submissions.length,
       pendingGrading,
+      trendData,
+      scoreDistribution,
+      subjectData
     });
   } catch (error) {
     res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải thống kê giáo viên') });
+  }
+});
+
+// GET /api/statistics/student — student's overview
+router.get('/student', authMiddleware, requireRole('STUDENT', 'ADMIN'), async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const type = req.query.type || req.query.timeType;
+    const start = req.query.start || req.query.timeStart;
+    const end = req.query.end || req.query.timeEnd;
+
+    let dateFilter = {};
+    const now = new Date();
+
+    if (type === 'today') {
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = { gte: today };
+    } else if (type === 'week') {
+      const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+      firstDay.setHours(0, 0, 0, 0);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'custom') {
+      if (start && end) {
+        dateFilter = { gte: new Date(start), lte: new Date(end) };
+      } else if (start && !end) {
+        dateFilter = { gte: new Date(start), lte: new Date() };
+      } else if (!start && end) {
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { gte: startOfYear, lte: new Date(end) };
+      }
+    }
+
+    const where = { userId: studentId, status: { in: ['SUBMITTED', 'GRADED'] } };
+    if (Object.keys(dateFilter).length > 0) where.createdAt = dateFilter;
+
+    const submissions = await prisma.submission.findMany({
+      where,
+      include: { exam: { select: { subject: true } } },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    // Chart 1: Progress Data (Area chart - Tiến độ điểm số theo thời gian)
+    const progressData = submissions
+      .filter(s => s.percentage !== null)
+      .map(s => {
+        const d = new Date(s.createdAt);
+        return {
+          name: `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`,
+          Điểm: Math.round(s.percentage * 10) / 10
+        };
+      });
+
+    // Chart 2: Subject Radar Data (Radar chart - Năng lực các môn)
+    const subjectMap = {};
+    submissions.forEach(s => {
+      if (s.percentage !== null) {
+        const subj = s.exam?.subject || 'Khác';
+        if (!subjectMap[subj]) subjectMap[subj] = { total: 0, count: 0 };
+        subjectMap[subj].total += s.percentage;
+        subjectMap[subj].count++;
+      }
+    });
+    const radarData = Object.keys(subjectMap).map(subj => ({
+      subject: subj,
+      Điểm_TB: Math.round((subjectMap[subj].total / subjectMap[subj].count) * 10) / 10,
+      fullMark: 100
+    }));
+
+    // Chart 3: Status Donut Data (Phân loại kết quả)
+    let excellent = 0;
+    let good = 0;
+    let average = 0;
+    let poor = 0;
+
+    submissions.forEach(s => {
+      if (s.percentage !== null) {
+        if (s.percentage >= 80) excellent++;
+        else if (s.percentage >= 65) good++;
+        else if (s.percentage >= 50) average++;
+        else poor++;
+      }
+    });
+
+    const donutData = [
+      { name: 'Giỏi (>=80)', value: excellent, color: '#34d399' },
+      { name: 'Khá (>=65)', value: good, color: '#38bdf8' },
+      { name: 'TB (>=50)', value: average, color: '#facc15' },
+      { name: 'Yếu (<50)', value: poor, color: '#fb7185' },
+    ].filter(d => d.value > 0);
+
+    const gradedSubmissions = submissions.filter(s => s.percentage !== null);
+    const averageScore = gradedSubmissions.length > 0
+      ? Math.round(gradedSubmissions.reduce((acc, curr) => acc + curr.percentage, 0) / gradedSubmissions.length)
+      : 0;
+
+    res.json({
+      totalSubmissions: submissions.length,
+      gradedSubmissions: gradedSubmissions.length,
+      averageScore,
+      progressData,
+      radarData,
+      donutData
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải thống kê cá nhân') });
   }
 });
 

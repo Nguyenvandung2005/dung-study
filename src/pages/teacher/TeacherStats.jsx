@@ -3,6 +3,7 @@ import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import TimeFilter from '../../components/ui/TimeFilter';
 import api from '../../api/client';
 
 
@@ -186,25 +187,28 @@ export default function TeacherStats() {
   const [studentSearch, setStudentSearch] = useState('');
   const [studentFilter, setStudentFilter] = useState('ALL');
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [timeRange, setTimeRange] = useState({ type: 'all' });
 
   useEffect(() => {
     setLoading(true);
     setError('');
+    const timeParams = `timeType=${timeRange.type}&timeStart=${timeRange.start || ''}&timeEnd=${timeRange.end || ''}`;
+    
     if (!examId) {
-      const url = subjectFilter ? `/statistics/global?subject=${encodeURIComponent(subjectFilter)}` : '/statistics/global';
+      const url = subjectFilter ? `/statistics/global?subject=${encodeURIComponent(subjectFilter)}&${timeParams}` : `/statistics/global?${timeParams}`;
       api.get(url)
         .then(res => setData({ isGlobal: true, ...res.data }))
         .catch(err => setError(err.response?.data?.message || 'Lỗi khi tải thống kê tổng quan'))
         .finally(() => setLoading(false));
     } else {
-      api.get(`/statistics/exam/${examId}`)
+      api.get(`/statistics/exam/${examId}?${timeParams}`)
         .then(res => setData({ isGlobal: false, ...res.data }))
         .catch(err => setError(err.response?.data?.message || 'Lỗi khi tải thống kê bài kiểm tra'))
         .finally(() => setLoading(false));
     }
-  }, [examId, subjectFilter]);
+  }, [examId, subjectFilter, timeRange]);
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="page-layout">
         <AnimatedBackground />
@@ -238,37 +242,40 @@ export default function TeacherStats() {
         <AnimatedBackground />
         <Sidebar />
         <main className="main-content fade-in">
-          <div className="page-header">
+          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h1 className="page-title">
                 🌍 Thống kê <span className="gradient-text">{subjectFilter ? `Môn ${subjectFilter}` : 'Tổng quan'}</span>
               </h1>
               <p className="page-subtitle">Dữ liệu phân tích toàn hệ thống bài kiểm tra của bạn.</p>
             </div>
-            {subjectFilter && (
-              <button className="btn btn-outline" onClick={() => navigate('/teacher/statistics')}>
-                ✕ Xóa bộ lọc môn học
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
+              {subjectFilter && (
+                <button className="btn btn-outline" onClick={() => navigate('/teacher/statistics')}>
+                  ✕ Bỏ lọc môn
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="stats-grid" style={{ marginBottom: 'var(--space-6)' }}>
-            <div className="stat-card glass-card">
+            <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '100ms', '--glow-color': '#f43f5e' }}>
               <span className="stat-icon">📚</span>
               <span className="stat-value">{data.totalExams}</span>
               <span className="stat-label">Tổng bài kiểm tra</span>
             </div>
-            <div className="stat-card glass-card">
+            <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '150ms', '--glow-color': '#fbbf24' }}>
               <span className="stat-icon">👥</span>
               <span className="stat-value">{data.totalSubmissions}</span>
               <span className="stat-label">Tổng lượt nộp bài</span>
             </div>
-            <div className="stat-card glass-card">
+            <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '200ms', '--glow-color': '#10b981' }}>
               <span className="stat-icon">📈</span>
               <span className="stat-value">{data.avgScore}</span>
               <span className="stat-label">Điểm trung bình (Hệ 100)</span>
             </div>
-            <div className="stat-card glass-card">
+            <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '250ms', '--glow-color': '#3b82f6' }}>
               <span className="stat-icon">🚨</span>
               <span className="stat-value">{data.totalCheating}</span>
               <span className="stat-label">Lượt vi phạm quy chế</span>
@@ -276,7 +283,7 @@ export default function TeacherStats() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
-            <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+            <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '300ms', '--glow-color': '#3b82f6', padding: 'var(--space-6)' }}>
               <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>📈 Xu hướng nộp bài (7 ngày qua)</h3>
               <div style={{ height: 300, width: '100%' }}>
                 <ResponsiveContainer>
@@ -297,7 +304,7 @@ export default function TeacherStats() {
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+            <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '350ms', '--glow-color': '#f43f5e', padding: 'var(--space-6)' }}>
               <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>📚 Cơ cấu Môn học</h3>
               <div style={{ height: 300, width: '100%' }}>
                 <ResponsiveContainer>
@@ -325,7 +332,7 @@ export default function TeacherStats() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
-            <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+            <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '400ms', '--glow-color': '#10b981', padding: 'var(--space-6)' }}>
               <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>📊 Phổ điểm toàn cục (Hệ 100)</h3>
               <div style={{ height: 320, width: '100%' }}>
                 <ResponsiveContainer>
@@ -340,7 +347,7 @@ export default function TeacherStats() {
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+            <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '450ms', '--glow-color': '#d946ef', padding: 'var(--space-6)' }}>
               <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>🎯 Năng lực theo môn (Điểm TB)</h3>
               <div style={{ height: 320, width: '100%' }}>
                 <ResponsiveContainer>
@@ -356,7 +363,7 @@ export default function TeacherStats() {
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+          <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '500ms', '--glow-color': '#8b5cf6', padding: 'var(--space-6)' }}>
             <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>🕒 Lịch sử nộp bài gần đây</h3>
             {data.recentSubmissions.length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
@@ -402,7 +409,7 @@ export default function TeacherStats() {
         <AnimatedBackground />
         <Sidebar />
         <main className="main-content">
-          <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
+          <div className="bento-card cascade-in" style={{ '--cascade-delay': '100ms', padding: '2rem', textAlign: 'center' }}>
             <h2>Chưa có dữ liệu</h2>
             <p>Bài kiểm tra này chưa có học sinh nào nộp bài.</p>
             <Link to="/teacher" className="btn btn-primary" style={{ marginTop: '1rem' }}>Quay lại</Link>
@@ -434,32 +441,35 @@ export default function TeacherStats() {
       <AnimatedBackground />
       <Sidebar />
       <main className="main-content fade-in">
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h1 className="page-title">📊 Thống kê: <span className="gradient-text">{exam.title}</span></h1>
             <p className="page-subtitle">Tổng quan điểm số và phát hiện đối phó.</p>
           </div>
-          <Link to="/teacher" className="btn btn-outline">⬅ Quay lại</Link>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
+            <Link to="/teacher/statistics" className="btn btn-outline">⬅ Quay lại</Link>
+          </div>
         </div>
 
         {/* Overview Stats */}
         <div className="stats-grid" style={{ marginBottom: 'var(--space-6)' }}>
-          <div className="stat-card glass-card">
+          <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '100ms', '--glow-color': '#fbbf24' }}>
             <span className="stat-icon">👥</span>
             <span className="stat-value">{stats.totalSubmissions}</span>
             <span className="stat-label">Lượt nộp bài</span>
           </div>
-          <div className="stat-card glass-card">
+          <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '150ms', '--glow-color': '#10b981' }}>
             <span className="stat-icon">📈</span>
             <span className="stat-value">{stats.avgScore.toFixed(1)}</span>
             <span className="stat-label">Điểm trung bình (Hệ 100)</span>
           </div>
-          <div className="stat-card glass-card">
+          <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '200ms', '--glow-color': '#3b82f6' }}>
             <span className="stat-icon">⭐</span>
             <span className="stat-value">{stats.maxScore.toFixed(1)}</span>
             <span className="stat-label">Điểm cao nhất</span>
           </div>
-          <div className="stat-card glass-card">
+          <div className="stat-card bento-card glow-border cascade-in" style={{ '--cascade-delay': '250ms', '--glow-color': '#8b5cf6' }}>
             <span className="stat-icon">✅</span>
             <span className="stat-value">{stats.passRate}%</span>
             <span className="stat-label">Tỷ lệ đạt (≥ 50%)</span>
@@ -468,7 +478,7 @@ export default function TeacherStats() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
           {/* Chart */}
-          <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+          <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '300ms', '--glow-color': '#10b981', padding: 'var(--space-6)' }}>
             <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>Phổ điểm (Hệ 100)</h3>
             <div style={{ height: 300, width: '100%' }}>
               <ResponsiveContainer>
@@ -484,7 +494,7 @@ export default function TeacherStats() {
           </div>
 
           {/* Anti-cheat summary */}
-          <div className="glass-card" style={{ padding: 'var(--space-6)', display: 'flex', flexDirection: 'column' }}>
+          <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '350ms', '--glow-color': '#f43f5e', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: 'var(--space-4)', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px' }}>
               <button 
                 type="button"
@@ -595,7 +605,7 @@ export default function TeacherStats() {
         </div>
 
         {/* Student Submissions List */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
+        <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '400ms', '--glow-color': '#3b82f6', padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: 'var(--space-6)' }}>
             <div>
               <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>📋 Danh Sách Kết Quả Làm Bài Của Học Sinh ({submissions.length} lượt nộp)</h3>
@@ -719,7 +729,7 @@ export default function TeacherStats() {
         </div>
 
         {/* Question Analysis */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
+        <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '450ms', '--glow-color': '#eab308', padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
           <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--text-primary)' }}>Thống kê từng câu hỏi</h3>
           <div style={{ overflowX: 'auto' }}>
             <table className="data-table">

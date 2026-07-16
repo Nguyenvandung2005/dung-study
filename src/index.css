@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    DUNG STUDY — DESIGN SYSTEM
    EduPrime Theme: Dark Glassmorphism
    ============================================= */
@@ -334,16 +334,53 @@ h6 {
 /* ---- GLASS CARD ---- */
 .glass-card {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1.5px solid transparent !important;
   border-radius: var(--radius-lg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
-  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  position: relative;
+  z-index: 1;
+  background-clip: padding-box !important;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  margin: -1.5px;
+  z-index: -2;
+  background: conic-gradient(from var(--border-angle),
+      transparent 15%,
+      var(--glow-color, var(--clr-primary-400)) 85%,
+      transparent 100%);
+  animation: borderRotate 3s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+
+.glass-card:hover::before {
+  opacity: 1;
 }
 
 .glass-card:hover {
-  border-color: var(--border-strong);
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transform: translateY(-2px);
@@ -698,16 +735,17 @@ select.input option {
   initial-value: 0turn;
 }
 
-.glow-border {
+.glow-border, .btn, .table-row {
   position: relative;
   z-index: 1;
   /* Ensure border is completely transparent */
-  border: 1.5px solid transparent !important;
+  border: 1.5px solid transparent;
   /* Prevent background from covering the transparent border area */
-  background-clip: padding-box !important;
+  background-clip: padding-box;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
-.glow-border::before {
+.glow-border::before, .btn::before, .table-row::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -733,7 +771,7 @@ select.input option {
 }
 
 /* Optional: Fallback for subtle border when not glowing */
-.glow-border::after {
+.glow-border::after, .btn::after, .table-row::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -744,8 +782,14 @@ select.input option {
 }
 
 .glow-border:hover::before,
-.glow-border.active::before {
+.glow-border.active::before,
+.btn:hover::before,
+.table-row:hover::before {
   opacity: 1;
+}
+
+.glow-border:hover, .btn:hover {
+  transform: translateY(-2px);
 }
 
 /* 2. Rainbow Glow Border (Always On) */
@@ -997,6 +1041,10 @@ select.input option {
   grid-column: span 8;
 }
 
+.bento-span-12 {
+  grid-column: span 12;
+}
+
 /* ---- BENTO CARDS ---- */
 .bento-card-wrapper {
   display: flex;
@@ -1081,4 +1129,4 @@ select.input option {
 
 .bento-card:hover .stat-card-glow {
   opacity: 0.12;
-}
+}

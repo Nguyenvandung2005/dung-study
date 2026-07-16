@@ -2,19 +2,23 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import TimeFilter from '../../components/ui/TimeFilter';
 import api from '../../api/client';
 import '../Dashboard.css';
 
 export default function StudentHistory() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState({ type: 'all' });
 
   useEffect(() => {
-    api.get('/submissions/history')
+    setLoading(true);
+    const timeParams = `?timeType=${timeRange.type}&timeStart=${timeRange.start || ''}&timeEnd=${timeRange.end || ''}`;
+    api.get(`/submissions/history${timeParams}`)
       .then(({ data }) => setHistory(data))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [timeRange]);
 
   const getScoreClass = (pct) => {
     if (pct === null || pct === undefined) return 'badge-warning';
@@ -33,10 +37,13 @@ export default function StudentHistory() {
       <AnimatedBackground />
       <Sidebar />
       <main className="main-content fade-in">
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 className="page-title">📊 Lịch sử <span className="gradient-text">Làm bài</span></h1>
             <p className="page-subtitle">Xem lại kết quả và đáp án đúng của các lần làm bài trước.</p>
+          </div>
+          <div>
+            <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
           </div>
         </div>
 
@@ -46,13 +53,13 @@ export default function StudentHistory() {
             <p>Đang tải lịch sử làm bài...</p>
           </div>
         ) : history.length === 0 ? (
-          <div className="empty-state glass-card">
+          <div className="empty-state bento-card cascade-in" style={{ '--cascade-delay': '200ms' }}>
             <span className="empty-icon">📭</span>
             <p>Bạn chưa làm bài kiểm tra nào. Hãy thử ngay!</p>
             <Link to="/student/exams" className="btn btn-primary btn-sm">Xem bài thi</Link>
           </div>
         ) : (
-          <div className="glass-card" style={{ overflowX: 'auto' }}>
+          <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '150ms', '--glow-color': '#fb7185', overflowX: 'auto', padding: '12px' }}>
             <table className="data-table">
               <thead>
                 <tr>

@@ -40,12 +40,13 @@ const uploadAvatar = multer({
 // PUT /api/users/profile - Cập nhật thông tin & settings
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    const { name, grade, settings } = req.body;
+    const { name, grade, settings, school } = req.body;
     
     // Build update data
     const data = {};
     if (name) data.name = name;
     if (req.user.role === 'STUDENT' && grade) data.grade = parseInt(grade) || req.user.grade;
+    if (school !== undefined) data.school = school;
     if (settings) {
       // Validate settings object
       data.settings = typeof settings === 'object' ? settings : {};
@@ -54,7 +55,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data,
-      select: { id: true, name: true, email: true, role: true, grade: true, avatar: true, settings: true }
+      select: { id: true, name: true, email: true, role: true, grade: true, school: true, avatar: true, settings: true }
     });
 
     res.json({ message: 'Cập nhật thành công', user: updatedUser });
@@ -107,7 +108,7 @@ router.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data: { avatar: avatarUrl },
-      select: { id: true, name: true, email: true, role: true, grade: true, avatar: true, settings: true }
+      select: { id: true, name: true, email: true, role: true, grade: true, school: true, avatar: true, settings: true }
     });
 
     res.json({ message: 'Cập nhật ảnh đại diện thành công', user: updatedUser });

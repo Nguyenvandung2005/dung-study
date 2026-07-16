@@ -11,21 +11,69 @@ const prisma = new PrismaClient();
 // GET /api/admin/dashboard
 router.get('/dashboard', authMiddleware, requireRole('ADMIN'), async (req, res) => {
   try {
+    const { type, start, end } = req.query;
+    
+    // Xử lý bộ lọc thời gian
+    let dateFilter = {};
+    const now = new Date();
+    
+    if (type === 'today') {
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = { gte: today };
+    } else if (type === 'week') {
+      const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+      firstDay.setHours(0, 0, 0, 0);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: firstDay };
+    } else if (type === 'custom') {
+      if (start && end) {
+        dateFilter = { gte: new Date(start), lte: new Date(end) };
+      } else if (start && !end) {
+        dateFilter = { gte: new Date(start), lte: new Date() }; // từ start đến hiện tại
+      } else if (!start && end) {
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { gte: startOfYear, lte: new Date(end) }; // từ đầu năm đến end
+      }
+    }
+
+    const whereCondition = Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {};
+
     const [totalUsers, totalExams, totalSubmissions, pendingGrading, recentLogs] = await Promise.all([
-      prisma.user.count(),
-      prisma.exam.count(),
-      prisma.submission.count({ where: { status: { in: ['SUBMITTED', 'GRADED'] } } }),
-      prisma.gradingTask.count({ where: { status: 'PENDING' } }),
+      prisma.user.count({ where: whereCondition }),
+      prisma.exam.count({ where: whereCondition }),
+      prisma.submission.count({ where: { status: { in: ['SUBMITTED', 'GRADED'] }, ...whereCondition } }),
+      prisma.gradingTask.count({ where: { status: 'PENDING', ...whereCondition } }),
       prisma.securityLog.findMany({
+        where: whereCondition,
         orderBy: { createdAt: 'desc' }, take: 20,
         include: { user: { select: { name: true, email: true } } }
       }),
     ]);
 
-    const usersByRole = await prisma.user.groupBy({ by: ['role'], _count: true });
-    const criticalLogs = await prisma.securityLog.count({ where: { severity: { in: ['HIGH', 'CRITICAL'] }, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } });
+    const usersByRole = await prisma.user.groupBy({ by: ['role'], _count: true, where: whereCondition });
+    const criticalLogs = await prisma.securityLog.count({ where: { severity: { in: ['HIGH', 'CRITICAL'] }, ...whereCondition } });
 
-    res.json({ totalUsers, totalExams, totalSubmissions, pendingGrading, usersByRole, criticalLogs, recentLogs });
+    // Generate dynamic activityData for Line Chart
+    const submissions = await prisma.submission.findMany({ where: whereCondition, select: { createdAt: true } });
+    const visits = await prisma.securityLog.findMany({ where: { action: 'LOGIN_SUCCESS', ...whereCondition }, select: { createdAt: true } });
+
+    const activityMap = {};
+    const processDate = (date, key) => {
+      const d = new Date(date);
+      // Format as DD/MM for chart labels
+      const label = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (!activityMap[label]) activityMap[label] = { name: label, truyCap: 0, nopBai: 0, rawDate: new Date(d.setHours(0,0,0,0)).getTime() };
+      activityMap[label][key]++;
+    };
+    
+    submissions.forEach(s => processDate(s.createdAt, 'nopBai'));
+    visits.forEach(v => processDate(v.createdAt, 'truyCap'));
+
+    const activityData = Object.values(activityMap).sort((a, b) => a.rawDate - b.rawDate).map(({ rawDate, ...rest }) => rest);
+
+    res.json({ totalUsers, totalExams, totalSubmissions, pendingGrading, usersByRole, criticalLogs, recentLogs, activityData });
   } catch (error) {
     res.status(500).json({ message: formatErrorMessage(typeof error !== 'undefined' ? error : (typeof err !== 'undefined' ? err : null), 'Lỗi khi tải dashboard') });
   }
@@ -34,17 +82,46 @@ router.get('/dashboard', authMiddleware, requireRole('ADMIN'), async (req, res) 
 // GET /api/admin/users
 router.get('/users', authMiddleware, requireRole('ADMIN'), async (req, res) => {
   try {
-    const { search, role, grade, status, page = 1, limit = 20 } = req.query;
-    const where = {};
-    if (search) where.OR = [{ name: { contains: search } }, { email: { contains: search } }];
-    if (role) where.role = role;
-    if (grade) where.grade = parseInt(grade);
-    if (status === 'locked') where.isLocked = true;
-    if (status === 'active') where.isLocked = false;
+    const { search, role, grade, status, page = 1, limit = 50, timeType, timeStart, timeEnd } = req.query;
+
+    const whereCondition = {};
+    if (search) {
+      whereCondition.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } }
+      ];
+    }
+    if (role) whereCondition.role = role;
+    if (grade) whereCondition.grade = parseInt(grade);
+    if (status === 'locked') whereCondition.isLocked = true;
+    if (status === 'active') whereCondition.isLocked = false;
+
+    if (timeType && timeType !== 'all') {
+      const now = new Date();
+      if (timeType === 'today') {
+        whereCondition.createdAt = { gte: new Date(now.setHours(0, 0, 0, 0)) };
+      } else if (timeType === 'week') {
+        const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+        firstDay.setHours(0, 0, 0, 0);
+        whereCondition.createdAt = { gte: firstDay };
+      } else if (timeType === 'month') {
+        whereCondition.createdAt = { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+      } else if (timeType === 'custom') {
+        if (timeStart && timeEnd) whereCondition.createdAt = { gte: new Date(timeStart), lte: new Date(timeEnd) };
+        else if (timeStart) whereCondition.createdAt = { gte: new Date(timeStart) };
+        else if (timeEnd) whereCondition.createdAt = { lte: new Date(timeEnd) };
+      }
+    }
 
     const [users, total] = await Promise.all([
-      prisma.user.findMany({ where, skip: (page - 1) * limit, take: parseInt(limit), orderBy: { createdAt: 'desc' }, select: { id: true, name: true, email: true, role: true, grade: true, isLocked: true, isVerified: true, createdAt: true } }),
-      prisma.user.count({ where })
+      prisma.user.findMany({
+        where: whereCondition,
+        select: { id: true, name: true, email: true, role: true, grade: true, isLocked: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit)
+      }),
+      prisma.user.count({ where: whereCondition })
     ]);
     res.json({ users, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
   } catch (error) {
@@ -77,9 +154,27 @@ router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), async (req
 // GET /api/admin/security-logs
 router.get('/security-logs', authMiddleware, requireRole('ADMIN'), async (req, res) => {
   try {
-    const { severity, page = 1, limit = 50 } = req.query;
+    const { severity, page = 1, limit = 50, timeType, timeStart, timeEnd } = req.query;
     const where = {};
     if (severity) where.severity = severity;
+
+    if (timeType && timeType !== 'all') {
+      const now = new Date();
+      if (timeType === 'today') {
+        where.createdAt = { gte: new Date(now.setHours(0, 0, 0, 0)) };
+      } else if (timeType === 'week') {
+        const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+        firstDay.setHours(0, 0, 0, 0);
+        where.createdAt = { gte: firstDay };
+      } else if (timeType === 'month') {
+        where.createdAt = { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+      } else if (timeType === 'custom') {
+        if (timeStart && timeEnd) where.createdAt = { gte: new Date(timeStart), lte: new Date(timeEnd) };
+        else if (timeStart) where.createdAt = { gte: new Date(timeStart) };
+        else if (timeEnd) where.createdAt = { lte: new Date(timeEnd) };
+      }
+    }
+
     const logs = await prisma.securityLog.findMany({
       where, skip: (page - 1) * limit, take: parseInt(limit),
       orderBy: { createdAt: 'desc' },
@@ -146,9 +241,32 @@ router.post('/animation-themes/custom', authMiddleware, requireRole('ADMIN'), as
 // GET /api/admin/anomalies — AI-assisted anomaly detection summary
 router.get('/anomalies', authMiddleware, requireRole('ADMIN'), async (req, res) => {
   try {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const { timeType, timeStart, timeEnd } = req.query;
+    
+    let dateFilter = {};
+    const now = new Date();
+    
+    if (timeType && timeType !== 'all') {
+      if (timeType === 'today') {
+        dateFilter = { gte: new Date(now.setHours(0, 0, 0, 0)) };
+      } else if (timeType === 'week') {
+        const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+        firstDay.setHours(0, 0, 0, 0);
+        dateFilter = { gte: firstDay };
+      } else if (timeType === 'month') {
+        dateFilter = { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+      } else if (timeType === 'custom') {
+        if (timeStart && timeEnd) dateFilter = { gte: new Date(timeStart), lte: new Date(timeEnd) };
+        else if (timeStart) dateFilter = { gte: new Date(timeStart) };
+        else if (timeEnd) dateFilter = { lte: new Date(timeEnd) };
+      }
+    } else {
+      // Default behavior if no filter
+      dateFilter = { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) };
+    }
+
     const criticalLogs = await prisma.securityLog.findMany({
-      where: { severity: { in: ['HIGH', 'CRITICAL'] }, createdAt: { gte: since } },
+      where: { severity: { in: ['HIGH', 'CRITICAL'] }, createdAt: dateFilter },
       include: { user: { select: { name: true, email: true } } },
       orderBy: { createdAt: 'desc' }
     });

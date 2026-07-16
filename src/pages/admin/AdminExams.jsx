@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import TimeFilter from '../../components/ui/TimeFilter';
 import api from '../../api/client';
 import ExportExamModal from '../../components/exam/ExportExamModal';
 
@@ -17,6 +18,7 @@ export default function AdminExams() {
   const [loading, setLoading] = useState(true);
   const [exportExam, setExportExam] = useState(null);
   const [exportingId, setExportingId] = useState(null);
+  const [timeRange, setTimeRange] = useState({ type: 'all' });
 
   const handleOpenExportModal = async (examId) => {
     try {
@@ -32,7 +34,8 @@ export default function AdminExams() {
 
   const fetchExams = () => {
     setLoading(true);
-    api.get('/exams')
+    const timeParams = `?timeType=${timeRange.type}&timeStart=${timeRange.start || ''}&timeEnd=${timeRange.end || ''}`;
+    api.get(`/exams${timeParams}`)
       .then(({ data }) => setExams(data))
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -40,7 +43,7 @@ export default function AdminExams() {
 
   useEffect(() => {
     fetchExams();
-  }, []);
+  }, [timeRange]);
 
   const handleTogglePublish = async (id, isPublished) => {
     try {
@@ -66,10 +69,13 @@ export default function AdminExams() {
       <AnimatedBackground />
       <Sidebar />
       <main className="main-content fade-in">
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 className="page-title">Quản lý <span className="gradient-text">Bài kiểm tra</span> 📝</h1>
             <p className="page-subtitle">Giám sát, kích hoạt hoặc xóa các đề kiểm tra K1-K12 trên toàn hệ thống.</p>
+          </div>
+          <div>
+            <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
           </div>
         </div>
 

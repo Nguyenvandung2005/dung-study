@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import TimeFilter from '../../components/ui/TimeFilter';
 import api from '../../api/client';
 import SecurityLogModal from '../../components/admin/SecurityLogModal';
 
@@ -14,6 +15,7 @@ export default function AdminSecurity() {
   const [filterSeverity, setFilterSeverity] = useState('ALL');
   const [filterAction, setFilterAction] = useState('ALL');
   const [searchIp, setSearchIp] = useState('');
+  const [timeRange, setTimeRange] = useState({ type: 'today' });
 
   // Derived unique actions for filter dropdown
   const uniqueActions = [...new Set(logs.map(log => log.action))];
@@ -27,25 +29,30 @@ export default function AdminSecurity() {
   });
 
   useEffect(() => {
+    setLoading(true);
+    const timeParams = `?timeType=${timeRange.type}&timeStart=${timeRange.start || ''}&timeEnd=${timeRange.end || ''}`;
     Promise.all([
-      api.get('/admin/security-logs'),
-      api.get('/admin/anomalies')
+      api.get(`/admin/security-logs${timeParams}`),
+      api.get(`/admin/anomalies${timeParams}`)
     ]).then(([logsRes, anomaliesRes]) => {
       setLogs(logsRes.data.logs);
       setAnomalies(anomaliesRes.data.anomalies);
     }).catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [timeRange]);
 
   return (
     <div className="page-layout">
       <AnimatedBackground />
       <Sidebar />
       <main className="main-content fade-in">
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 className="page-title">Hệ thống <span className="gradient-text">Bảo mật</span> 🔒</h1>
             <p className="page-subtitle">Giám sát các mối đe dọa, brute force, spam và hỗ trợ ra quyết định bằng AI.</p>
+          </div>
+          <div>
+            <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
           </div>
         </div>
 

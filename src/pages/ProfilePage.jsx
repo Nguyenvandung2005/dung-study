@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { getFullUploadUrl } from '../api/client';
 import Sidebar from '../components/ui/Sidebar';
@@ -35,11 +35,27 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [schoolSuggestions, setSchoolSuggestions] = useState([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+
+
   // Form states
   const [accountForm, setAccountForm] = useState({
     name: user?.name || '',
-    grade: user?.grade || ''
+    grade: user?.grade || '',
+    school: user?.school || ''
   });
+
+  useEffect(() => {
+    if (!user) return;
+    setAccountForm({
+      name: user.name || '',
+      grade: user?.grade || '',
+      school: user?.school || ''
+    });
+  }, [user]);
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -75,7 +91,33 @@ export default function ProfilePage() {
     }
   };
 
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar]);
 
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!accountForm.school || accountForm.school.trim().length < 2) {
+        setSchoolSuggestions([]);
+        return;
+      }
+      setIsSuggesting(true);
+      try {
+        const { data } = await api.get('/ai/suggest-schools', { params: { q: accountForm.school } });
+        setSchoolSuggestions(data.suggestions || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSuggesting(false);
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      if (showSuggestions) fetchSuggestions();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [accountForm.school, showSuggestions]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -226,6 +268,54 @@ export default function ProfilePage() {
                 <div className="form-group" style={{ marginBottom: 'var(--space-4)' }}>
                   <label>Họ và tên</label>
                   <input type="text" className="input" value={accountForm.name} onChange={e => setAccountForm({...accountForm, name: e.target.value})} required />
+                </div>
+                <div className="form-group" style={{ marginBottom: 'var(--space-4)', position: 'relative' }}>
+                  <label>Trường học (Gợi ý tự động từ AI)</label>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    value={accountForm.school} 
+                    onChange={e => {
+                      setAccountForm({...accountForm, school: e.target.value});
+                      setShowSuggestions(true);
+                    }} 
+                    onFocus={() => { if (accountForm.school.trim().length >= 2) setShowSuggestions(true); }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    placeholder="Nhập tên trường học của bạn" 
+                  />
+                  {showSuggestions && (isSuggesting || schoolSuggestions.length > 0) && (
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, 
+                      background: 'var(--bg-surface)', border: '1px solid var(--border-strong)', 
+                      borderRadius: 8, marginTop: 4, zIndex: 10,
+                      boxShadow: 'var(--glass-shadow)', overflow: 'hidden'
+                    }}>
+                      {isSuggesting ? (
+                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                          <div className="spinner" style={{ width: 16, height: 16, margin: '0 auto 8px', borderTopColor: 'var(--clr-primary-500)' }} />
+                          AI đang tìm kiếm trường...
+                        </div>
+                      ) : (
+                        <ul style={{ listStyle: 'none', margin: 0, padding: 0, maxHeight: 200, overflowY: 'auto' }}>
+                          {schoolSuggestions.map((school, i) => (
+                            <li 
+                              key={i} 
+                              style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.95rem' }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                              onMouseDown={(e) => {
+                                e.preventDefault(); // Ngăn onBlur kích hoạt trước
+                                setAccountForm({...accountForm, school});
+                                setShowSuggestions(false);
+                              }}
+                            >
+                              ✨ {school}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="form-group" style={{ marginBottom: 'var(--space-4)' }}>
                   <label>Email (Không thể đổi)</label>

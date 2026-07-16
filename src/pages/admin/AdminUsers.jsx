@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import TimeFilter from '../../components/ui/TimeFilter';
 import api from '../../api/client';
 
 export default function AdminUsers() {
@@ -10,10 +11,12 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState('');
   const [gradeFilter, setGradeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [timeRange, setTimeRange] = useState({ type: 'all' });
 
   const fetchUsers = () => {
     setLoading(true);
-    api.get(`/admin/users?search=${search}&role=${roleFilter}&grade=${gradeFilter}&status=${statusFilter}`)
+    const timeParams = `&timeType=${timeRange.type}&timeStart=${timeRange.start || ''}&timeEnd=${timeRange.end || ''}`;
+    api.get(`/admin/users?search=${search}&role=${roleFilter}&grade=${gradeFilter}&status=${statusFilter}${timeParams}`)
       .then(({ data }) => setUsers(data.users))
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -21,7 +24,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, [search, roleFilter, gradeFilter, statusFilter]);
+  }, [search, roleFilter, gradeFilter, statusFilter, timeRange]);
 
   const handleLockUser = async (id, isLocked) => {
     try {
@@ -47,10 +50,13 @@ export default function AdminUsers() {
       <AnimatedBackground />
       <Sidebar />
       <main className="main-content fade-in">
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 className="page-title">Quản lý <span className="gradient-text">Người dùng</span> 👥</h1>
             <p className="page-subtitle">Quản lý phân quyền, khóa và kích hoạt tài khoản trong hệ thống.</p>
+          </div>
+          <div>
+            <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
           </div>
         </div>
 

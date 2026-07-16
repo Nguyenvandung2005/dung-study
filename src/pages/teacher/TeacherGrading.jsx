@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../../components/ui/Sidebar';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import TimeFilter from '../../components/ui/TimeFilter';
 import api, { getFullUploadUrl } from '../../api/client';
 
 
@@ -22,6 +23,7 @@ export default function TeacherGrading() {
   const [gradingTask, setGradingTask] = useState(null); // Which task is currently being graded
   const [teacherScores, setTeacherScores] = useState({});
   const [teacherRemarks, setTeacherRemarks] = useState({});
+  const [timeRange, setTimeRange] = useState({ type: 'all' });
 
   // Filters
   const [filterExam, setFilterExam] = useState('');
@@ -29,12 +31,13 @@ export default function TeacherGrading() {
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [timeRange]);
 
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/submissions/pending-grading');
+      const timeParams = `?timeType=${timeRange.type}&timeStart=${timeRange.start || ''}&timeEnd=${timeRange.end || ''}`;
+      const res = await api.get(`/submissions/pending-grading${timeParams}`);
       setTasks(res.data);
     } catch (e) {
       console.error(e);
@@ -96,16 +99,19 @@ export default function TeacherGrading() {
       <AnimatedBackground />
       <Sidebar />
       <main className="main-content fade-in">
-        <div className="page-header">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 className="page-title">✏️ Chấm bài <span className="gradient-text">Tự luận</span></h1>
             <p className="page-subtitle">Xem điểm tự chấm bởi Gemini AI và thực hiện điều chỉnh nếu muốn.</p>
+          </div>
+          <div>
+            <TimeFilter timeRange={timeRange} setTimeRange={setTimeRange} />
           </div>
         </div>
 
         {gradingTask ? (
           <div className="grading-interface fade-in">
-            <div className="glass-card" style={{ padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
+            <div className="bento-card glow-border cascade-in" style={{ '--glow-color': '#f59e0b', padding: 'var(--space-6)', marginBottom: 'var(--space-6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
                 <div>
                   <h2 style={{ color: 'var(--clr-primary-400)' }}>Học sinh: {gradingTask.task.submission.user.name}</h2>
@@ -191,7 +197,7 @@ export default function TeacherGrading() {
             </div>
           </div>
         ) : (
-          <div className="glass-card" style={{ overflowX: 'auto', padding: 'var(--space-6)' }}>
+          <div className="bento-card glow-border cascade-in" style={{ '--cascade-delay': '100ms', '--glow-color': '#10b981', overflowX: 'auto', padding: '12px' }}>
             {loading ? (
               <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
                 <div className="spinner" style={{ width: 36, height: 36, margin: '0 auto 16px' }} />

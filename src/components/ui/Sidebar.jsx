@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getFullUploadUrl } from '../../api/client';
@@ -56,7 +56,11 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
-  
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar]);
+
   const [simulatedRole, setSimulatedRole] = useState(() => {
     return localStorage.getItem('simulatedRole') || user?.role || 'STUDENT';
   });
@@ -93,8 +97,8 @@ export default function Sidebar() {
           <div className="icon-wrap">
             <Wrench size={16} weight="duotone" />
           </div>
-          <select 
-            value={simulatedRole} 
+          <select
+            value={simulatedRole}
             onChange={e => handleSimulateRole(e.target.value)}
             className="role-sim-select"
           >
@@ -109,9 +113,9 @@ export default function Sidebar() {
       <div className="sidebar-user">
         <div className="sidebar-avatar">
           {user?.avatar && !avatarError ? (
-            <img 
-              src={getFullUploadUrl(user.avatar)} 
-              alt={user.name} 
+            <img
+              src={getFullUploadUrl(user.avatar)}
+              alt={user.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
               onError={() => setAvatarError(true)}
             />
@@ -124,10 +128,10 @@ export default function Sidebar() {
             {user?.name}
           </Link>
           <span className="sidebar-user-role">
-            {user?.role === 'ADMIN' 
-              ? `Hệ thống gốc` 
-              : user?.role === 'TEACHER' 
-                ? 'Giáo viên' 
+            {user?.role === 'ADMIN'
+              ? `Hệ thống gốc`
+              : user?.role === 'TEACHER'
+                ? 'Giáo viên'
                 : `Lớp ${user?.grade}`}
           </span>
         </div>
@@ -169,7 +173,7 @@ export default function Sidebar() {
     <>
       <button className="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)} id="mobile-menu-toggle">
         <svg width="20" height="14" viewBox="0 0 18 14" fill="none">
-          <path d="M1 1h16M1 7h16M1 13h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M1 1h16M1 7h16M1 13h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       </button>
       {mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}

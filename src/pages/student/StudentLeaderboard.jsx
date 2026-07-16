@@ -59,11 +59,11 @@ export default function StudentLeaderboard() {
 
         {/* My rank card */}
         {myRank && (
-          <div className="glass-card fade-in" style={{
+          <div className="bento-card glow-border cascade-in" style={{
+            '--glow-color': '#c084fc',
             padding: 'var(--space-5) var(--space-6)',
             marginBottom: 'var(--space-6)',
             background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1))',
-            border: '1px solid rgba(139,92,246,0.4)',
             display: 'flex', alignItems: 'center', gap: 'var(--space-4)',
           }}>
             <div style={{ fontSize: '2.5rem' }}>{myRank.rank <= 3 ? MEDAL[myRank.rank - 1] : `#${myRank.rank}`}</div>
@@ -97,32 +97,27 @@ export default function StudentLeaderboard() {
             <p style={{ color: 'var(--clr-rose-500)' }}>❌ {error}</p>
           </div>
         ) : leaderboard.length === 0 ? (
-          <div className="empty-state glass-card">
+          <div className="empty-state bento-card cascade-in" style={{ '--cascade-delay': '200ms' }}>
             <span className="empty-icon">🏆</span>
             <p>Chưa có dữ liệu xếp hạng. Hãy hoàn thành bài thi đầu tiên!</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {leaderboard.map((entry) => {
+            {leaderboard.map((entry, idx) => {
               const rankStyle = RANK_COLORS[entry.rank] || {};
               const isMe = entry.userId === user?.id;
               const perf = getPerformanceLabel(entry.avgScore);
 
               return (
-                <div key={entry.userId} className="glass-card" style={{
+                <div key={entry.userId} className="bento-card glow-border cascade-in" style={{
+                  '--cascade-delay': `${150 + idx * 50}ms`,
+                  '--glow-color': rankStyle.text || 'var(--clr-primary-400)',
                   padding: 'var(--space-4) var(--space-6)',
                   display: 'flex', alignItems: 'center', gap: 'var(--space-4)',
                   background: isMe
                     ? 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1))'
                     : (rankStyle.bg || 'transparent'),
-                  border: isMe
-                    ? '1px solid rgba(139,92,246,0.5)'
-                    : `1px solid ${rankStyle.border || 'var(--border-subtle)'}`,
-                  transition: 'transform 0.2s ease',
-                }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = ''}
-                >
+                }}>
                   {/* Rank */}
                   <div style={{ minWidth: 48, textAlign: 'center' }}>
                     {entry.rank <= 3 ? (

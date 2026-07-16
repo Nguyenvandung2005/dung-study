@@ -197,9 +197,26 @@ router.post('/:id/submit', authMiddleware, requireRole('STUDENT', 'ADMIN'), asyn
 // GET /api/submissions/history — student's submission history
 router.get('/history', authMiddleware, async (req, res) => {
   try {
-    const { examId } = req.query;
+    const { examId, timeType, timeStart, timeEnd } = req.query;
     const where = { userId: req.user.id };
     if (examId) where.examId = examId;
+
+    if (timeType && timeType !== 'all') {
+      const now = new Date();
+      if (timeType === 'today') {
+        where.createdAt = { gte: new Date(now.setHours(0, 0, 0, 0)) };
+      } else if (timeType === 'week') {
+        const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+        firstDay.setHours(0, 0, 0, 0);
+        where.createdAt = { gte: firstDay };
+      } else if (timeType === 'month') {
+        where.createdAt = { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+      } else if (timeType === 'custom') {
+        if (timeStart && timeEnd) where.createdAt = { gte: new Date(timeStart), lte: new Date(timeEnd) };
+        else if (timeStart) where.createdAt = { gte: new Date(timeStart) };
+        else if (timeEnd) where.createdAt = { lte: new Date(timeEnd) };
+      }
+    }
 
     const submissions = await prisma.submission.findMany({
       where,

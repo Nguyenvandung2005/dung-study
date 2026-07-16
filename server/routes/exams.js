@@ -21,15 +21,42 @@ router.get('/', authMiddleware, async (req, res) => {
     });
 
     const { user } = req;
+    const { timeType, timeStart, timeEnd } = req.query;
+
+    let dateFilter = {};
+    
+    if (timeType === 'today') {
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = { gte: today };
+    } else if (timeType === 'week') {
+      const firstDay = new Date(now.setDate(now.getDate() - now.getDay()));
+      firstDay.setHours(0, 0, 0, 0);
+      dateFilter = { gte: firstDay };
+    } else if (timeType === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: firstDay };
+    } else if (timeType === 'custom') {
+      if (timeStart && timeEnd) {
+        dateFilter = { gte: new Date(timeStart), lte: new Date(timeEnd) };
+      } else if (timeStart && !timeEnd) {
+        dateFilter = { gte: new Date(timeStart), lte: new Date() };
+      } else if (!timeStart && timeEnd) {
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { gte: startOfYear, lte: new Date(timeEnd) };
+      }
+    }
+
     let where = {};
+    if (Object.keys(dateFilter).length > 0) where.createdAt = dateFilter;
+
     if (user.role === 'STUDENT') {
-      where = { isPublished: true };
+      where.isPublished = true;
     } else if (user.role === 'TEACHER') {
-      where = { createdById: user.id };
+      where.createdById = user.id;
     }
     const exams = await prisma.exam.findMany({
       where,
-      include: { createdBy: { select: { name: true } }, _count: { select: { questions: true, submissions: { where: { status: { in: ['SUBMITTED', 'GRADED'] } } } } } },
+      include: { createdBy: { select: { name: true, school: true } }, _count: { select: { questions: true, submissions: { where: { status: { in: ['SUBMITTED', 'GRADED'] } } } } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(exams);

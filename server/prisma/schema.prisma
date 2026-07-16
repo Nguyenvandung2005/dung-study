@@ -34,6 +34,7 @@ model User {
   role          Role      @default(STUDENT)
   grade         Int?      // 1-12 for students, null for admin/teacher
   avatar        String?
+  school        String?   // Tên trường học (để học sinh dễ tìm giáo viên)
   settings      Json?     // Lưu cấu hình giao diện: theme, primaryColor, fontSize, animation
   isVerified    Boolean   @default(false)
   isLocked      Boolean   @default(false)
