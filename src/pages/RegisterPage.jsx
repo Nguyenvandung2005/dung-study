@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
+import FacebookLogin from 'react-facebook-login/dist/facebook-login-render.props';
 import { useAuth } from '../context/AuthContext';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
 import LogoWaveBounce from '../components/ui/LogoWaveBounce';
@@ -60,8 +62,42 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT', grade: 1 });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, oauthLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleOAuthSuccess = async (provider, credentials) => {
+    setError('');
+    setLoading(true);
+    try {
+      const user = await oauthLogin(provider, credentials, form.role, form.grade);
+      const redirectUrl = localStorage.getItem('redirectUrl');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectUrl');
+        navigate(redirectUrl);
+      } else {
+        if (user.role === 'ADMIN') navigate('/admin');
+        else if (user.role === 'TEACHER') navigate('/teacher');
+        else navigate('/student');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || `Đăng ký ${provider} thất bại`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: (codeResponse) => handleOAuthSuccess('google', { credential: codeResponse.access_token }),
+    onError: (error) => setError('Đăng nhập Google thất bại'),
+  });
+
+  const handleFacebookCallback = (response) => {
+    if (response?.accessToken) {
+      handleOAuthSuccess('facebook', { accessToken: response.accessToken });
+    } else {
+      setError('Đăng nhập Facebook thất bại');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -145,9 +181,35 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ marginTop: '8px' }}>
+              <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ marginTop: '8px', width: '100%' }}>
                 {loading ? <><span className="spinner" /> Đang tạo...</> : '✨ Tạo tài khoản'}
               </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', margin: '12px 0', color: 'var(--text-muted)' }}>
+                <hr style={{ flex: 1, borderColor: 'var(--border-subtle)' }} />
+                <span style={{ padding: '0 10px', fontSize: '0.9rem' }}>HOẶC ĐĂNG KÝ VỚI</span>
+                <hr style={{ flex: 1, borderColor: 'var(--border-subtle)' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="button" onClick={() => googleLogin()} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
+                  Google
+                </button>
+
+                <FacebookLogin
+                  appId={import.meta.env.VITE_FACEBOOK_APP_ID || 'dummy-app-id'}
+                  autoLoad={false}
+                  fields="name,email,picture"
+                  callback={handleFacebookCallback}
+                  render={renderProps => (
+                    <button type="button" onClick={renderProps.onClick} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style={{ width: 18, height: 18 }} />
+                      Facebook
+                    </button>
+                  )}
+                />
+              </div>
             </form>
 
             <p className="auth-link" style={{ marginTop: '20px' }}>

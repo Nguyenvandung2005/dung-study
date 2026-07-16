@@ -82,6 +82,16 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const oauthLogin = async (provider, credentials, role = null, grade = null) => {
+    const { data } = await api.post(`/auth/${provider}`, { ...credentials, role, grade });
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('lastActivity', Date.now().toString());
+    setUser(data.user);
+    applyUserSettings(data.user?.settings);
+    return data.user;
+  };
+
   const logout = () => {
     localStorage.clear();
     setUser(null);
@@ -125,8 +135,8 @@ export const AuthProvider = ({ children }) => {
   const isStudent = user?.role === 'STUDENT';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, isAdmin, isTeacher, isStudent }}>
-      {children}
+    <AuthContext.Provider value={{ user, loading, login, oauthLogin, register, logout, updateUser, isAdmin, isTeacher, isStudent }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

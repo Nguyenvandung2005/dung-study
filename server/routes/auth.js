@@ -6,9 +6,13 @@ const rateLimit = require('express-rate-limit');
 const { detectThreat, recordFailedAttempt, recordSuccessEvent } = require('../utils/threatDetector');
 const { formatErrorMessage } = require('../utils/errorHandler');
 const adminEventHub = require('../utils/adminEventHub');
+const { OAuth2Client } = require('google-auth-library');
+const axios = require('axios');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'dummy-client-id');
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -119,6 +123,98 @@ router.post('/login', authLimiter, async (req, res) => {
   } catch (error) {
     console.error('[Login Error]', error);
     res.status(500).json({ message: formatErrorMessage(error) });
+  }
+});
+
+// POST /api/auth/google
+router.post('/google', authLimiter, async (req, res) => {
+  try {
+    const { credential, role, grade } = req.body;
+    let payload;
+
+    if (process.env.GOOGLE_CLIENT_ID) {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } else {
+      // Mock logic cho dev/demo nếu chưa có Client ID
+      payload = jwt.decode(credential);
+    }
+
+    if (!payload || !payload.email) {
+      return res.status(400).json({ message: 'Không thể xác thực với Google' });
+    }
+
+    const { email, name, picture } = payload;
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Register
+      const userRole = (email === process.env.ADMIN_EMAIL) ? 'ADMIN' : (role || 'STUDENT');
+      const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 12);
+      user = await prisma.user.create({
+        data: {
+          name, email, password: hashedPassword, role: userRole,
+          grade: userRole === 'STUDENT' ? (parseInt(grade) || null) : null,
+          avatar: picture, isVerified: true,
+        },
+      });
+      adminEventHub.broadcastEvent({
+        type: 'USER_REGISTER',
+        title: 'Thành viên mới (Google)! 🎉',
+        message: `${user.name} vừa đăng ký bằng Google.`,
+        data: { email: user.email, role: user.role }
+      });
+    } else if (user.isLocked) {
+      return res.status(403).json({ message: 'Tài khoản đã bị khóa.' });
+    }
+
+    const { accessToken, refreshToken } = generateTokens(user.id);
+    const userData = { id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, school: user.school, avatar: user.avatar, settings: user.settings };
+    res.json({ message: 'Đăng nhập Google thành công', user: userData, accessToken, refreshToken });
+  } catch (error) {
+    console.error('[Google Auth Error]', error);
+    res.status(500).json({ message: formatErrorMessage(error) });
+  }
+});
+
+// POST /api/auth/facebook
+router.post('/facebook', authLimiter, async (req, res) => {
+  try {
+    const { accessToken: fbAccessToken, role, grade } = req.body;
+    
+    // Call Facebook Graph API
+    const response = await axios.get(`https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${fbAccessToken}`);
+    const { email, name, picture, id: fbId } = response.data;
+    
+    // Nếu Facebook ko cấp quyền email, xài email giả từ ID
+    const userEmail = email || `${fbId}@facebook.dummy.com`;
+
+    let user = await prisma.user.findUnique({ where: { email: userEmail } });
+
+    if (!user) {
+      const userRole = (userEmail === process.env.ADMIN_EMAIL) ? 'ADMIN' : (role || 'STUDENT');
+      const hashedPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 12);
+      const avatarUrl = picture?.data?.url || null;
+      user = await prisma.user.create({
+        data: {
+          name, email: userEmail, password: hashedPassword, role: userRole,
+          grade: userRole === 'STUDENT' ? (parseInt(grade) || null) : null,
+          avatar: avatarUrl, isVerified: true,
+        },
+      });
+    } else if (user.isLocked) {
+      return res.status(403).json({ message: 'Tài khoản đã bị khóa.' });
+    }
+
+    const { accessToken, refreshToken } = generateTokens(user.id);
+    const userData = { id: user.id, name: user.name, email: user.email, role: user.role, grade: user.grade, school: user.school, avatar: user.avatar, settings: user.settings };
+    res.json({ message: 'Đăng nhập Facebook thành công', user: userData, accessToken, refreshToken });
+  } catch (error) {
+    console.error('[Facebook Auth Error]', error);
+    res.status(500).json({ message: 'Đăng nhập bằng Facebook thất bại' });
   }
 });
 

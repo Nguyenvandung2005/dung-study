@@ -21,6 +21,7 @@ import TeacherCreateExam from './pages/teacher/TeacherCreateExam';
 import TeacherEditExam from './pages/teacher/TeacherEditExam';
 import TeacherStats from './pages/teacher/TeacherStats';
 import TeacherGrading from './pages/teacher/TeacherGrading';
+import TeacherMonitor from './pages/teacher/TeacherMonitor';
 
 // Student sub-pages
 import StudentExams from './pages/student/StudentExams';
@@ -112,6 +113,9 @@ export default function App() {
         } />
         <Route path="/teacher/grading" element={
           <ProtectedRoute roles={TEACHER_ROLES}><TeacherGrading /></ProtectedRoute>
+        } />
+        <Route path="/teacher/monitor/:examId" element={
+          <ProtectedRoute roles={TEACHER_ROLES}><TeacherMonitor /></ProtectedRoute>
         } />
 
         {/* ─── Admin Routes ─── */}

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
+import FacebookLogin from 'react-facebook-login/dist/facebook-login-render.props';
 import { useAuth } from '../context/AuthContext';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
 import LogoWaveBounce from '../components/ui/LogoWaveBounce';
@@ -54,8 +56,42 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, oauthLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleOAuthSuccess = async (provider, credentials) => {
+    setError('');
+    setLoading(true);
+    try {
+      const user = await oauthLogin(provider, credentials);
+      const redirectUrl = localStorage.getItem('redirectUrl');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectUrl');
+        navigate(redirectUrl);
+      } else {
+        if (user.role === 'ADMIN') navigate('/admin');
+        else if (user.role === 'TEACHER') navigate('/teacher');
+        else navigate('/student');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || `Đăng nhập ${provider} thất bại`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: (codeResponse) => handleOAuthSuccess('google', { credential: codeResponse.access_token }),
+    onError: (error) => setError('Đăng nhập Google thất bại'),
+  });
+
+  const handleFacebookCallback = (response) => {
+    if (response?.accessToken) {
+      handleOAuthSuccess('facebook', { accessToken: response.accessToken });
+    } else {
+      setError('Đăng nhập Facebook thất bại');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -115,9 +151,35 @@ export default function LoginPage() {
                 <input id="login-password" type="password" className="input" placeholder="••••••••"
                   value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
               </div>
-              <button type="submit" className="btn btn-primary btn-lg" disabled={loading} id="login-submit-btn">
+              <button type="submit" className="btn btn-primary btn-lg" disabled={loading} id="login-submit-btn" style={{ width: '100%', marginBottom: '16px' }}>
                 {loading ? <><span className="spinner" /> Đang đăng nhập...</> : '🚀 Đăng nhập'}
               </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', margin: '16px 0', color: 'var(--text-muted)' }}>
+                <hr style={{ flex: 1, borderColor: 'var(--border-subtle)' }} />
+                <span style={{ padding: '0 10px', fontSize: '0.9rem' }}>HOẶC ĐĂNG NHẬP VỚI</span>
+                <hr style={{ flex: 1, borderColor: 'var(--border-subtle)' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="button" onClick={() => googleLogin()} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
+                  Google
+                </button>
+
+                <FacebookLogin
+                  appId={import.meta.env.VITE_FACEBOOK_APP_ID || 'dummy-app-id'}
+                  autoLoad={false}
+                  fields="name,email,picture"
+                  callback={handleFacebookCallback}
+                  render={renderProps => (
+                    <button type="button" onClick={renderProps.onClick} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style={{ width: 18, height: 18 }} />
+                      Facebook
+                    </button>
+                  )}
+                />
+              </div>
             </form>
             <p className="auth-link anim-stagger-3">
               Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>

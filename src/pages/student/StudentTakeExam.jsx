@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api, { getFullUploadUrl } from '../../api/client';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
+import { useAuth } from '../../context/AuthContext';
+import { useScreenShare } from '../../hooks/useScreenShare';
 import '../Dashboard.css';
 
 function LiveCameraModal({ questionId, onCapture, onClose }) {
@@ -129,7 +131,10 @@ export default function StudentTakeExam() {
   const [timeSpent, setTimeSpent] = useState({});
   const [activeQuestionId, setActiveQuestionId] = useState(null);
 
+  const { user } = useAuth();
   const [examStarted, setExamStarted] = useState(false);
+  const [screenGranted, setScreenGranted] = useState(false);
+  const [screenError, setScreenError] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileMode, setIsMobileMode] = useState(false);
   const [showMobilePalette, setShowMobilePalette] = useState(false);
@@ -415,6 +420,26 @@ export default function StudentTakeExam() {
     }
   };
 
+  // Hook chia sẻ màn hình — chỉ bật sau khi thi bắt đầu
+  useScreenShare({
+    examId,
+    studentName: user?.name || 'Học sinh',
+    enabled: examStarted && screenGranted
+  });
+
+  const requestScreenShare = async () => {
+    setScreenError('');
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: { ideal: 5, max: 10 }, width: { ideal: 1280 } }, audio: false
+      });
+      stream.getTracks().forEach(t => t.stop()); // Thử được rồi, dừng để hook xử lý
+      setScreenGranted(true);
+    } catch (err) {
+      setScreenError('Bạn phải cho phép chia sẻ màn hình để bắt đầu làm bài. Vui lòng thử lại.');
+    }
+  };
+
   const startExam = async () => {
     try {
       setLoading(true);
@@ -534,29 +559,44 @@ export default function StudentTakeExam() {
           <div style={{
             background: 'rgba(255, 255, 255, 0.03)',
             border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-md)',
-            padding: 'var(--space-4)',
-            marginTop: 'var(--space-6)',
-            textAlign: 'left',
-            fontSize: '0.88rem',
-            lineHeight: 1.6,
-            color: 'var(--text-secondary)'
+            borderRadius: 'var(--radius-md)', padding: 'var(--space-4)',
+            marginTop: 'var(--space-6)', textAlign: 'left',
+            fontSize: '0.88rem', lineHeight: 1.6, color: 'var(--text-secondary)'
           }}>
             <p style={{ fontWeight: 600, color: 'var(--clr-primary-400)', marginBottom: '8px' }}>⚠️ QUY CHẾ VÀ HƯỚNG DẪN THI:</p>
             <p>1. Bài thi gồm <strong>{exam.questions?.length || 0} câu hỏi</strong>, thời gian làm bài là <strong>{exam.timeLimit} phút</strong>.</p>
-            <p>2. Khi bắt đầu, hệ thống sẽ **bắt buộc chạy ở chế độ Toàn màn hình (Fullscreen)**.</p>
-            <p>3. **Không được thoát chế độ toàn màn hình hoặc chuyển tab** trong suốt quá trình làm bài. Mọi hành vi vi phạm quá 3 lần sẽ bị **tự động nộp bài thi ngay lập tức**.</p>
-            <p>4. Bài thi chỉ kết thúc khi bạn nhấn nút **Nộp bài** hoặc hết thời gian làm bài.</p>
+            <p>2. Khi bắt đầu, hệ thống sẽ bắt buộc chạy ở chế độ <strong>Toàn màn hình (Fullscreen)</strong>.</p>
+            <p>3. Không được thoát chế độ toàn màn hình hoặc chuyển tab. Vi phạm quá 3 lần sẽ bị <strong>tự động nộp bài</strong>.</p>
+            <p style={{ color: 'var(--clr-rose-500)', fontWeight: 600 }}>4. 🖥️ BẮT BUỘC: Bạn phải <strong>chia sẻ toàn bộ màn hình</strong> cho giáo viên giám sát trong suốt quá trình thi.</p>
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: 'var(--space-8)' }}>
-            <button className="btn btn-outline" onClick={() => navigate('/student/exams')}>
-              Quay lại
-            </button>
-            <button className="btn btn-primary btn-lg" onClick={startExam} disabled={loading} id="start-exam-confirm">
-              🚀 Bắt đầu làm bài
-            </button>
-          </div>
+          {/* Bước chia sẻ màn hình */}
+          {!screenGranted ? (
+            <div style={{ marginTop: 'var(--space-6)' }}>
+              <div style={{ padding: '16px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, marginBottom: 16 }}>
+                <p style={{ margin: 0, color: 'var(--clr-primary-400)', fontWeight: 600, fontSize: '0.95rem' }}>📡 BƯỚC BẮT BUỘC: Cho phép chia sẻ màn hình</p>
+                <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Nhấn nút bên dưới, chọn "Toàn bộ màn hình" rồi bấm "Chia sẻ" để tiếp tục.</p>
+              </div>
+              {screenError && (
+                <p style={{ color: 'var(--clr-rose-500)', fontSize: '0.85rem', marginBottom: 12 }}>⚠️ {screenError}</p>
+              )}
+              <button className="btn btn-primary btn-lg" onClick={requestScreenShare} style={{ width: '100%' }}>
+                🖥️ Cho phép chia sẻ màn hình
+              </button>
+            </div>
+          ) : (
+            <div style={{ marginTop: 'var(--space-6)' }}>
+              <div style={{ padding: '12px 16px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 10, marginBottom: 20 }}>
+                <p style={{ margin: 0, color: '#10b981', fontWeight: 600 }}>✅ Đã xác nhận chia sẻ màn hình</p>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button className="btn btn-outline" onClick={() => navigate('/student/exams')}>Quay lại</button>
+                <button className="btn btn-primary btn-lg" onClick={startExam} disabled={loading} id="start-exam-confirm">
+                  🚀 Bắt đầu làm bài
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
