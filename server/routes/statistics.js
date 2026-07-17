@@ -332,7 +332,6 @@ router.get('/teacher', authMiddleware, requireRole('TEACHER', 'ADMIN'), async (r
     }
 
     const examWhere = { createdById: teacherId };
-    if (Object.keys(dateFilter).length > 0) examWhere.createdAt = dateFilter;
     const exams = await prisma.exam.findMany({ where: examWhere });
     const examIds = exams.map(e => e.id);
 

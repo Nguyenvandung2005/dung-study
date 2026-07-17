@@ -17,7 +17,7 @@ const ICE_SERVERS = {
   ]
 };
 
-export function useScreenShare({ examId, studentName, enabled = true }) {
+export function useScreenShare({ examId, studentName, enabled = true, providedStream = null }) {
   const socketRef = useRef(null);
   const streamRef = useRef(null);
   const peerRef = useRef(null);
@@ -60,12 +60,15 @@ export function useScreenShare({ examId, studentName, enabled = true }) {
     let mounted = true;
 
     const init = async () => {
-      // Yêu cầu chia sẻ màn hình
+      // Yêu cầu chia sẻ màn hình nếu chưa có providedStream
       try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: { ideal: 5, max: 10 }, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        });
+        let stream = providedStream;
+        if (!stream) {
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: { ideal: 5, max: 10 }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+          });
+        }
         if (!mounted) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         setShareStatus('sharing');
@@ -119,7 +122,7 @@ export function useScreenShare({ examId, studentName, enabled = true }) {
       mounted = false;
       cleanup();
     };
-  }, [enabled, examId, studentName, createOffer, cleanup]);
+  }, [enabled, examId, studentName, providedStream, createOffer, cleanup]);
 
   return { shareStatus, stopSharing: cleanup };
 }

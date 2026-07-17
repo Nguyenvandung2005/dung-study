@@ -128,12 +128,13 @@ export default function StudentTakeExam() {
   const [answers, setAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [timeSpent, setTimeSpent] = useState({});
+  const timeSpentRef = useRef({});
   const [activeQuestionId, setActiveQuestionId] = useState(null);
 
   const { user } = useAuth();
   const [examStarted, setExamStarted] = useState(false);
   const [screenGranted, setScreenGranted] = useState(false);
+  const [screenStream, setScreenStream] = useState(null);
   const [screenError, setScreenError] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileMode, setIsMobileMode] = useState(false);
@@ -240,10 +241,7 @@ export default function StudentTakeExam() {
   useEffect(() => {
     if (!examStarted || !activeQuestionId || submitting) return;
     questionTimerRef.current = setInterval(() => {
-      setTimeSpent(prev => ({
-        ...prev,
-        [activeQuestionId]: (prev[activeQuestionId] || 0) + 1
-      }));
+      timeSpentRef.current[activeQuestionId] = (timeSpentRef.current[activeQuestionId] || 0) + 1;
     }, 1000);
     return () => clearInterval(questionTimerRef.current);
   }, [examStarted, activeQuestionId, submitting]);
@@ -387,7 +385,7 @@ export default function StudentTakeExam() {
 
       const { data } = await api.post(`/submissions/${submissionId}/submit`, {
         answers: finalAnswers,
-        timeSpentPerQuestion: timeSpent,
+        timeSpentPerQuestion: timeSpentRef.current,
         cheatCount: cheatCountRef.current,
         cheatLogs: cheatLogsRef.current
       });
@@ -424,7 +422,8 @@ export default function StudentTakeExam() {
   useScreenShare({
     examId,
     studentName: user?.name || 'Học sinh',
-    enabled: examStarted && screenGranted
+    enabled: examStarted && screenGranted,
+    providedStream: screenStream
   });
 
   const requestScreenShare = async () => {
@@ -433,7 +432,7 @@ export default function StudentTakeExam() {
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: { ideal: 5, max: 10 }, width: { ideal: 1280 } }, audio: false
       });
-      stream.getTracks().forEach(t => t.stop()); // Thử được rồi, dừng để hook xử lý
+      setScreenStream(stream);
       setScreenGranted(true);
     } catch (err) {
       setScreenError('Bạn phải cho phép chia sẻ màn hình để bắt đầu làm bài. Vui lòng thử lại.');
