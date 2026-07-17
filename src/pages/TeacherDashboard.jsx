@@ -396,6 +396,14 @@ export default function TeacherDashboard() {
                                     📊 Thống kê
                                   </Link>
                                   <Link
+                                    to={`/teacher/monitor/${exam.id}`}
+                                    className="btn btn-ghost btn-sm dropdown-action-item"
+                                    style={{ color: 'var(--clr-emerald-400, #34d399)' }}
+                                    onClick={() => setOpenDropdownId(null)}
+                                  >
+                                    🖥️ Giám sát
+                                  </Link>
+                                  <Link
                                     to={`/teacher/edit/${exam.id}`}
                                     className="btn btn-ghost btn-sm dropdown-action-item action-edit"
                                   >

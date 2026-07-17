@@ -132,15 +132,24 @@ router.post('/google', authLimiter, async (req, res) => {
     const { credential, role, grade } = req.body;
     let payload;
 
-    if (process.env.GOOGLE_CLIENT_ID) {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID,
+    // Frontend (useGoogleLogin) gửi access_token → dùng Google userinfo API
+    // Nếu là id_token (JWT) → dùng verifyIdToken
+    try {
+      const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${credential}` },
       });
-      payload = ticket.getPayload();
-    } else {
-      // Mock logic cho dev/demo nếu chưa có Client ID
-      payload = jwt.decode(credential);
+      payload = userInfoRes.data; // { sub, email, name, picture }
+    } catch {
+      // Fallback: thử verify như id_token
+      if (process.env.GOOGLE_CLIENT_ID) {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+      } else {
+        payload = jwt.decode(credential);
+      }
     }
 
     if (!payload || !payload.email) {
@@ -179,6 +188,7 @@ router.post('/google', authLimiter, async (req, res) => {
     res.status(500).json({ message: formatErrorMessage(error) });
   }
 });
+
 
 // POST /api/auth/facebook
 router.post('/facebook', authLimiter, async (req, res) => {

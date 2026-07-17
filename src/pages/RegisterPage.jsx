@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
-import FacebookLogin from 'react-facebook-login/dist/facebook-login-render.props';
+
 import { useAuth } from '../context/AuthContext';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
 import LogoWaveBounce from '../components/ui/LogoWaveBounce';
@@ -91,12 +91,18 @@ export default function RegisterPage() {
     onError: (error) => setError('Đăng nhập Google thất bại'),
   });
 
-  const handleFacebookCallback = (response) => {
-    if (response?.accessToken) {
-      handleOAuthSuccess('facebook', { accessToken: response.accessToken });
-    } else {
-      setError('Đăng nhập Facebook thất bại');
+  const handleFacebookLogin = () => {
+    if (typeof window.FB === 'undefined') {
+      setError('Facebook SDK chưa tải xong. Vui lòng thử lại sau vài giây.');
+      return;
     }
+    window.FB.login((response) => {
+      if (response?.authResponse?.accessToken) {
+        handleOAuthSuccess('facebook', { accessToken: response.authResponse.accessToken });
+      } else {
+        setError('Đăng ký Facebook bị huỷ hoặc thất bại.');
+      }
+    }, { scope: 'public_profile,email' });
   };
 
   const handleSubmit = async (e) => {
@@ -197,18 +203,10 @@ export default function RegisterPage() {
                   Google
                 </button>
 
-                <FacebookLogin
-                  appId={import.meta.env.VITE_FACEBOOK_APP_ID || 'dummy-app-id'}
-                  autoLoad={false}
-                  fields="name,email,picture"
-                  callback={handleFacebookCallback}
-                  render={renderProps => (
-                    <button type="button" onClick={renderProps.onClick} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style={{ width: 18, height: 18 }} />
-                      Facebook
-                    </button>
-                  )}
-                />
+                <button type="button" onClick={handleFacebookLogin} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style={{ width: 18, height: 18 }} />
+                  Facebook
+                </button>
               </div>
             </form>
 

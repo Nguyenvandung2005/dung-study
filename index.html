@@ -12,6 +12,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      const fbAppId = '%VITE_FACEBOOK_APP_ID%';
+      if (fbAppId && !fbAppId.startsWith('%')) {
+        window.fbAsyncInit = function() {
+          window.FB.init({
+            appId: fbAppId,
+            cookie: true,
+            xfbml: true,
+            version: 'v19.0'
+          });
+          window.fbSdkReady = true;
+        };
+      }
+    </script>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
