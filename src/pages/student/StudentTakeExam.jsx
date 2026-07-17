@@ -853,7 +853,7 @@ export default function StudentTakeExam() {
           {exam.questions.map((q, index) => {
             const showSection = q.section && (index === 0 || q.section !== exam.questions[index - 1]?.section);
             return (
-              <React.Fragment key={`wrap-${q.id}`}>
+              <div key={q.id} style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                 {showSection && (
                   <div style={{ 
                     marginTop: '1rem', 
@@ -960,6 +960,8 @@ export default function StudentTakeExam() {
               {q.type === 'ESSAY' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <textarea 
+                    key={`essay-textarea-${q.id}`}
+                    id={`essay-textarea-${q.id}`}
                     className="input"
                     style={{ minHeight: '150px', resize: 'vertical' }}
                     placeholder="Nhập câu trả lời của bạn..."
@@ -1041,7 +1043,7 @@ export default function StudentTakeExam() {
                 </div>
               )}
             </div>
-            </React.Fragment>
+              </div>
           );
         })}
         </div>
