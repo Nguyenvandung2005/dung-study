@@ -129,6 +129,7 @@ export default function StudentTakeExam() {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const timeSpentRef = useRef({});
+  const latestAnswersRef = useRef({});
   const [activeQuestionId, setActiveQuestionId] = useState(null);
 
   const { user } = useAuth();
@@ -355,11 +356,13 @@ export default function StudentTakeExam() {
 
   const handleSelectAnswer = (qId, optionId, type) => {
     if (type === 'SINGLE_CHOICE') {
+      latestAnswersRef.current[qId] = optionId;
       setAnswers(prev => ({ ...prev, [qId]: optionId }));
     }
   };
 
   const handleEssayChange = (qId, text) => {
+    latestAnswersRef.current[qId] = text;
     setAnswers(prev => ({ ...prev, [qId]: text }));
   };
 
@@ -374,7 +377,7 @@ export default function StudentTakeExam() {
     setSubmitting(true);
     try {
       // Build final answers payload combining text and image attachments
-      const finalAnswers = { ...answers };
+      const finalAnswers = { ...latestAnswersRef.current };
       Object.keys(essayImages).forEach(qId => {
         const imageUrl = essayImages[qId];
         if (imageUrl) {
@@ -965,8 +968,9 @@ export default function StudentTakeExam() {
                     className="input"
                     style={{ minHeight: '150px', resize: 'vertical' }}
                     placeholder="Nhập câu trả lời của bạn..."
-                    value={answers[q.id] || ''}
-                    onChange={e => handleEssayChange(q.id, e.target.value)}
+                    defaultValue={answers[q.id] || ''}
+                    onChange={e => { latestAnswersRef.current[q.id] = e.target.value; }}
+                    onBlur={e => handleEssayChange(q.id, e.target.value)}
                   />
                   
                   {/* Image attachment area */}

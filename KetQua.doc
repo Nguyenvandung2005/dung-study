@@ -152,6 +152,14 @@
   <li><b>Xóa sạch viền/nét căn của bảng đáp án trắc nghiệm A, B, C, D:</b> Tự động áp dụng thuộc tính bảng không viền, các đáp án được thẳng hàng theo cột nhưng không còn đường viền nét đứt hay viền đen xung quanh.</li>
 </ul>
 
+<h3>5. Hoàn thiện Tích hợp Đăng nhập Mạng Xã hội & Cải thiện Trải nghiệm Thi Trực tuyến</h3>
+<ul>
+  <li><b>Đăng nhập một chạm qua Google & Facebook (SSO OAuth2.0):</b> Tích hợp thành công và triển khai trên môi trường thực tế (Production) hệ thống đăng nhập qua tài khoản Google và Facebook. Cấu hình hoàn chỉnh các tên miền hợp lệ trên Google Cloud Console và Meta for Developers, giúp học sinh và giáo viên truy cập nhanh chóng, an toàn tuyệt đối mà không cần nhớ mật khẩu.</li>
+  <li><b>Khắc phục triệt để xung đột Camera và Chế độ Toàn màn hình:</b> Tái cấu trúc luồng lấy quyền truy cập chia sẻ màn hình/camera, lưu trữ luồng dữ liệu (stream) ngay từ bước chuẩn bị. Giúp ngăn chặn việc gọi lại hộp thoại cấp quyền, giải quyết hoàn toàn lỗi "văng chế độ toàn màn hình" gây cảnh báo vi phạm gian lận oan cho học sinh.</li>
+  <li><b>Tối ưu Hiệu năng & Triệt tiêu Nháy màn hình (React DOM Reconciliation):</b> Tối ưu bộ đếm thời gian làm bài từ trạng thái động (State) sang tham chiếu tĩnh (Ref) và chuẩn hóa cấu trúc cây DOM (Virtual DOM keys) của các khung nhập liệu câu hỏi tự luận. Điều này loại bỏ triệt để hiện tượng giật, chớp nháy giao diện và khắc phục lỗi mất con trỏ chuột (losing focus) khi học sinh đang gõ bài.</li>
+  <li><b>Sửa lỗi hiển thị thống kê "Lượt nộp bài":</b> Tinh chỉnh API Backend để áp dụng bộ lọc thời gian trực tiếp lên "ngày nộp bài" (submittedAt) thay vì "ngày tạo đề thi" (createdAt), đảm bảo Bảng điều khiển Tổng quan của Giáo viên luôn hiển thị số liệu lượt nộp bài chính xác 100% trong ngày.</li>
+</ul>
+
 <h2>PHẦN II: CHI TIẾT CÁC ACTOR (TÁC NHÂN) VÀ NGHIỆP VỤ HỆ THỐNG</h2>
 <p>Hệ thống được vận hành bởi 04 Actor với phân công nhiệm vụ chuyên biệt được mô tả chi tiết trong bảng sau:</p>
 
