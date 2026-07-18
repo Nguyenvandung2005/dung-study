@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api, { getFullUploadUrl } from '../api/client';
 import Sidebar from '../components/ui/Sidebar';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
+import { Eye, EyeOff } from 'lucide-react';
 import './Dashboard.css';
 
 const COLOR_THEMES = [
@@ -62,6 +63,7 @@ export default function ProfilePage() {
     newPassword: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const [settingsForm, setSettingsForm] = useState({
     theme: user?.settings?.theme || 'dark',
@@ -458,15 +460,30 @@ export default function ProfilePage() {
                 <h3 style={{ marginBottom: 'var(--space-5)', color: 'var(--text-primary)' }}>Đổi mật khẩu</h3>
                 <div className="form-group" style={{ marginBottom: 'var(--space-4)' }}>
                   <label>Mật khẩu hiện tại</label>
-                  <input type="password" className="input" value={passwordForm.currentPassword} onChange={e => setPasswordForm({...passwordForm, currentPassword: e.target.value})} required />
+                  <div style={{ position: 'relative' }}>
+                    <input type={showPassword ? 'text' : 'password'} className="input" value={passwordForm.currentPassword} onChange={e => setPasswordForm({...passwordForm, currentPassword: e.target.value})} required style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted, #a0a0c8)', cursor: 'pointer', display: 'flex' }}>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group" style={{ marginBottom: 'var(--space-4)' }}>
                   <label>Mật khẩu mới</label>
-                  <input type="password" className="input" value={passwordForm.newPassword} onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})} required minLength={6} />
+                  <div style={{ position: 'relative' }}>
+                    <input type={showPassword ? 'text' : 'password'} className="input" value={passwordForm.newPassword} onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})} required minLength={6} style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted, #a0a0c8)', cursor: 'pointer', display: 'flex' }}>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group" style={{ marginBottom: 'var(--space-5)' }}>
                   <label>Nhập lại mật khẩu mới</label>
-                  <input type="password" className="input" value={passwordForm.confirmPassword} onChange={e => setPasswordForm({...passwordForm, confirmPassword: e.target.value})} required minLength={6} />
+                  <div style={{ position: 'relative' }}>
+                    <input type={showPassword ? 'text' : 'password'} className="input" value={passwordForm.confirmPassword} onChange={e => setPasswordForm({...passwordForm, confirmPassword: e.target.value})} required minLength={6} style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted, #a0a0c8)', cursor: 'pointer', display: 'flex' }}>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Đang lưu...' : 'Đổi mật khẩu'}</button>
               </form>

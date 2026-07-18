@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 import AnimatedBackground from '../components/ui/AnimatedBackground';
@@ -60,6 +61,7 @@ const ImagePuzzle = () => {
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT', grade: 1 });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register, oauthLogin } = useAuth();
@@ -158,8 +160,18 @@ export default function RegisterPage() {
               
               <div className="input-group">
                 <label className="input-label">Mật khẩu</label>
-                <input type="password" className="input" placeholder="Ít nhất 6 ký tự"
-                  value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+                <div style={{ position: 'relative' }}>
+                  <input type={showPassword ? 'text' : 'password'} className="input" placeholder="Ít nhất 6 ký tự"
+                    value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required 
+                    style={{ paddingRight: '2.5rem' }} />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted, #a0a0c8)', cursor: 'pointer', display: 'flex' }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               {/* Role selector */}

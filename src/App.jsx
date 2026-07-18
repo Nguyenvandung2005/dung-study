@@ -3,6 +3,8 @@ import { useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import AboutPage from './pages/AboutPage';
+import ArchitecturePage from './pages/ArchitecturePage';
 import PrivateRoute from './components/ui/PrivateRoute';
 import AdminRealtimeNotifier from './components/admin/AdminRealtimeNotifier';
 
@@ -65,6 +67,8 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/architecture" element={<ArchitecturePage />} />
 
         {/* Global Protected Routes */}
         <Route path="/profile" element={

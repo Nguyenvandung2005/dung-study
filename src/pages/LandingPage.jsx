@@ -82,6 +82,8 @@ export default function LandingPage() {
         </div>
 
         <div className="header-actions">
+          <Link to="/about" className="btn btn-outline" style={{ border: 'none', color: '#a0a0c8' }}>Về chúng tôi</Link>
+          <Link to="/architecture" className="btn btn-outline" style={{ border: 'none', color: '#a0a0c8' }}>Cấu trúc hệ thống</Link>
           <Link to="/login" className="btn btn-outline">Đăng nhập</Link>
           <Link to="/register" className="btn btn-primary">Bắt đầu miễn phí</Link>
         </div>
