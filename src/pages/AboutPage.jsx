@@ -1,17 +1,132 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, BrainCircuit, Activity, ShieldCheck, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  BrainCircuit,
+  Activity,
+  ShieldCheck,
+  Users,
+  Sparkles,
+  BookOpen,
+  CheckCircle2,
+  ArrowRight,
+  GraduationCap,
+  Sun,
+  Moon,
+  Zap
+} from 'lucide-react';
 import LogoWaveBounce from '../components/ui/LogoWaveBounce';
 import './AboutPage.css';
 
+const ScrollTypingText = ({ text, className = "" }) => {
+  const elRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!elRef.current) return;
+      const rect = elRef.current.getBoundingClientRect();
+      const startY = window.innerHeight * 0.9;
+      const endY = window.innerHeight * 0.1;
+      const currentProgress = (startY - rect.top) / (startY - endY);
+      setProgress(Math.max(0, Math.min(1, currentProgress)));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
+  const chars = text.split('');
+  const activeCount = Math.floor(progress * chars.length);
+
+  return (
+    <span ref={elRef} className={`scroll-typing-text ${className}`}>
+      {chars.map((char, idx) => (
+        <span
+          key={idx}
+          className={`char-span ${idx <= activeCount ? 'active' : ''}`}
+        >
+          {char}
+        </span>
+      ))}
+    </span>
+  );
+};
+
+const InteractiveBuilding = ({ src, alt, themeMode, className = "" }) => {
+  const containerRef = useRef(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const isNight = themeMode === 'night' || themeMode === 'aura';
+
+  return (
+    <div
+      ref={containerRef}
+      className={`interactive-building-wrap ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'crosshair', width: '100%' }}
+    >
+      {/* Base Layer */}
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          width: '100%',
+          height: 'auto',
+          maxHeight: 'inherit',
+          objectFit: 'cover',
+          display: 'block',
+          filter: isNight ? 'none' : 'grayscale(0.7) brightness(1.4) sepia(0.2) contrast(0.9)',
+          transition: 'filter 0.5s ease'
+        }}
+      />
+
+      {/* Hover Spotlight Overlay Layer (Reversed state) */}
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          position: 'absolute',
+          top: 0, left: 0, width: '100%', height: '100%',
+          objectFit: 'cover',
+          filter: isNight ? 'grayscale(0.7) brightness(1.4) sepia(0.2) contrast(0.9)' : 'none',
+          clipPath: isHovered
+            ? `circle(120px at ${mousePos.x}px ${mousePos.y}px)`
+            : `circle(0px at 0px 0px)`,
+          transition: isHovered ? 'none' : 'clip-path 0.4s ease-out',
+          pointerEvents: 'none'
+        }}
+      />
+    </div>
+  );
+};
+
 const TerminalTyping = () => {
   const codeLines = [
-    "npm run start-ai-server",
-    "Loading neural network...",
-    "Allocating tensors... OK",
-    "Model loaded: DungStudy-GPT",
-    "Analyzing user data: 100%",
-    "[SUCCESS] System Online."
+    "npm run start-dungstudy-ai",
+    "Initializing Gemini AI Engine...",
+    "Allocating neural tensors... OK",
+    "Model loaded: DungStudy-GPT v2.6",
+    "Securing Anti-cheat Sockets... ACTIVE",
+    "[SUCCESS] Educational Platform Ready."
   ];
   const [text, setText] = useState('');
   const [lineIndex, setLineIndex] = useState(0);
@@ -31,28 +146,30 @@ const TerminalTyping = () => {
       const timeout = setTimeout(() => {
         setText(prev => prev + currentLine[charIndex]);
         setCharIndex(charIndex + 1);
-      }, Math.random() * 40 + 20);
+      }, Math.random() * 30 + 20);
       return () => clearTimeout(timeout);
     } else {
       const timeout = setTimeout(() => {
-        setText(prev => prev + '\\n> ');
+        setText(prev => prev + '\n> ');
         setLineIndex(lineIndex + 1);
         setCharIndex(0);
-      }, 600);
+      }, 500);
       return () => clearTimeout(timeout);
     }
   }, [lineIndex, charIndex]);
 
   return (
-    <div className="typing-text">
+    <div className="typing-text-v2">
       &gt; {text}
-      <span className="typing-cursor"></span>
+      <span className="typing-cursor-v2"></span>
     </div>
   );
 };
 
 export default function AboutPage() {
   const pageRef = useRef(null);
+  const [themeMode, setThemeMode] = useState('night');
+  const isInternalChange = useRef(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -63,83 +180,219 @@ export default function AboutPage() {
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.12 }
     );
 
-    const elements = document.querySelectorAll('.reveal');
+    const elements = document.querySelectorAll('.reveal-v2');
     elements.forEach((el) => observer.observe(el));
 
-    return () => observer.disconnect();
+    const checkTheme = () => {
+      if (isInternalChange.current) return;
+      const isLight = document.documentElement.classList.contains('light-theme') ||
+        document.body.classList.contains('light-theme');
+      const isAura = document.documentElement.classList.contains('aura-theme') ||
+        document.body.classList.contains('aura-theme');
+      if (isLight) {
+        setThemeMode('day');
+      } else if (isAura) {
+        setThemeMode('aura');
+      } else {
+        setThemeMode('night');
+      }
+    };
+    checkTheme();
+    const themeObs = new MutationObserver(checkTheme);
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    themeObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      observer.disconnect();
+      themeObs.disconnect();
+    };
   }, []);
 
+  const handleThemeChange = (newTheme) => {
+    isInternalChange.current = true;
+    setThemeMode(newTheme);
+    document.documentElement.classList.remove('light-theme', 'aura-theme');
+    document.body.classList.remove('light-theme', 'aura-theme');
+    if (newTheme === 'day') {
+      document.documentElement.classList.add('light-theme');
+      document.body.classList.add('light-theme');
+    } else if (newTheme === 'aura') {
+      document.documentElement.classList.add('aura-theme');
+      document.body.classList.add('aura-theme');
+    }
+    setTimeout(() => {
+      isInternalChange.current = false;
+    }, 100);
+  };
+
   return (
-    <div className="about-page" ref={pageRef}>
-      <nav className="about-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link to="/">
-          <ArrowLeft size={20} /> Trở về trang chủ
+    <div className={`about-page-v2 theme-${themeMode}`} ref={pageRef}>
+      {/* Fixed Fullscreen Background Image & Progressive Blur Overlay */}
+      <div className="v2-page-bg">
+        <div className="v2-bg-image" />
+        <div className="v2-bg-overlay" />
+      </div>
+
+      {/* Top Navbar */}
+      <nav className="about-nav-v2">
+        <Link to="/" className="nav-back-link">
+          <ArrowLeft size={18} />
+          <span>Trở về trang chủ</span>
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+        <div className="nav-brand-about">
           <LogoWaveBounce size="sm" />
-          <span>Dung-<span style={{ color: 'var(--clr-primary-400)' }}>Study</span></span>
+          <span>Dung<span className="gold-accent">Study</span></span>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="story-hero">
-        <div className="story-hero-content reveal">
-          <h1 className="story-hero-title">Kỷ Nguyên Mới Của Giáo Dục</h1>
-          <p className="story-hero-subtitle">
-            Dung-Study không chỉ là một nền tảng thi trắc nghiệm. Chúng tôi đang tái định nghĩa 
-            cách giáo viên và học sinh tương tác, kiểm tra và phát triển thông qua sức mạnh của Generative AI.
+      <section className="about-hero-v2">
+        <div className="about-hero-content reveal-v2">
+          <div className="hero-pill-badge">
+            <Sparkles size={16} className="gold-icon" />
+            <span>TẦM NHÌN & SỨ MỆNH GIÁO DỤC</span>
+          </div>
+
+          <h1 className="about-hero-title">
+            <ScrollTypingText text="Kỷ Nguyên Mới Của " />
+            <span className="serif-highlight">
+              <ScrollTypingText text="Tri Thức" />
+            </span>
+            <ScrollTypingText text=" & " />
+            <span className="serif-highlight">
+              <ScrollTypingText text="Công Nghệ" />
+            </span>
+            <ScrollTypingText text="." />
+          </h1>
+
+          <p className="about-hero-subtitle">
+            <ScrollTypingText text="DungStudy kết hợp tôn vinh tri thức, tinh thần đạo đức và sức mạnh tiên phong của Generative AI để tái định nghĩa môi trường kiểm tra & học tập trực tuyến." />
           </p>
         </div>
-      </section>
 
-      {/* Philosophy Section */}
-      <section className="story-section">
-        <div className="story-text reveal">
-          <h2>Ý Tưởng Thiết Kế & Triết Lý</h2>
-          <p>
-            Mọi thứ bắt đầu từ một nỗi trăn trở: Tại sao giáo viên phải tốn hàng giờ đồng hồ để soạn từng câu hỏi trắc nghiệm, 
-            và tại sao học sinh lại thiếu đi những phân tích chuyên sâu về năng lực của bản thân sau mỗi kỳ thi?
-          </p>
-          <p>
-            Chúng tôi đã phác thảo ra một kiến trúc hệ thống nơi Trí Tuệ Nhân Tạo (Gemini AI) trở thành người trợ lý vô hình nhưng đắc lực. 
-            Từ những bản vẽ Wireframe đầu tiên trong bóng tối, Dung-Study được định hình với triết lý: <strong>Tối giản hóa quy trình - Tối đa hóa hiệu năng.</strong>
-          </p>
-          <div className="metrics-card">
-            <BrainCircuit size={32} color="var(--clr-primary-400)" />
-            <div>
-              <div className="metrics-label">Cốt lõi công nghệ</div>
-              <div style={{ color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 600 }}>Tích hợp Generative AI & OCR</div>
+        <div className="about-hero-showcase reveal-v2">
+          <div className="about-image-frame">
+            <InteractiveBuilding
+              src="/images/hero_study_cathedral.png"
+              alt="Catholic Academic Cathedral Sanctuary"
+              themeMode={themeMode}
+              className="about-showcase-img"
+            />
+            <div className="about-glass-caption">
+              <GraduationCap size={24} className="gold-icon" />
+              <div>
+                <span className="caption-title">Tôn Vinh Tri Thức & Đạo Đức Học Đường</span>
+                <span className="caption-sub">Không gian học tập chuẩn mực và truyền cảm hứng</span>
+              </div>
             </div>
           </div>
         </div>
-        <div className="story-image-container reveal" style={{ transitionDelay: '0.2s', background: 'transparent', boxShadow: 'none', animation: 'none' }}>
-          <div className="holo-container">
-            <div className="holo-scanline"></div>
-            <div className="holo-scanline-h"></div>
-            <div className="holo-node node-1"></div>
-            <div className="holo-node node-2"></div>
-            <div className="holo-node node-3"></div>
-            <div className="holo-node node-4"></div>
-            <div className="holo-node node-5"></div>
-            <div className="holo-floating-data data-1">01100101</div>
-            <div className="holo-floating-data data-2">SYS_OK</div>
-            <div className="holo-grid">
-              <div className="holo-box">
-                <div className="holo-line delay-1"></div>
-                <div className="holo-line delay-2"></div>
-                <div className="holo-line delay-3"></div>
+      </section>
+
+      {/* Section 1: Vision & Philosophy */}
+      <section className="about-section-v2">
+        <div className="about-container-v2 grid-2">
+          <div className="about-text-col reveal-v2">
+            <div className="section-tag">TRIẾT LÝ THIẾT KẾ</div>
+            <h2>
+              <ScrollTypingText text="Tối Giản Hóa Quy Trình — Tối Đa Hóa Hiệu Năng" />
+            </h2>
+            <p>
+              <ScrollTypingText text="Dự án khởi đầu từ mong muốn giải quyết thách thức lớn của giáo viên: làm sao để soạn đề thi nhanh chóng, bảo mật và cung cấp cho học sinh bức tranh toàn diện về năng lực học tập sau mỗi kỳ kiểm tra." />
+            </p>
+            <p>
+              <ScrollTypingText text="Chúng tôi phác thảo nên kiến trúc DungStudy nơi Generative AI trở thành người trợ lý đắc lực. Từ câu hỏi trắc nghiệm đơn, trắc nghiệm chọn nhiều đáp án đến câu tự luận phức tạp — hệ thống tự động hóa toàn bộ quá trình chấm điểm và phân tích." />
+            </p>
+
+            <div className="metrics-grid-v2">
+              <div className="metric-box-v2">
+                <div className="metric-val">80%</div>
+                <div className="metric-lbl">Tiết kiệm thời gian làm đề</div>
               </div>
-              <div className="holo-box">
-                <div style={{ display: 'flex', gap: '1rem', height: '100%' }}>
-                   <div style={{ flex: 1, border: '1px solid var(--clr-primary-400)', opacity: 0.5, borderRadius: '4px' }}></div>
-                   <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <div className="holo-line delay-1" style={{ width: '100%' }}></div>
-                      <div className="holo-line delay-2" style={{ width: '80%' }}></div>
-                      <div className="holo-line delay-3" style={{ width: '60%' }}></div>
-                   </div>
+              <div className="metric-box-v2">
+                <div className="metric-val">100%</div>
+                <div className="metric-lbl">Bảo mật & Anti-cheat</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="about-visual-col reveal-v2">
+            <div className="story-img-card">
+              <img src="/images/course_smart_prep.png" alt="Students in Cathedral Library" className="story-img-v2" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 2: AI Core Blueprint & Tech */}
+      <section className="about-section-v2 alt-bg">
+        <div className="about-container-v2 grid-2 reverse">
+          <div className="about-text-col reveal-v2">
+            <div className="section-tag">CỐT LÕI CÔNG NGHỆ AI</div>
+            <h2>
+              <ScrollTypingText text="Generative AI & Giám Sát Thời Gian Thực" />
+            </h2>
+            <p>
+              <ScrollTypingText text="DungStudy tích hợp mô hình Gemini AI thế nghe mới nhất cho phép tự động nhận diện câu hỏi từ file Word/PDF, phân tích ngữ nghĩa câu hỏi và đưa ra lời giải chi tiết từng bước." />
+            </p>
+            <ul className="about-bullets-v2">
+              <li><CheckCircle2 size={18} className="gold-icon" /> AI chấm điểm câu hỏi tự luận với thang điểm chuẩn xác</li>
+              <li><CheckCircle2 size={18} className="gold-icon" /> Socket.io giám sát phiên làm bài real-time chống rò rỉ đề</li>
+              <li><CheckCircle2 size={18} className="gold-icon" /> Thuật toán đo lường thời gian dừng lại ở từng câu hỏi</li>
+            </ul>
+          </div>
+
+          <div className="about-visual-col reveal-v2">
+            <div className="blueprint-showcase-v2">
+              <InteractiveBuilding
+                src="/images/about_wireframe_cathedral.png"
+                alt="System Blueprint"
+                themeMode={themeMode}
+                className="blueprint-img-v2"
+              />
+              <div className="blueprint-scanline-v2" />
+              <div className="blueprint-label-v2">
+                <BrainCircuit size={18} className="gold-icon" />
+                <span>ARCHITECTURAL WIREFRAME ENGINE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: Creator Profile */}
+      <section className="creator-section-v2">
+        <div className="creator-card-v2 reveal-v2">
+          <div className="creator-avatar-wrap">
+            <img src="/images/creator.png" alt="Developer Nguyễn Văn Dũng" className="creator-img-v2" />
+            <div className="terminal-badge-v2">
+              <TerminalTyping />
+            </div>
+          </div>
+
+          <div className="creator-info-v2">
+            <span className="creator-role-tag">NHÀ SÁNG LẬP & KỸ SƯ PHẦN MỀM</span>
+            <h2 className="creator-name">Nguyễn Văn Dũng</h2>
+            <p className="creator-quote-v2">
+              "Lập trình không chỉ là gõ những dòng mã khô khan. Đó là nghệ thuật giải quyết vấn đề, là mang công nghệ phức tạp nhất để phục vụ những nhu cầu tri thức bình dị nhất. DungStudy là minh chứng cho việc AI có thể làm cho giáo dục trở nên minh bạch và nhân văn hơn."
+            </p>
+
+            <div className="creator-stats-v2">
+              <div className="c-stat">
+                <Users size={20} className="gold-icon" />
+                <div>
+                  <span className="c-stat-lbl">Đối tượng phục vụ</span>
+                  <span className="c-stat-val">Học sinh & Giáo viên K1-K12</span>
+                </div>
+              </div>
+              <div className="c-stat">
+                <BrainCircuit size={20} className="gold-icon" />
+                <div>
+                  <span className="c-stat-lbl">Chuyên môn cốt lõi</span>
+                  <span className="c-stat-val">AI & Web Systems</span>
                 </div>
               </div>
             </div>
@@ -147,107 +400,61 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Results Section */}
-      <section className="story-section reverse">
-        <div className="story-text reveal">
-          <h2>Kết Quả Đạt Được & Tác Động</h2>
+      {/* CTA Footer */}
+      <section className="about-cta-v2">
+        <div className="about-cta-box reveal-v2">
+          <h2>
+            <ScrollTypingText text="Khám phá hệ thống DungStudy ngay" />
+          </h2>
           <p>
-            Vượt qua giới hạn của một dự án thông thường, Dung-Study mang lại khả năng xử lý hàng chục ngàn câu hỏi với ma trận đề thi phức tạp. 
-            Hệ thống chấm điểm tự luận bằng AI với độ chính xác cao đã giúp giải phóng 80% thời lượng làm việc của giáo viên.
+            <ScrollTypingText text="Tạo tài khoản miễn phí hoặc đăng nhập để trải nghiệm các tính năng thi trắc nghiệm AI." />
           </p>
-          <p>
-            Hệ thống giám sát Anti-cheat đa tầng đảm bảo tính minh bạch tuyệt đối, biến môi trường trực tuyến trở nên nghiêm túc và đáng tin cậy như một kỳ thi thực tế.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '2rem' }}>
-            <div className="metrics-card">
-              <Activity size={28} color="var(--clr-emerald-500)" />
-              <div>
-                <div className="metrics-value">80%</div>
-                <div className="metrics-label">Tiết kiệm thời gian</div>
-              </div>
-            </div>
-            <div className="metrics-card">
-              <ShieldCheck size={28} color="var(--clr-primary-400)" />
-              <div>
-                <div className="metrics-value">100%</div>
-                <div className="metrics-label">Bảo mật & Anti-cheat</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="story-image-container reveal" style={{ transitionDelay: '0.2s', background: 'transparent', boxShadow: 'none', animation: 'none' }}>
-          <div className="dash-container">
-            <div className="dash-header">
-               <div className="dash-skeleton-text" style={{ width: '150px' }}></div>
-               <div className="dash-skeleton-text" style={{ width: '80px' }}></div>
-            </div>
-            <div className="dash-charts">
-               <div className="dash-bar-chart">
-                  <svg className="dash-line-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path className="dash-line-path" d="M 0 80 Q 25 20, 50 60 T 100 10" />
-                  </svg>
-                  <div className="dash-bar"></div>
-                  <div className="dash-bar"></div>
-                  <div className="dash-bar"></div>
-                  <div className="dash-bar"></div>
-                  <div className="dash-bar"></div>
-               </div>
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-                 <div className="dash-donut">
-                    <div className="donut-circle">
-                       <div className="donut-circle-2"></div>
-                       <div className="donut-circle-3"></div>
-                       <div className="donut-inner"></div>
-                    </div>
-                 </div>
-                 <div className="dash-stream">
-                    <div className="dash-stream-content">
-                       <div className="dash-stream-item">Data fetch: OK</div>
-                       <div className="dash-stream-item">Latency: 12ms</div>
-                       <div className="dash-stream-item">Users: 1,024</div>
-                       <div className="dash-stream-item">CPU: 42%</div>
-                       <div className="dash-stream-item">Memory: 64%</div>
-                       <div className="dash-stream-item">Model: Active</div>
-                    </div>
-                 </div>
-               </div>
-            </div>
+          <div className="about-cta-btns">
+            <Link to="/register" className="btn-v2 btn-gold btn-hero">
+              <span>Đăng ký miễn phí</span>
+              <ArrowRight size={18} />
+            </Link>
+            <Link to="/" className="btn-v2 btn-outline-gold btn-hero">
+              <span>Trở về trang chủ</span>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Creator Section */}
-      <section className="creator-section">
-        <div className="creator-profile reveal">
-          <div className="creator-avatar-container">
-            <img src="/images/creator.png" alt="Developer Coding" className="creator-avatar" />
-            <div className="typing-overlay">
-              <TerminalTyping />
-            </div>
-          </div>
-          <div className="creator-info">
-            <h3>Nguyễn Văn Dũng</h3>
-            <span>Nhà sáng lập & Kỹ sư Phần mềm (Full-Stack Developer)</span>
-            <p className="creator-quote">
-              "Lập trình không chỉ là gõ những dòng mã khô khan. Đó là nghệ thuật giải quyết vấn đề, 
-              là mang công nghệ phức tạp nhất để phục vụ những nhu cầu bình dị nhất của con người. 
-              Dung-Study là minh chứng cho việc AI có thể làm giáo dục trở nên nhân văn hơn."
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
-             <div style={{ textAlign: 'center' }}>
-               <Users size={24} color="var(--clr-primary-400)" style={{ marginBottom: '0.5rem' }} />
-               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Đối tượng</div>
-               <div style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>B2B & B2C</div>
-             </div>
-             <div style={{ textAlign: 'center' }}>
-               <BrainCircuit size={24} color="var(--clr-rose-500)" style={{ marginBottom: '0.5rem' }} />
-               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Chuyên môn</div>
-               <div style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>AI & Web Systems</div>
-             </div>
-          </div>
+      {/* Floating Theme Control Widget (Matching Reference Video) */}
+      <div className="floating-theme-widget">
+        <span className="widget-label">Chế độ xem:</span>
+        <button
+          className={`theme-btn ${themeMode === 'night' ? 'active' : ''}`}
+          onClick={() => handleThemeChange('night')}
+          title="Giao diện Ban Đêm (Luxury Dark)"
+        >
+          <Moon size={15} />
+          <span>Night</span>
+        </button>
+        <button
+          className={`theme-btn ${themeMode === 'day' ? 'active' : ''}`}
+          onClick={() => handleThemeChange('day')}
+          title="Giao diện Ban Ngày (Light Mode)"
+        >
+          <Sun size={15} />
+          <span>Day</span>
+        </button>
+        <button
+          className={`theme-btn ${themeMode === 'aura' ? 'active' : ''}`}
+          onClick={() => handleThemeChange('aura')}
+          title="Giao diện Aura Cyber"
+        >
+          <Zap size={15} />
+          <span>Aura</span>
+        </button>
+      </div>
+
+      <footer className="footer-v2" style={{ marginTop: '4rem' }}>
+        <div className="footer-bottom">
+          <p>© 2026 DungStudy — Phát triển bởi Nguyễn Văn Dũng. Tất cả quyền được bảo lưu.</p>
         </div>
-      </section>
+      </footer>
     </div>
   );
 }
